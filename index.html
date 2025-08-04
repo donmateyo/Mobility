@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Progressive Mobility — Morning Spine Flow</title>
+    <meta
+      name="description"
+      content="A simple, professional progressive mobility flow for morning spinal health."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="theme-color" content="#0b6cff" />
+
+    <style>
+      :root {
+        --bg: #ffffff;
+        --card: #f6f7f9;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #0b6cff;
+        --accent-2: #2ecc71;
+        --danger: #e11d48;
+        --shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
+        --radius: 16px;
+        --tap: 52px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1220;
+          --card: #121a2a;
+          --text: #e6edf7;
+          --muted: #a3b1c6;
+          --accent: #5aa1ff;
+          --accent-2: #46d38c;
+          --danger: #ff718d;
+          --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji;
+        color: var(--text);
+        background: radial-gradient(
+            1200px 800px at 100% -200px,
+            rgba(11, 108, 255, 0.06),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 600px at -200px 100%,
+            rgba(46, 204, 113, 0.08),
+            transparent 60%
+          ),
+          var(--bg);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .app {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: calc(env(safe-area-inset-top) + 20px) 16px
+          calc(env(safe-area-inset-bottom) + 24px);
+        display: grid;
+        gap: 16px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--accent), #8abaff);
+        box-shadow: var(--shadow);
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .card {
+        background: color-mix(in oklab, var(--card) 92%, transparent);
+        backdrop-filter: saturate(1.1) blur(6px);
+        border: 1px solid color-mix(in oklab, var(--muted) 14%, transparent);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .panel {
+        padding: 16px;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .control {
+        display: grid;
+        gap: 8px;
+      }
+      label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input[type="number"],
+      select {
+        width: 100%;
+        height: var(--tap);
+        border-radius: 12px;
+        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+        background: var(--bg);
+        color: var(--text);
+        padding: 0 14px;
+        font-size: 16px;
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        height: var(--tap);
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+        background: var(--bg);
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-width: 120px;
+        height: var(--tap);
+        padding: 0 16px;
+        border: none;
+        border-radius: 12px;
+        background: var(--accent);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        box-shadow: var(--shadow);
+      }
+      .btn:disabled {
+        opacity: 0.6;
+      }
+      .btn.secondary {
+        background: color-mix(in oklab, var(--accent) 12%, var(--card));
+        color: var(--text);
+      }
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+        color: var(--text);
+      }
+      .danger {
+        color: var(--danger);
+      }
+      .progress {
+        height: 10px;
+        background: color-mix(in oklab, var(--muted) 18%, transparent);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        transition: width 0.3s ease;
+      }
+      .exercise {
+        display: grid;
+        gap: 12px;
+      }
+      .ex-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .ex-name {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .chip {
+        font-size: 12px;
+        color: var(--muted);
+        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+        padding: 4px 8px;
+        border-radius: 999px;
+      }
+      .purpose,
+      .how {
+        font-size: 15px;
+        line-height: 1.45;
+        color: var(--text);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .timer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+      .time {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      .nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .ex-list {
+        display: grid;
+        gap: 8px;
+      }
+      .ex-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--bg);
+        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+      }
+      .ex-item small {
+        color: var(--muted);
+      }
+      .check {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        border: 2px solid color-mix(in oklab, var(--muted) 32%, transparent);
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+      }
+      .check.done {
+        background: var(--accent-2);
+        border-color: var(--accent-2);
+        color: #fff;
+      }
+      footer {
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+        padding-top: 6px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bar {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header>
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>Morning Spine Flow</h1>
+            <div class="sub">Progressive mobility for happier mornings</div>
+          </div>
+        </div>
+        <!-- Reset button removed -->
+      </header>
+
+      <section class="card panel" aria-labelledby="sessionHeading">
+        <h2 id="sessionHeading" style="margin: 0 0 8px; font-size: 18px">
+          Session Setup
+        </h2>
+        <div class="controls">
+          <div class="control">
+            <label for="rounds">Rounds per exercise</label>
+            <input
+              type="number"
+              id="rounds"
+              min="1"
+              max="5"
+              step="1"
+              value="2"
+              inputmode="numeric"
+            />
+          </div>
+          <div class="control">
+            <label for="hold">Hold/rep seconds</label>
+            <input
+              type="number"
+              id="hold"
+              min="5"
+              max="60"
+              step="5"
+              value="20"
+              inputmode="numeric"
+            />
+          </div>
+          <div class="control">
+            <label for="haptics">Haptics</label>
+            <div class="toggle">
+              <input
+                type="checkbox"
+                id="haptics"
+                aria-label="Enable haptics"
+                checked
+              />
+              <span class="muted">Tap feedback</span>
+            </div>
+          </div>
+          <div class="control">
+            <label for="autoAdvance">Auto-advance</label>
+            <div class="toggle">
+              <input
+                type="checkbox"
+                id="autoAdvance"
+                aria-label="Auto advance exercises"
+                checked
+              />
+              <span class="muted">When timer ends</span>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 12px">
+          <button id="startBtn" class="btn">Start Session</button>
+          <button id="resumeBtn" class="btn secondary" disabled>
+            Resume
+          </button>
+        </div>
+      </section>
+
+      <section class="card panel" aria-labelledby="progressHeading">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          "
+        >
+          <h2 id="progressHeading" style="margin: 0; font-size: 18px">
+            Progress
+          </h2>
+          <div class="muted" id="progressText">0 of 7 complete</div>
+        </div>
+        <div class="progress" aria-label="Overall progress">
+          <div class="bar" id="progressBar"></div>
+        </div>
+        <div class="ex-list" id="exList" style="margin-top: 12px"></div>
+      </section>
+
+      <section class="card panel exercise" aria-labelledby="exHeading">
+        <div class="ex-title">
+          <div class="ex-name" id="exHeading">Welcome</div>
+          <div class="chip" id="roundChip">Rounds: 0/0</div>
+        </div>
+        <div class="purpose" id="purpose">
+          Get started by pressing “Start Session.” Adjust holds and rounds to
+          your comfort. If any movement causes pain, stop and skip it.
+        </div>
+        <div class="how muted" id="how">
+          Tip: You can use the on-screen timer to pace holds and reps. Auto
+          advance moves to the next exercise when the timer completes.
+        </div>
+
+        <div class="timer">
+          <div class="time" id="time">00:20</div>
+          <div class="row">
+            <button class="btn secondary" id="minus5" aria-label="-5 seconds">
+              −5s
+            </button>
+            <button class="btn secondary" id="plus5" aria-label="+5 seconds">
+              +5s
+            </button>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <button id="playPause" class="btn">Start Timer</button>
+          <button id="skipBtn" class="btn ghost">Skip</button>
+        </div>
+        <div class="nav" style="margin-top: 4px">
+          <button id="backBtn" class="btn ghost">Back</button>
+          <button id="nextBtn" class="btn">Next</button>
+        </div>
+        <div class="muted" style="font-size: 12px; margin-top: 8px">
+          Safety: If lumbar flexion or extension worsens your symptoms, skip or
+          limit range. Avoid sharp pain, tingling, or numbness. Consider
+          consulting a clinician for persistent issues.
+        </div>
+      </section>
+
+      <footer>
+        Made for Mateo • Works offline • Long-press to add to Home Screen
+      </footer>
+    </div>
+
+    <script>
+      // Data model
+      const exercises = [
+        {
+          name: "Knee‑to‑Chest Stretch",
+          purpose:
+            "Relieves lower back tension, helps align hips, and stretches lumbar paraspinal muscles.",
+          how:
+            "Lie on your back, bring one knee toward your chest, hold for 20–30 seconds, switch legs. Repeat 2–3 times each leg. Can be done in bed.",
+          tags: ["Supine", "Flexion-tolerant"],
+        },
+        {
+          name: "Cat–Cow Stretch",
+          purpose:
+            "Promotes spinal flexibility, decompresses vertebrae, and reduces morning stiffness.",
+          how:
+            "On hands and knees, arch up (cat), then drop belly and look up (cow), moving slowly. Repeat 10 reps for 2–3 rounds.",
+          tags: ["Quadruped", "Mobility"],
+        },
+        {
+          name: "Supine Lumbar Rotation (Windshield Wipers)",
+          purpose:
+            "Enhances rotational mobility of the lumbar spine while minimizing disc pressure.",
+          how:
+            "Lie on your back, knees up together, feet flat. Gently allow knees to fall side to side. Limit range if there’s discomfort.",
+          tags: ["Supine", "Rotation"],
+        },
+        {
+          name: "Prone Extension (Sphinx/Cobra)",
+          purpose:
+            "May help centralize disc material and reduce some nerve root irritation.",
+          how:
+            "Lie on your stomach. Prop onto elbows (sphinx) or gently press onto hands (cobra), hips down. Hold 10–30s for 3–10 reps. Stop if it worsens sciatica or causes pain.",
+          tags: ["Prone", "Extension"],
+        },
+        {
+          name: "Pelvic Tilts / Abdominal Bracing",
+          purpose:
+            "Strengthens core stabilizers, supports the lumbar spine, and encourages a neutral spine.",
+          how:
+            "Lie on your back, knees bent. Tighten low belly while gently flattening lower back. Hold 10–15s. Repeat several times.",
+          tags: ["Core", "Activation"],
+        },
+        {
+          name: "Child’s Pose (Gentle)",
+          purpose:
+            "Stretches lower back; only perform if lumbar flexion doesn’t aggravate symptoms.",
+          how:
+            "Kneel, sit back toward heels, arms forward, rest forehead. Only perform if flexion is pain‑free.",
+          tags: ["Flexion", "Restorative"],
+        },
+        {
+          name: "Bird‑Dog",
+          purpose:
+            "Promotes lumbar stability and safe core activation; helpful for demanding jobs.",
+          how:
+            "On hands and knees, extend one leg behind and opposite arm forward. Hold briefly, switch sides. 10 reps, 2–3 sets.",
+          tags: ["Quadruped", "Stability"],
+        },
+      ];
+
+      // State
+      let state = {
+        index: 0,
+        round: 1,
+        totalRounds: 2,
+        holdSeconds: 20,
+        running: false,
+        remaining: 20,
+        completed: new Array(exercises.length).fill(false),
+        autoAdvance: true,
+        haptics: true,
+        intervalId: null,
+        inSession: false,
+      };
+
+      // DOM
+      const exHeading = document.getElementById("exHeading");
+      const purpose = document.getElementById("purpose");
+      const how = document.getElementById("how");
+      const timeEl = document.getElementById("time");
+      const playPause = document.getElementById("playPause");
+      const nextBtn = document.getElementById("nextBtn");
+      const backBtn = document.getElementById("backBtn");
+      const skipBtn = document.getElementById("skipBtn");
+      const roundChip = document.getElementById("roundChip");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const exList = document.getElementById("exList");
+      const minus5 = document.getElementById("minus5");
+      const plus5 = document.getElementById("plus5");
+      const startBtn = document.getElementById("startBtn");
+      const resumeBtn = document.getElementById("resumeBtn");
+
+      const roundsInput = document.getElementById("rounds");
+      const holdInput = document.getElementById("hold");
+      const autoAdvanceInput = document.getElementById("autoAdvance");
+      const hapticsInput = document.getElementById("haptics");
+
+      // Utils
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+      const fmt = (s) => {
+        const m = Math.floor(s / 60)
+          .toString()
+          .padStart(2, "0");
+        const r = Math.floor(s % 60)
+          .toString()
+          .padStart(2, "0");
+        return `${m}:${r}`;
+      };
+      const vibrate = (pat) => {
+        if (!state.haptics) return;
+        if ("vibrate" in navigator) {
+          navigator.vibrate(pat);
+        }
+      };
+
+      function renderList() {
+        exList.innerHTML = "";
+        exercises.forEach((ex, i) => {
+          const row = document.createElement("div");
+          row.className = "ex-item";
+          row.role = "button";
+          row.tabIndex = 0;
+          row.setAttribute("aria-label", `Jump to ${ex.name}`);
+          row.addEventListener("click", () => goTo(i));
+          row.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              goTo(i);
+            }
+          });
+
+          const left = document.createElement("div");
+          left.innerHTML = `<div style="font-weight:600">${ex.name}</div>
+            <small>${ex.tags.join(" • ")}</small>`;
+
+          const right = document.createElement("div");
+          right.className = "check" + (state.completed[i] ? " done" : "");
+          right.innerHTML = state.completed[i] ? "✓" : "";
+
+          row.appendChild(left);
+          row.appendChild(right);
+          exList.appendChild(row);
+        });
+      }
+
+      function render() {
+        const ex = exercises[state.index];
+        exHeading.textContent = ex.name;
+        purpose.textContent = ex.purpose;
+        how.textContent = ex.how;
+
+        roundChip.textContent = `Rounds: ${state.round}/${state.totalRounds}`;
+        timeEl.textContent = fmt(state.remaining);
+
+        playPause.textContent = state.running ? "Pause Timer" : "Start Timer";
+        backBtn.disabled = state.index === 0 && state.round === 1;
+        nextBtn.textContent =
+          state.index === exercises.length - 1 &&
+          state.round === state.totalRounds
+            ? "Finish"
+            : "Next";
+
+        const doneCount = state.completed.filter(Boolean).length;
+        progressText.textContent = `${doneCount} of ${exercises.length} complete`;
+        progressBar.style.width = `${
+          (doneCount / exercises.length) * 100
+        }%`;
+
+        // Toggle Start/Stop label and styling
+        startBtn.textContent = state.inSession ? "Stop Session" : "Start Session";
+        startBtn.classList.toggle("danger", state.inSession);
+        resumeBtn.disabled = !state.inSession;
+
+        renderList();
+      }
+
+      function markDone(i) {
+        state.completed[i] = true;
+      }
+
+      function resetTimer() {
+        state.remaining = state.holdSeconds;
+        timeEl.textContent = fmt(state.remaining);
+      }
+
+      function stopTimer() {
+        state.running = false;
+        if (state.intervalId) {
+          clearInterval(state.intervalId);
+          state.intervalId = null;
+        }
+        playPause.textContent = "Start Timer";
+      }
+
+      function startTimer() {
+        if (state.running) return;
+        state.running = true;
+        playPause.textContent = "Pause Timer";
+        const tick = () => {
+          state.remaining = Math.max(0, state.remaining - 1);
+          timeEl.textContent = fmt(state.remaining);
+          if (state.remaining === 0) {
+            vibrate([40, 60, 40]);
+            stopTimer();
+            if (state.autoAdvance) {
+              next();
+            }
+          }
+        };
+        timeEl.textContent = fmt(state.remaining);
+        state.intervalId = setInterval(tick, 1000);
+      }
+
+      // Navigation
+      function next() {
+        const atLastRound = state.round >= state.totalRounds;
+        if (atLastRound) {
+          markDone(state.index);
+          if (state.index < exercises.length - 1) {
+            state.index++;
+            state.round = 1;
+          } else {
+            render();
+            toast("Session complete. Nice work!");
+            vibrate([60, 80, 60, 80, 120]);
+            return;
+          }
+        } else {
+          state.round++;
+        }
+        resetTimer();
+        render();
+      }
+
+      function back() {
+        if (state.round > 1) {
+          state.round--;
+        } else if (state.index > 0) {
+          state.index--;
+          state.round = state.totalRounds;
+        } else {
+          return;
+        }
+        resetTimer();
+        render();
+      }
+
+      function goTo(i) {
+        stopTimer();
+        state.index = i;
+        state.round = 1;
+        resetTimer();
+        render();
+      }
+
+      // Toast
+      let toastEl = null;
+      function toast(msg) {
+        if (!toastEl) {
+          toastEl = document.createElement("div");
+          toastEl.style.position = "fixed";
+          toastEl.style.bottom = "calc(env(safe-area-inset-bottom) + 20px)";
+          toastEl.style.left = "50%";
+          toastEl.style.transform = "translateX(-50%)";
+          toastEl.style.background = "var(--text)";
+          toastEl.style.color = "var(--bg)";
+          toastEl.style.padding = "12px 14px";
+          toastEl.style.borderRadius = "12px";
+          toastEl.style.boxShadow = "var(--shadow)";
+          toastEl.style.fontSize = "14px";
+          toastEl.style.zIndex = "999";
+          document.body.appendChild(toastEl);
+        }
+        toastEl.textContent = msg;
+        toastEl.style.opacity = "0.98";
+        setTimeout(() => (toastEl.style.opacity = "0"), 1600);
+      }
+
+      function resetToWelcome() {
+        stopTimer();
+        state.index = 0;
+        state.round = 1;
+        state.completed = new Array(exercises.length).fill(false);
+        state.running = false;
+        state.remaining = state.holdSeconds;
+        render();
+      }
+
+      // Handlers
+      startBtn.addEventListener("click", () => {
+        if (!state.inSession) {
+          // Start Session
+          state.totalRounds = clamp(parseInt(roundsInput.value || "2", 10), 1, 5);
+          state.holdSeconds = clamp(parseInt(holdInput.value || "20", 10), 5, 60);
+          state.remaining = state.holdSeconds;
+          state.haptics = !!hapticsInput.checked;
+          state.autoAdvance = !!autoAdvanceInput.checked;
+          state.index = 0;
+          state.round = 1;
+          state.completed = new Array(exercises.length).fill(false);
+          state.inSession = true;
+          render();
+          resumeBtn.disabled = false;
+          toast("Session started");
+        } else {
+          // Stop Session
+          state.inSession = false;
+          resetToWelcome();
+          toast("Session stopped");
+        }
+      });
+
+      resumeBtn.addEventListener("click", () => {
+        if (!state.inSession) return;
+        startTimer();
+      });
+
+      playPause.addEventListener("click", () => {
+        if (!state.inSession) {
+          toast("Start a session first");
+          return;
+        }
+        if (state.running) {
+          stopTimer();
+        } else {
+          startTimer();
+        }
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if (!state.inSession) {
+          toast("Start a session first");
+          return;
+        }
+        stopTimer();
+        next();
+      });
+
+      backBtn.addEventListener("click", () => {
+        if (!state.inSession) {
+          toast("Start a session first");
+          return;
+        }
+        stopTimer();
+        back();
+      });
+
+      skipBtn.addEventListener("click", () => {
+        if (!state.inSession) {
+          toast("Start a session first");
+          return;
+        }
+        stopTimer();
+        markDone(state.index);
+        next();
+      });
+
+      minus5.addEventListener("click", () => {
+        state.remaining = clamp(state.remaining - 5, 0, 600);
+        timeEl.textContent = fmt(state.remaining);
+      });
+      plus5.addEventListener("click", () => {
+        state.remaining = clamp(state.remaining + 5, 0, 600);
+        timeEl.textContent = fmt(state.remaining);
+      });
+
+      roundsInput.addEventListener("change", () => {
+        const v = clamp(parseInt(roundsInput.value || "2", 10), 1, 5);
+        roundsInput.value = String(v);
+        state.totalRounds = v;
+        roundChip.textContent = `Rounds: ${state.round}/${state.totalRounds}`;
+      });
+      holdInput.addEventListener("change", () => {
+        const v = clamp(parseInt(holdInput.value || "20", 10), 5, 60);
+        holdInput.value = String(v);
+        state.holdSeconds = v;
+        if (!state.running) {
+          state.remaining = v;
+          timeEl.textContent = fmt(state.remaining);
+        }
+      });
+      autoAdvanceInput.addEventListener("change", () => {
+        state.autoAdvance = !!autoAdvanceInput.checked;
+      });
+      hapticsInput.addEventListener("change", () => {
+        state.haptics = !!hapticsInput.checked;
+        if (state.haptics) vibrate(20);
+      });
+
+      // Init
+      render();
+
+      // Install prompt hint for iOS
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          if (
+            /iPhone|iPad|iPod/i.test(navigator.userAgent) &&
+            !window.matchMedia("(display-mode: standalone)").matches
+          ) {
+            toast("Tip: Share → Add to Home Screen");
+          }
+        }, 1200);
+      });
+    </script>
+  </body>
+</html>
