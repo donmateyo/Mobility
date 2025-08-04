@@ -206,6 +206,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 8px;
+        flex-wrap: wrap;
       }
       .ex-name {
         font-size: 18px;
@@ -217,6 +218,12 @@
         border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
         padding: 4px 8px;
         border-radius: 999px;
+      }
+      .chip.link {
+        cursor: pointer;
+        border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+        color: var(--accent);
+        background: color-mix(in oklab, var(--accent) 8%, transparent);
       }
       .purpose,
       .how {
@@ -276,6 +283,54 @@
         border-color: var(--accent-2);
         color: #fff;
       }
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: color-mix(in oklab, var(--text) 60%, transparent);
+        z-index: 1000;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .modal-card {
+        width: 100%;
+        max-width: 720px;
+        background: var(--card);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+      }
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+      }
+      .modal-title {
+        font-weight: 700;
+      }
+      .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        font-size: 16px;
+        padding: 8px;
+      }
+      .modal-body {
+        aspect-ratio: 16 / 9;
+        background: #000;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+      }
       footer {
         text-align: center;
         font-size: 12px;
@@ -299,7 +354,6 @@
             <div class="sub">Progressive mobility for happier mornings</div>
           </div>
         </div>
-        <!-- Reset button removed -->
       </header>
 
       <section class="card panel" aria-labelledby="sessionHeading">
@@ -387,15 +441,20 @@
       <section class="card panel exercise" aria-labelledby="exHeading">
         <div class="ex-title">
           <div class="ex-name" id="exHeading">Welcome</div>
-          <div class="chip" id="roundChip">Rounds: 0/0</div>
+          <div class="row" style="gap:8px;">
+            <div class="chip" id="roundChip">Rounds: 0/0</div>
+            <button id="videoChip" class="chip link" style="display:none">
+              How‑to video ▶︎
+            </button>
+          </div>
         </div>
         <div class="purpose" id="purpose">
           Get started by pressing “Start Session.” Adjust holds and rounds to
           your comfort. If any movement causes pain, stop and skip it.
         </div>
         <div class="how muted" id="how">
-          Tip: You can use the on-screen timer to pace holds and reps. Auto
-          advance moves to the next exercise when the timer completes.
+          Tip: Use the on‑screen timer to pace holds and reps. Auto advance
+          moves to the next exercise when the timer completes.
         </div>
 
         <div class="timer">
@@ -429,8 +488,27 @@
       </footer>
     </div>
 
+    <!-- Video Modal -->
+    <div
+      id="videoModal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+    >
+      <div class="modal-card">
+        <div class="modal-head">
+          <div class="modal-title" id="videoTitle">How‑to Video</div>
+          <button id="closeVideo" class="modal-close" aria-label="Close video">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body" id="videoBody"></div>
+      </div>
+    </div>
+
     <script>
-      // Data model
+      // Data model with video links (playsinline for iPhone)
       const exercises = [
         {
           name: "Knee‑to‑Chest Stretch",
@@ -439,6 +517,8 @@
           how:
             "Lie on your back, bring one knee toward your chest, hold for 20–30 seconds, switch legs. Repeat 2–3 times each leg. Can be done in bed.",
           tags: ["Supine", "Flexion-tolerant"],
+          videoUrl:
+            "https://www.youtube.com/embed/o8gAyDUh2bs?rel=0&modestbranding=1&playsinline=1",
         },
         {
           name: "Cat–Cow Stretch",
@@ -447,6 +527,8 @@
           how:
             "On hands and knees, arch up (cat), then drop belly and look up (cow), moving slowly. Repeat 10 reps for 2–3 rounds.",
           tags: ["Quadruped", "Mobility"],
+          videoUrl:
+            "https://www.youtube.com/embed/KzM3QWeajwA?rel=0&modestbranding=1&playsinline=1",
         },
         {
           name: "Supine Lumbar Rotation (Windshield Wipers)",
@@ -455,6 +537,8 @@
           how:
             "Lie on your back, knees up together, feet flat. Gently allow knees to fall side to side. Limit range if there’s discomfort.",
           tags: ["Supine", "Rotation"],
+          videoUrl:
+            "https://www.youtube.com/embed/VK75m-l3RSY?rel=0&modestbranding=1&playsinline=1",
         },
         {
           name: "Prone Extension (Sphinx/Cobra)",
@@ -463,6 +547,8 @@
           how:
             "Lie on your stomach. Prop onto elbows (sphinx) or gently press onto hands (cobra), hips down. Hold 10–30s for 3–10 reps. Stop if it worsens sciatica or causes pain.",
           tags: ["Prone", "Extension"],
+          videoUrl:
+            "https://www.youtube.com/embed/dNfIMIhVxwg?rel=0&modestbranding=1&playsinline=1",
         },
         {
           name: "Pelvic Tilts / Abdominal Bracing",
@@ -471,6 +557,8 @@
           how:
             "Lie on your back, knees bent. Tighten low belly while gently flattening lower back. Hold 10–15s. Repeat several times.",
           tags: ["Core", "Activation"],
+          videoUrl:
+            "https://www.youtube.com/embed/u0AJnVg0tcc?rel=0&modestbranding=1&playsinline=1",
         },
         {
           name: "Child’s Pose (Gentle)",
@@ -479,6 +567,8 @@
           how:
             "Kneel, sit back toward heels, arms forward, rest forehead. Only perform if flexion is pain‑free.",
           tags: ["Flexion", "Restorative"],
+          videoUrl:
+            "https://www.youtube.com/embed/nMp3MlTz9fA?rel=0&modestbranding=1&playsinline=1",
         },
         {
           name: "Bird‑Dog",
@@ -487,6 +577,8 @@
           how:
             "On hands and knees, extend one leg behind and opposite arm forward. Hold briefly, switch sides. 10 reps, 2–3 sets.",
           tags: ["Quadruped", "Stability"],
+          videoUrl:
+            "https://www.youtube.com/embed/HtMI17DGuTk?rel=0&modestbranding=1&playsinline=1",
         },
       ];
 
@@ -522,11 +614,18 @@
       const plus5 = document.getElementById("plus5");
       const startBtn = document.getElementById("startBtn");
       const resumeBtn = document.getElementById("resumeBtn");
+      const videoChip = document.getElementById("videoChip");
 
       const roundsInput = document.getElementById("rounds");
       const holdInput = document.getElementById("hold");
       const autoAdvanceInput = document.getElementById("autoAdvance");
       const hapticsInput = document.getElementById("haptics");
+
+      // Modal DOM
+      const videoModal = document.getElementById("videoModal");
+      const videoTitle = document.getElementById("videoTitle");
+      const videoBody = document.getElementById("videoBody");
+      const closeVideo = document.getElementById("closeVideo");
 
       // Utils
       const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -541,11 +640,10 @@
       };
       const vibrate = (pat) => {
         if (!state.haptics) return;
-        if ("vibrate" in navigator) {
-          navigator.vibrate(pat);
-        }
+        if ("vibrate" in navigator) navigator.vibrate(pat);
       };
 
+      // Checklist
       function renderList() {
         exList.innerHTML = "";
         exercises.forEach((ex, i) => {
@@ -576,6 +674,7 @@
         });
       }
 
+      // Main render
       function render() {
         const ex = exercises[state.index];
         exHeading.textContent = ex.name;
@@ -599,10 +698,19 @@
           (doneCount / exercises.length) * 100
         }%`;
 
-        // Toggle Start/Stop label and styling
+        // Start/Stop label
         startBtn.textContent = state.inSession ? "Stop Session" : "Start Session";
         startBtn.classList.toggle("danger", state.inSession);
         resumeBtn.disabled = !state.inSession;
+
+        // Video chip visibility
+        if (ex.videoUrl) {
+          videoChip.style.display = "inline-block";
+          videoChip.onclick = () => openVideo(ex.name, ex.videoUrl);
+        } else {
+          videoChip.style.display = "none";
+          videoChip.onclick = null;
+        }
 
         renderList();
       }
@@ -635,9 +743,7 @@
           if (state.remaining === 0) {
             vibrate([40, 60, 40]);
             stopTimer();
-            if (state.autoAdvance) {
-              next();
-            }
+            if (state.autoAdvance) next();
           }
         };
         timeEl.textContent = fmt(state.remaining);
@@ -709,6 +815,7 @@
         setTimeout(() => (toastEl.style.opacity = "0"), 1600);
       }
 
+      // Session welcome reset
       function resetToWelcome() {
         stopTimer();
         state.index = 0;
@@ -719,7 +826,41 @@
         render();
       }
 
-      // Handlers
+      // Video modal helpers
+      function openVideo(title, url) {
+        // Pause any running timer
+        if (state.running) stopTimer();
+        videoTitle.textContent = title + " — How‑to";
+        videoBody.innerHTML = `
+          <iframe
+            src="${url}"
+            title="${title} — How‑to"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            playsinline
+          ></iframe>
+        `;
+        videoModal.classList.add("open");
+        videoModal.setAttribute("aria-hidden", "false");
+      }
+
+      function closeVideoModal() {
+        videoModal.classList.remove("open");
+        videoModal.setAttribute("aria-hidden", "true");
+        videoBody.innerHTML = ""; // stop playback
+      }
+
+      // Event handlers
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && videoModal.classList.contains("open")) {
+          closeVideoModal();
+        }
+      });
+      closeVideo.addEventListener("click", closeVideoModal);
+      videoModal.addEventListener("click", (e) => {
+        if (e.target === videoModal) closeVideoModal();
+      });
+
       startBtn.addEventListener("click", () => {
         if (!state.inSession) {
           // Start Session
@@ -753,11 +894,8 @@
           toast("Start a session first");
           return;
         }
-        if (state.running) {
-          stopTimer();
-        } else {
-          startTimer();
-        }
+        if (state.running) stopTimer();
+        else startTimer();
       });
 
       nextBtn.addEventListener("click", () => {
@@ -789,11 +927,11 @@
       });
 
       minus5.addEventListener("click", () => {
-        state.remaining = clamp(state.remaining - 5, 0, 600);
+        state.remaining = Math.max(0, state.remaining - 5);
         timeEl.textContent = fmt(state.remaining);
       });
       plus5.addEventListener("click", () => {
-        state.remaining = clamp(state.remaining + 5, 0, 600);
+        state.remaining = Math.min(600, state.remaining + 5);
         timeEl.textContent = fmt(state.remaining);
       });
 
@@ -803,6 +941,7 @@
         state.totalRounds = v;
         roundChip.textContent = `Rounds: ${state.round}/${state.totalRounds}`;
       });
+
       holdInput.addEventListener("change", () => {
         const v = clamp(parseInt(holdInput.value || "20", 10), 5, 60);
         holdInput.value = String(v);
@@ -812,9 +951,11 @@
           timeEl.textContent = fmt(state.remaining);
         }
       });
+
       autoAdvanceInput.addEventListener("change", () => {
         state.autoAdvance = !!autoAdvanceInput.checked;
       });
+
       hapticsInput.addEventListener("change", () => {
         state.haptics = !!hapticsInput.checked;
         if (state.haptics) vibrate(20);
@@ -823,7 +964,7 @@
       // Init
       render();
 
-      // Install prompt hint for iOS
+      // iOS add-to-home hint
       window.addEventListener("load", () => {
         setTimeout(() => {
           if (
