@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -6,44 +6,58 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>Progressive Mobility — Morning Spine Flow</title>
-    <meta
-      name="description"
-      content="A simple, professional progressive mobility flow for morning spinal health."
-    />
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="theme-color" content="#0b6cff" />
-
+    <link id="apple180" rel="apple-touch-icon" sizes="180x180" href="#" />
+    <link id="apple167" rel="apple-touch-icon" sizes="167x167" href="#" />
+    <link id="apple152" rel="apple-touch-icon" sizes="152x152" href="#" />
+    <link id="apple120" rel="apple-touch-icon" sizes="120x120" href="#" />
+    <title>Mobility Minutes</title>
     <style>
       :root {
-        --bg: #ffffff;
-        --card: #f6f7f9;
-        --text: #0f172a;
-        --muted: #475569;
-        --accent: #0b6cff;
-        --accent-2: #2ecc71;
-        --danger: #e11d48;
-        --shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
+        --bg: #0f172a;
+        --bg-elev: color-mix(in hsl, var(--bg), #ffffff 6%);
+        --card: color-mix(in hsl, var(--bg), #ffffff 8%);
+        --text: #e5e7eb;
+        --muted: #9aa4b2;
+        --primary: #0ea5e9;
+        --primary-2: #22d3ee;
+        --ok: #10b981;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --ring: #38bdf8;
+        --glass-border: color-mix(in hsl, #ffffff, transparent 80%);
+        --shadow: 0 10px 30px hsl(210 50% 2% / 0.35);
         --radius: 16px;
-        --tap: 52px;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0b1220;
-          --card: #121a2a;
-          --text: #e6edf7;
-          --muted: #a3b1c6;
-          --accent: #5aa1ff;
-          --accent-2: #46d38c;
-          --danger: #ff718d;
-          --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
-        }
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --bg-elev: color-mix(in hsl, var(--bg), #ffffff 6%);
+        --card: color-mix(in hsl, var(--bg), #ffffff 8%);
+        --text: #e5e7eb;
+        --muted: #9aa4b2;
+        --glass-border: color-mix(in hsl, #ffffff, transparent 80%);
+        --shadow: 0 10px 30px hsl(210 50% 2% / 0.35);
       }
-      * {
+      html[data-theme="light"] {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --bg-elev: #ffffff;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --glass-border: color-mix(in hsl, #000, transparent 88%);
+        --shadow: 0 8px 24px hsl(210 20% 50% / 0.15);
+      }
+      *,
+      *::before,
+      *::after {
         box-sizing: border-box;
       }
       html,
@@ -52,928 +66,1499 @@
       }
       body {
         margin: 0;
-        font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica,
-          Arial, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
         color: var(--text);
         background: radial-gradient(
-            1200px 800px at 100% -200px,
-            rgba(11, 108, 255, 0.06),
-            transparent 60%
-          ),
+              90% 60% at 20% 0%,
+              color-mix(in srgb, var(--primary), transparent 80%),
+              transparent 60%
+            ),
           radial-gradient(
-            900px 600px at -200px 100%,
-            rgba(46, 204, 113, 0.08),
-            transparent 60%
-          ),
+              70% 50% at 100% 0%,
+              color-mix(in srgb, var(--primary-2), transparent 85%),
+              transparent 60%
+            ),
           var(--bg);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+        background-attachment: fixed;
+        line-height: 1.45;
+        -webkit-tap-highlight-color: transparent;
       }
-      .app {
-        max-width: 720px;
+      #app {
+        max-width: 1100px;
         margin: 0 auto;
-        padding: calc(env(safe-area-inset-top) + 20px) 16px
-          calc(env(safe-area-inset-bottom) + 24px);
-        display: grid;
-        gap: 16px;
+        padding: env(safe-area-inset-top) 16px 64px;
       }
-      header {
+      .topbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 12px 0;
+        backdrop-filter: saturate(1.2) blur(8px);
       }
       .brand {
         display: flex;
         align-items: center;
         gap: 12px;
       }
-      .logo {
+      .brand-mark {
         width: 36px;
         height: 36px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, var(--accent), #8abaff);
+        border-radius: 8px;
+      }
+      .brand-text h1 {
+        font-size: 18px;
+        margin: 0 0 2px;
+      }
+      .tagline {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .btn {
+        appearance: none;
+        border: 1px solid var(--glass-border);
+        background: linear-gradient(
+              180deg,
+              color-mix(in srgb, #fff, transparent 85%),
+              transparent
+            ),
+          var(--card);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.2s ease,
+          border-color 0.2s;
         box-shadow: var(--shadow);
       }
-      h1 {
-        font-size: 20px;
-        margin: 0;
+      .btn.primary {
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--primary), #fff 15%),
+          color-mix(in srgb, var(--primary), #000 10%)
+        );
+        border-color: color-mix(in srgb, var(--primary), transparent 60%);
+        color: white;
+      }
+      .btn.ghost {
+        background: color-mix(in srgb, var(--card), transparent 40%);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .hero {
+        position: relative;
+        margin-top: 12px;
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        border-radius: calc(var(--radius) * 1.25);
+        background: linear-gradient(
+            120deg,
+            color-mix(in srgb, var(--primary), transparent 80%),
+            transparent 50%
+          ),
+          var(--card);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow);
+      }
+      .hero-content {
+        position: relative;
+        padding: 28px 20px;
+      }
+      .hero h2 {
+        margin: 0 0 8px;
         letter-spacing: 0.2px;
       }
-      .sub {
-        font-size: 13px;
-        color: var(--muted);
-        margin-top: 2px;
-      }
-      .card {
-        background: color-mix(in oklab, var(--card) 92%, transparent);
-        backdrop-filter: saturate(1.1) blur(6px);
-        border: 1px solid color-mix(in oklab, var(--muted) 14%, transparent);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-      }
-      .panel {
-        padding: 16px;
-      }
-      .controls {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .control {
-        display: grid;
-        gap: 8px;
-      }
-      label {
-        font-size: 13px;
+      .hero p {
+        margin: 0 0 16px;
         color: var(--muted);
       }
-      input[type="number"],
-      select {
-        width: 100%;
-        height: var(--tap);
-        border-radius: 12px;
-        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
-        background: var(--bg);
-        color: var(--text);
-        padding: 0 14px;
-        font-size: 16px;
-      }
-      .toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        height: var(--tap);
-        padding: 0 14px;
-        border-radius: 12px;
-        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
-        background: var(--bg);
-      }
-      .row {
+      .hero-cta {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
+        margin-bottom: 16px;
       }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        min-width: 120px;
-        height: var(--tap);
-        padding: 0 16px;
-        border: none;
-        border-radius: 12px;
-        background: var(--accent);
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .stat {
+        background: color-mix(in srgb, var(--card), transparent 20%);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius);
+        padding: 12px;
+        text-align: center;
+      }
+      .stat-number {
+        font-weight: 800;
+        font-size: 22px;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .panel {
+        margin-top: 18px;
+        padding: 16px;
+        border-radius: calc(var(--radius) * 1.1);
+        background: var(--bg-elev);
+        border: 1px solid var(--glass-border);
         box-shadow: var(--shadow);
       }
-      .btn:disabled {
-        opacity: 0.6;
-      }
-      .btn.secondary {
-        background: color-mix(in oklab, var(--accent) 12%, var(--card));
-        color: var(--text);
-      }
-      .btn.ghost {
-        background: transparent;
-        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
-        color: var(--text);
-      }
-      .danger {
-        color: var(--danger);
-      }
-      .progress {
-        height: 10px;
-        background: color-mix(in oklab, var(--muted) 18%, transparent);
-        border-radius: 999px;
-        overflow: hidden;
-      }
-      .bar {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, var(--accent), var(--accent-2));
-        transition: width 0.3s ease;
-      }
-      .exercise {
-        display: grid;
-        gap: 12px;
-      }
-      .ex-title {
+      .panel-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
+      }
+      .bullets {
+        margin: 12px 0;
+        padding-left: 18px;
+      }
+      .bullets li {
+        margin: 6px 0;
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
         flex-wrap: wrap;
       }
-      .ex-name {
-        font-size: 18px;
-        font-weight: 700;
-      }
       .chip {
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px dashed var(--glass-border);
+        background: color-mix(in srgb, var(--card), transparent 25%);
         font-size: 12px;
         color: var(--muted);
-        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+      }
+      .cards {
+        display: grid;
+        gap: 12px;
+      }
+      .exercise {
+        padding: 14px;
+        border-radius: var(--radius);
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--card), transparent 0%),
+          color-mix(in srgb, var(--card), transparent 18%)
+        );
+        border: 1px solid var(--glass-border);
+        position: relative;
+        overflow: clip;
+      }
+      .exercise.done::after {
+        content: "Done";
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 11px;
+        color: #fff;
+        background: linear-gradient(120deg, var(--ok), #2dd4bf);
         padding: 4px 8px;
         border-radius: 999px;
       }
-      .chip.link {
-        cursor: pointer;
-        border-color: color-mix(in oklab, var(--accent) 40%, transparent);
-        color: var(--accent);
-        background: color-mix(in oklab, var(--accent) 8%, transparent);
+      .ex-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
       }
-      .purpose,
-      .how {
-        font-size: 15px;
-        line-height: 1.45;
+      .ex-title {
+        margin: 0;
+        font-size: 16px;
+      }
+      .ex-targets {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .segment {
+        display: inline-flex;
+        border: 1px solid var(--glass-border);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .segment button {
+        border: 0;
+        background: transparent;
         color: var(--text);
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      .segment button[aria-pressed="true"] {
+        background: color-mix(in srgb, var(--primary), transparent 84%);
+        color: color-mix(in srgb, var(--text), #000 0%);
+      }
+      .meta {
+        font-size: 12px;
+        color: var(--muted);
+        display: grid;
+        gap: 2px;
+        margin-top: 8px;
+      }
+      .ex-cta {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tiny {
+        font-size: 11px;
       }
       .muted {
         color: var(--muted);
       }
-      .timer {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 12px;
-        align-items: center;
+      .small {
+        font-size: 12px;
       }
-      .time {
-        font-variant-numeric: tabular-nums;
-        font-feature-settings: "tnum";
-        font-size: 32px;
-        font-weight: 700;
-        letter-spacing: 1px;
-      }
-      .nav {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .ex-list {
-        display: grid;
-        gap: 8px;
-      }
-      .ex-item {
-        display: grid;
-        grid-template-columns: 1fr auto;
+      .switch {
+        display: inline-flex;
         gap: 8px;
         align-items: center;
-        padding: 12px;
-        border-radius: 12px;
-        background: var(--bg);
-        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
-      }
-      .ex-item small {
+        font-size: 12px;
         color: var(--muted);
       }
-      .check {
-        width: 22px;
-        height: 22px;
-        border-radius: 6px;
-        border: 2px solid color-mix(in oklab, var(--muted) 32%, transparent);
-        display: grid;
-        place-items: center;
-        font-size: 14px;
-      }
-      .check.done {
-        background: var(--accent-2);
-        border-color: var(--accent-2);
-        color: #fff;
-      }
-      .modal {
+      .offline-badge {
         position: fixed;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        background: color-mix(in oklab, var(--text) 60%, transparent);
-        z-index: 1000;
-      }
-      .modal.open {
-        display: flex;
-      }
-      .modal-card {
-        width: 100%;
-        max-width: 720px;
-        background: var(--card);
-        border-radius: 16px;
+        bottom: 16px;
+        right: 16px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: linear-gradient(120deg, var(--primary), var(--ok));
+        color: white;
         box-shadow: var(--shadow);
-        overflow: hidden;
-        border: 1px solid color-mix(in oklab, var(--muted) 18%, transparent);
+        z-index: 30;
       }
-      .modal-head {
+      .a2hs-tip {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 31;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: var(--bg-elev);
+        border: 1px solid var(--glass-border);
+        color: var(--text);
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .timer-dialog {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        width: min(560px, 92vw);
+      }
+      .timer-dialog::backdrop {
+        background: linear-gradient(0deg, #0008, #0006);
+        backdrop-filter: blur(3px);
+      }
+      .timer-surface {
+        background: var(--bg-elev);
+        border: 1px solid var(--glass-border);
+        border-radius: calc(var(--radius) * 1.2);
+        padding: 14px;
+        box-shadow: var(--shadow);
+      }
+      .timer-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 14px;
       }
-      .modal-title {
+      .eyebrow {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 11px;
+      }
+      .ring-wrap {
+        display: grid;
+        place-items: center;
+        padding: 18px 6px;
+      }
+      .ring {
+        width: 220px;
+        aspect-ratio: 1 / 1;
+        border-radius: 999px;
+        background: conic-gradient(
+            var(--ring) var(--p, 0%),
+            color-mix(in srgb, var(--ring), transparent 85%) 0%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            color-mix(in srgb, var(--card), transparent 20%),
+            transparent 60%
+          ),
+          var(--card);
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow);
+      }
+      .ring-inner {
+        width: 75%;
+        aspect-ratio: 1 / 1;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: color-mix(in srgb, var(--card), transparent 10%);
+      }
+      .timer-value {
+        font-size: 36px;
+        font-variant-numeric: tabular-nums;
         font-weight: 700;
       }
-      .modal-close {
-        background: transparent;
-        border: none;
-        color: var(--muted);
-        font-size: 16px;
-        padding: 8px;
-      }
-      .modal-body {
-        aspect-ratio: 16 / 9;
-        background: #000;
-      }
-      iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        display: block;
-      }
-      footer {
-        text-align: center;
+      .timer-sub {
         font-size: 12px;
         color: var(--muted);
-        padding-top: 6px;
+        margin-top: 4px;
+        text-align: center;
       }
-      @media (prefers-reduced-motion: reduce) {
-        .bar {
-          transition: none;
-        }
+      .timer-controls {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .flow-steps {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .flow-steps .chip {
+        border-style: solid;
+      }
+      .footer {
+        margin-top: 24px;
+        text-align: center;
+        color: var(--muted);
       }
     </style>
   </head>
   <body>
-    <div class="app" id="app">
-      <header>
+    <div id="app">
+      <header class="topbar">
         <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <h1>Morning Spine Flow</h1>
-            <div class="sub">Progressive mobility for happier mornings</div>
+          <img class="brand-mark" alt="" aria-hidden="true" id="brandIcon" />
+          <div class="brand-text">
+            <h1>Mobility Minutes</h1>
+            <p class="tagline">8–12 min daily mobility, beautifully guided</p>
           </div>
+        </div>
+        <div class="actions">
+          <button id="installBtn" class="btn ghost" hidden>Install</button>
+          <button id="themeBtn" class="btn ghost" aria-label="Toggle theme">
+            <span class="icon">🌙</span>
+          </button>
         </div>
       </header>
 
-      <section class="card panel" aria-labelledby="sessionHeading">
-        <h2 id="sessionHeading" style="margin: 0 0 8px; font-size: 18px">
-          Session Setup
-        </h2>
-        <div class="controls">
-          <div class="control">
-            <label for="rounds">Rounds per exercise</label>
-            <input
-              type="number"
-              id="rounds"
-              min="1"
-              max="5"
-              step="1"
-              value="2"
-              inputmode="numeric"
-            />
-          </div>
-          <div class="control">
-            <label for="hold">Hold/rep seconds</label>
-            <input
-              type="number"
-              id="hold"
-              min="5"
-              max="60"
-              step="5"
-              value="20"
-              inputmode="numeric"
-            />
-          </div>
-          <div class="control">
-            <label for="haptics">Haptics</label>
-            <div class="toggle">
-              <input
-                type="checkbox"
-                id="haptics"
-                aria-label="Enable haptics"
-                checked
-              />
-              <span class="muted">Tap feedback</span>
+      <main>
+        <section class="hero">
+          <div class="hero-bg"></div>
+          <div class="hero-content">
+            <h2>Daily mobility made simple</h2>
+            <p>
+              Hit spine, hips, shoulders, and ankles in minutes. Accumulate
+              about 60 seconds per region using 10–30s holds or 8–12 reps.
+              Stay pain‑free and avoid bouncing.
+            </p>
+            <div class="hero-cta">
+              <button id="startFlowBtn" class="btn primary">
+                Start Guided Flow
+              </button>
+              <button id="quickStartBtn" class="btn">Build My Own</button>
+            </div>
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-number" id="todayStat">0</div>
+                <div class="stat-label">Exercises Today</div>
+              </div>
+              <div class="stat">
+                <div class="stat-number" id="streakStat">0</div>
+                <div class="stat-label">Day Streak</div>
+              </div>
+              <div class="stat">
+                <div class="stat-number" id="minutesStat">0</div>
+                <div class="stat-label">Minutes</div>
+              </div>
             </div>
           </div>
-          <div class="control">
-            <label for="autoAdvance">Auto-advance</label>
-            <div class="toggle">
-              <input
-                type="checkbox"
-                id="autoAdvance"
-                aria-label="Auto advance exercises"
-                checked
-              />
-              <span class="muted">When timer ends</span>
+        </section>
+
+        <section class="panel howto" aria-labelledby="howtoTitle">
+          <h3 id="howtoTitle">How to use</h3>
+          <ul class="bullets">
+            <li>Frequency: daily or 3–4x/week; ~60s per region.</li>
+            <li>Intensity: slow, mild stretch, no pain; no bouncing.</li>
+            <li>Structure: static 2–4 × 10–30s; dynamic 8–12 reps.</li>
+          </ul>
+        </section>
+
+        <section class="panel sequence" aria-labelledby="seqTitle">
+          <h3 id="seqTitle">Quick sequencing tip</h3>
+          <p class="muted">
+            Cat‑Cow → Open Book → World’s Greatest Stretch → 90/90 → Couch
+            Stretch → Ankle Knee‑to‑Wall → Shoulder CARs → Prone Press‑Ups.
+          </p>
+          <div class="chips" id="seqChips"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="routineTitle">
+          <div class="panel-head">
+            <h3 id="routineTitle">Daily routine (8–12 min)</h3>
+            <div class="panel-controls">
+              <label class="switch"
+                ><input id="compactToggle" type="checkbox" /><span
+                  >Compact view</span
+                ></label
+              >
+              <button
+                id="clearTodayBtn"
+                class="btn tiny ghost"
+                title="Reset today’s progress"
+              >
+                Reset today
+              </button>
             </div>
           </div>
-        </div>
-        <div class="row" style="margin-top: 12px">
-          <button id="startBtn" class="btn">Start Session</button>
-          <button id="resumeBtn" class="btn secondary" disabled>
-            Resume
-          </button>
-        </div>
-      </section>
+          <div id="exerciseList" class="cards"></div>
+        </section>
 
-      <section class="card panel" aria-labelledby="progressHeading">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-          "
-        >
-          <h2 id="progressHeading" style="margin: 0; font-size: 18px">
-            Progress
-          </h2>
-          <div class="muted" id="progressText">0 of 7 complete</div>
-        </div>
-        <div class="progress" aria-label="Overall progress">
-          <div class="bar" id="progressBar"></div>
-        </div>
-        <div class="ex-list" id="exList" style="margin-top: 12px"></div>
-      </section>
+        <section class="panel safety" aria-labelledby="safetyTitle">
+          <h3 id="safetyTitle">Safety and progression</h3>
+          <ul class="bullets">
+            <li>Pain‑free, no bouncing, scale to tolerance.</li>
+            <li>Short on time? Do one each for spine, hip, ankle, shoulder.</li>
+            <li>Quality over quantity; target ~60s per region or 8–12 reps.</li>
+          </ul>
+        </section>
+      </main>
 
-      <section class="card panel exercise" aria-labelledby="exHeading">
-        <div class="ex-title">
-          <div class="ex-name" id="exHeading">Welcome</div>
-          <div class="row" style="gap:8px;">
-            <div class="chip" id="roundChip">Rounds: 0/0</div>
-            <button id="videoChip" class="chip link" style="display:none">
-              How‑to video ▶︎
-            </button>
-          </div>
-        </div>
-        <div class="purpose" id="purpose">
-          Get started by pressing “Start Session.” Adjust holds and rounds to
-          your comfort. If any movement causes pain, stop and skip it.
-        </div>
-        <div class="how muted" id="how">
-          Tip: Use the on‑screen timer to pace holds and reps. Auto advance
-          moves to the next exercise when the timer completes.
-        </div>
-
-        <div class="timer">
-          <div class="time" id="time">00:20</div>
-          <div class="row">
-            <button class="btn secondary" id="minus5" aria-label="-5 seconds">
-              −5s
-            </button>
-            <button class="btn secondary" id="plus5" aria-label="+5 seconds">
-              +5s
-            </button>
-          </div>
-        </div>
-        <div class="row" style="margin-top: 8px">
-          <button id="playPause" class="btn">Start Timer</button>
-          <button id="skipBtn" class="btn ghost">Skip</button>
-        </div>
-        <div class="nav" style="margin-top: 4px">
-          <button id="backBtn" class="btn ghost">Back</button>
-          <button id="nextBtn" class="btn">Next</button>
-        </div>
-        <div class="muted" style="font-size: 12px; margin-top: 8px">
-          Safety: If lumbar flexion or extension worsens your symptoms, skip or
-          limit range. Avoid sharp pain, tingling, or numbness. Consider
-          consulting a clinician for persistent issues.
-        </div>
-      </section>
-
-      <footer>
-        Made for Mateo • Works offline • Long-press to add to Home Screen
+      <footer class="footer">
+        <p class="muted">General guidance; not medical advice.</p>
+        <p class="muted small">Offline‑ready. Add to Home Screen.</p>
       </footer>
     </div>
 
-    <!-- Video Modal -->
-    <div
-      id="videoModal"
-      class="modal"
-      role="dialog"
-      aria-modal="true"
-      aria-hidden="true"
-    >
-      <div class="modal-card">
-        <div class="modal-head">
-          <div class="modal-title" id="videoTitle">How‑to Video</div>
-          <button id="closeVideo" class="modal-close" aria-label="Close video">
-            ✕
-          </button>
+    <dialog id="timerDialog" class="timer-dialog">
+      <form method="dialog" class="timer-surface">
+        <div class="timer-head">
+          <div>
+            <div class="eyebrow" id="timerRegion">Mobility</div>
+            <h3 id="timerTitle">Timer</h3>
+          </div>
         </div>
-        <div class="modal-body" id="videoBody"></div>
-      </div>
+        <div class="ring-wrap">
+          <div class="ring" id="progressRing">
+            <div class="ring-inner">
+              <div class="timer-value" id="timerValue">00:30</div>
+              <div class="timer-sub" id="timerSub">Hold steady…</div>
+            </div>
+          </div>
+        </div>
+        <div class="timer-controls">
+          <button id="pauseBtn" type="button" class="btn">Pause</button>
+          <button id="resumeBtn" type="button" class="btn" hidden>
+            Resume
+          </button>
+          <button id="skipBtn" type="button" class="btn ghost">Skip</button>
+          <button id="doneBtn" type="button" class="btn primary">Done</button>
+        </div>
+        <div class="flow-steps" id="flowSteps"></div>
+      </form>
+    </dialog>
+
+    <div id="offlineBadge" class="offline-badge" hidden>Offline ready</div>
+    <div id="a2hsTip" class="a2hs-tip">
+      Tip: Share → “Add to Home Screen” after the icon appears in the top bar.
     </div>
 
-    <script>
-      // Data model with video links (playsinline for iPhone)
-      const exercises = [
+    <script type="module">
+      // ----- Icon generation (no files needed) -----
+      function drawIcon(size, opts = { maskable: false }) {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const ctx = c.getContext("2d");
+        const gBg = ctx.createLinearGradient(0, 0, size, size);
+        gBg.addColorStop(0, "#0f172a");
+        gBg.addColorStop(1, "#0b1220");
+        ctx.fillStyle = gBg;
+        ctx.fillRect(0, 0, size, size);
+        const r = Math.round(size * 0.18);
+        const gx = Math.round(size * 0.26);
+        const gy = Math.round(size * 0.22);
+        const g1 = ctx.createLinearGradient(0, 0, size, size);
+        g1.addColorStop(0, "#0ea5e9");
+        g1.addColorStop(1, "#22d3ee");
+        ctx.globalAlpha = 0.45;
+        ctx.beginPath();
+        ctx.fillStyle = g1;
+        ctx.arc(gx, gy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = Math.max(6, size * 0.055);
+        const gStroke = ctx.createLinearGradient(0, 0, size, size);
+        gStroke.addColorStop(0, "#0ea5e9");
+        gStroke.addColorStop(1, "#22d3ee");
+        ctx.strokeStyle = gStroke;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        const yMid = size * 0.56;
+        ctx.moveTo(size * 0.24, yMid + size * 0.08);
+        ctx.bezierCurveTo(
+          size * 0.36,
+          yMid - size * 0.22,
+          size * 0.5,
+          yMid - size * 0.1,
+          size * 0.62,
+          yMid - size * 0.28
+        );
+        ctx.stroke();
+        ctx.globalAlpha = 0.7;
+        ctx.lineWidth = Math.max(4, size * 0.035);
+        ctx.strokeStyle = "#38bdf8";
+        ctx.beginPath();
+        ctx.moveTo(size * 0.22, yMid + size * 0.3);
+        ctx.lineTo(size * 0.78, yMid + size * 0.3);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#e5e7eb";
+        ctx.font = `bold ${Math.round(size * 0.36)}px system-ui, Segoe UI, Roboto`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("M", size * 0.5, yMid - size * 0.05);
+        if (opts.maskable) {
+          const v = ctx.createRadialGradient(
+            size * 0.5,
+            size * 0.5,
+            size * 0.2,
+            size * 0.5,
+            size * 0.5,
+            size * 0.52
+          );
+          v.addColorStop(0, "rgba(0,0,0,0)");
+          v.addColorStop(1, "rgba(0,0,0,0.16)");
+          ctx.fillStyle = v;
+          ctx.fillRect(0, 0, size, size);
+        }
+        return c.toDataURL("image/png");
+      }
+
+      const ICONS = {
+        p120: drawIcon(120),
+        p152: drawIcon(152),
+        p167: drawIcon(167),
+        p180: drawIcon(180, { maskable: true }),
+        p192: drawIcon(192),
+        p512: drawIcon(512),
+        mask512: drawIcon(512, { maskable: true }),
+      };
+
+      function attachAppleIcons() {
+        apple180.href = ICONS.p180;
+        apple167.href = ICONS.p167;
+        apple152.href = ICONS.p152;
+        apple120.href = ICONS.p120;
+        brandIcon.src = ICONS.p192;
+      }
+
+      function attachManifestData() {
+        const manifest = {
+          name: "Mobility Minutes",
+          short_name: "Mobility",
+          description:
+            "An elegant PWA guiding an 8–12 minute daily mobility routine.",
+          start_url: ".",
+          display: "standalone",
+          background_color: "#0f172a",
+          theme_color: "#0ea5e9",
+          icons: [
+            { src: ICONS.p192, sizes: "192x192", type: "image/png" },
+            { src: ICONS.p512, sizes: "512x512", type: "image/png" },
+            {
+              src: ICONS.mask512,
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "maskable",
+            },
+          ],
+        };
+        const blob = new Blob([JSON.stringify(manifest)], {
+          type: "application/manifest+json",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("link");
+        link.rel = "manifest";
+        link.href = url;
+        document.head.appendChild(link);
+      }
+
+      async function registerInlineSW() {
+        if (!("serviceWorker" in navigator)) return;
+        const swCode = `
+          const CACHE = "mm-inline-v1";
+          const ICONS = {
+            "/apple-touch-icon.png": ${JSON.stringify(ICONS.p180)},
+            "/apple-touch-icon-precomposed.png": ${JSON.stringify(
+              ICONS.p180
+            )},
+            "/icon-192.png": ${JSON.stringify(ICONS.p192)},
+            "/icon-512.png": ${JSON.stringify(ICONS.p512)},
+            "/maskable-512.png": ${JSON.stringify(ICONS.mask512)}
+          };
+          const PAGE = self.location.href;
+          self.addEventListener("install", (e) => {
+            e.waitUntil(caches.open(CACHE).then((c)=>c.add(PAGE).catch(()=>{})));
+            self.skipWaiting();
+          });
+          self.addEventListener("activate",(e)=>{
+            e.waitUntil(
+              caches.keys().then(ks=>Promise.all(ks.map(k=>k===CACHE?null:caches.delete(k))))
+            );
+            self.clients.claim();
+          });
+          self.addEventListener("fetch",(e)=>{
+            const url = new URL(e.request.url);
+            if (ICONS[url.pathname]) { e.respondWith(fetch(ICONS[url.pathname])); return; }
+            if (e.request.method!=="GET") return;
+            e.respondWith(
+              caches.match(e.request).then(cached=>{
+                const net = fetch(e.request).then(res=>{
+                  const copy=res.clone();
+                  caches.open(CACHE).then(c=>c.put(e.request,copy));
+                  return res;
+                }).catch(()=> cached || (e.request.mode==="navigate"?caches.match(PAGE):undefined));
+                return cached || net;
+              })
+            );
+          });
+        `;
+        try {
+          const blob = new Blob([swCode], { type: "text/javascript" });
+          const swUrl = URL.createObjectURL(blob);
+          await navigator.serviceWorker.register(swUrl, { scope: "./" });
+          await navigator.serviceWorker.ready;
+          offlineBadge.hidden = false;
+          setTimeout(() => (offlineBadge.hidden = true), 1800);
+        } catch {}
+      }
+
+      // ----- App data -----
+      const EXERCISES = [
         {
-          name: "Knee‑to‑Chest Stretch",
-          purpose:
-            "Relieves lower back tension, helps align hips, and stretches lumbar paraspinal muscles.",
+          id: "wgs",
+          name: "World’s Greatest Stretch",
+          region: "Hips + T‑spine",
+          defaultMode: "reps",
+          defaultReps: 8,
+          durations: [30, 45],
+          sided: true,
           how:
-            "Lie on your back, bring one knee toward your chest, hold for 20–30 seconds, switch legs. Repeat 2–3 times each leg. Can be done in bed.",
-          tags: ["Supine", "Flexion-tolerant"],
-          videoUrl:
-            "https://www.youtube.com/embed/o8gAyDUh2bs?rel=0&modestbranding=1&playsinline=1",
+            "From a plank, step right foot outside right hand. Rotate to reach sky. Optional: thread‑the‑needle first.",
+          dosage:
+            "5–8 slow reps/side or 30–45s/side. Keep hips square, spine long.",
+          targets:
+            "Hips, hamstrings, hip flexors, glutes, thoracic spine, shoulders.",
         },
         {
-          name: "Cat–Cow Stretch",
-          purpose:
-            "Promotes spinal flexibility, decompresses vertebrae, and reduces morning stiffness.",
-          how:
-            "On hands and knees, arch up (cat), then drop belly and look up (cow), moving slowly. Repeat 10 reps for 2–3 rounds.",
-          tags: ["Quadruped", "Mobility"],
-          videoUrl:
-            "https://www.youtube.com/embed/KzM3QWeajwA?rel=0&modestbranding=1&playsinline=1",
+          id: "catcow",
+          name: "Cat‑Cow",
+          region: "Spine",
+          defaultMode: "reps",
+          defaultReps: 10,
+          durations: [30, 60],
+          sided: false,
+          how: "Hands under shoulders, knees under hips. Inhale cow, exhale cat.",
+          dosage: "8–12 controlled reps, 1–2 sets.",
+          targets: "Neck, mid‑back, low back.",
         },
         {
-          name: "Supine Lumbar Rotation (Windshield Wipers)",
-          purpose:
-            "Enhances rotational mobility of the lumbar spine while minimizing disc pressure.",
+          id: "openbook",
+          name: "Thoracic Open Book",
+          region: "T‑spine",
+          defaultMode: "reps",
+          defaultReps: 8,
+          durations: [30, 60],
+          sided: true,
           how:
-            "Lie on your back, knees up together, feet flat. Gently allow knees to fall side to side. Limit range if there’s discomfort.",
-          tags: ["Supine", "Rotation"],
-          videoUrl:
-            "https://www.youtube.com/embed/VK75m-l3RSY?rel=0&modestbranding=1&playsinline=1",
+            "Side‑lying, knees/hips ~90°. Arc top arm to open chest; keep top knee anchored.",
+          dosage: "8–10 reps/side or 30–60s/side.",
+          targets: "Thoracic rotation; shoulder/ribcage motion.",
         },
         {
-          name: "Prone Extension (Sphinx/Cobra)",
-          purpose:
-            "May help centralize disc material and reduce some nerve root irritation.",
+          id: "9090",
+          name: "90/90 Hip Stretch or Hip Switches",
+          region: "Hips (ER/IR)",
+          defaultMode: "time",
+          defaultSecs: 60,
+          durations: [30, 60],
+          sided: true,
           how:
-            "Lie on your stomach. Prop onto elbows (sphinx) or gently press onto hands (cobra), hips down. Hold 10–30s for 3–10 reps. Stop if it worsens sciatica or causes pain.",
-          tags: ["Prone", "Extension"],
-          videoUrl:
-            "https://www.youtube.com/embed/dNfIMIhVxwg?rel=0&modestbranding=1&playsinline=1",
+            "Knees ~90°. Hinge forward (ER). Turn toward back shin (IR).",
+          dosage: "Hold 30–60s/position/side or 8–12 switches.",
+          targets: "Hip capsule ER/IR.",
         },
         {
-          name: "Pelvic Tilts / Abdominal Bracing",
-          purpose:
-            "Strengthens core stabilizers, supports the lumbar spine, and encourages a neutral spine.",
+          id: "couch",
+          name: "Couch Stretch",
+          region: "Hip flexors + quads",
+          defaultMode: "time",
+          defaultSecs: 60,
+          durations: [30, 60],
+          sided: true,
           how:
-            "Lie on your back, knees bent. Tighten low belly while gently flattening lower back. Hold 10–15s. Repeat several times.",
-          tags: ["Core", "Activation"],
-          videoUrl:
-            "https://www.youtube.com/embed/u0AJnVg0tcc?rel=0&modestbranding=1&playsinline=1",
+            "Back knee near wall/couch, shin up. Stay tall, glutes on, hips square.",
+          dosage: "30–60s/side, 1–2 rounds.",
+          targets: "Hip flexors and quads.",
         },
         {
-          name: "Child’s Pose (Gentle)",
-          purpose:
-            "Stretches lower back; only perform if lumbar flexion doesn’t aggravate symptoms.",
+          id: "ankle",
+          name: "Ankle Dorsiflexion Knee‑to‑Wall",
+          region: "Ankles",
+          defaultMode: "reps",
+          defaultReps: 12,
+          durations: [30, 60],
+          sided: true,
           how:
-            "Kneel, sit back toward heels, arms forward, rest forehead. Only perform if flexion is pain‑free.",
-          tags: ["Flexion", "Restorative"],
-          videoUrl:
-            "https://www.youtube.com/embed/nMp3MlTz9fA?rel=0&modestbranding=1&playsinline=1",
+            "Toes near wall. Drive knee forward without heel lift; keep arch.",
+          dosage: "10–15 slow reps/side or 30–60s holds.",
+          targets: "Dorsiflexion for squat, gait, running.",
         },
         {
-          name: "Bird‑Dog",
-          purpose:
-            "Promotes lumbar stability and safe core activation; helpful for demanding jobs.",
+          id: "cars",
+          name: "Shoulder CARs",
+          region: "Shoulders",
+          defaultMode: "reps",
+          defaultReps: 3,
+          durations: [30, 45],
+          sided: true,
           how:
-            "On hands and knees, extend one leg behind and opposite arm forward. Hold briefly, switch sides. 10 reps, 2–3 sets.",
-          tags: ["Quadruped", "Stability"],
-          videoUrl:
-            "https://www.youtube.com/embed/HtMI17DGuTk?rel=0&modestbranding=1&playsinline=1",
+            "Largest pain‑free arm circle; rotate humerus; reverse.",
+          dosage: "3–5 slow circles each direction per shoulder.",
+          targets: "Usable shoulder range and control.",
+        },
+        {
+          id: "pressups",
+          name: "Prone Press‑Ups (McKenzie)",
+          region: "Lumbar",
+          defaultMode: "reps",
+          defaultReps: 10,
+          durations: [30, 45],
+          sided: false,
+          how:
+            "Press chest up using arms; glutes/low back relaxed; brief pause.",
+          dosage: "10 smooth reps; stop if pain worsens.",
+          targets: "Lumbar extension (when tolerated).",
         },
       ];
 
-      // State
-      let state = {
-        index: 0,
-        round: 1,
-        totalRounds: 2,
-        holdSeconds: 20,
-        running: false,
-        remaining: 20,
-        completed: new Array(exercises.length).fill(false),
-        autoAdvance: true,
-        haptics: true,
-        intervalId: null,
-        inSession: false,
+      const FLOW_ORDER = [
+        "catcow",
+        "openbook",
+        "wgs",
+        "9090",
+        "couch",
+        "ankle",
+        "cars",
+        "pressups",
+      ];
+
+      const $ = (s, el = document) => el.querySelector(s);
+      const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+      const state = {
+        theme: null,
+        compact: false,
+        done: {},
+        streak: 0,
+        todayCount: 0,
+        minutes: 0,
+        flowIndex: 0,
+        flowActive: false,
+        installEvt: null,
+        lastDay: null, // YYYY-MM-DD
       };
+      const STORE_KEY = "mm-v1-state";
+      const DAY_KEY = () => new Date().toISOString().slice(0, 10);
 
-      // DOM
-      const exHeading = document.getElementById("exHeading");
-      const purpose = document.getElementById("purpose");
-      const how = document.getElementById("how");
-      const timeEl = document.getElementById("time");
-      const playPause = document.getElementById("playPause");
-      const nextBtn = document.getElementById("nextBtn");
-      const backBtn = document.getElementById("backBtn");
-      const skipBtn = document.getElementById("skipBtn");
-      const roundChip = document.getElementById("roundChip");
-      const progressBar = document.getElementById("progressBar");
-      const progressText = document.getElementById("progressText");
-      const exList = document.getElementById("exList");
-      const minus5 = document.getElementById("minus5");
-      const plus5 = document.getElementById("plus5");
-      const startBtn = document.getElementById("startBtn");
-      const resumeBtn = document.getElementById("resumeBtn");
-      const videoChip = document.getElementById("videoChip");
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORE_KEY);
+          if (raw) Object.assign(state, JSON.parse(raw));
+        } catch {}
+      }
+      function saveState() {
+        const s = (({
+          theme,
+          compact,
+          done,
+          streak,
+          todayCount,
+          minutes,
+          lastDay,
+        }) => ({ theme, compact, done, streak, todayCount, minutes, lastDay }))(
+          state
+        );
+        localStorage.setItem(STORE_KEY, JSON.stringify(s));
+      }
 
-      const roundsInput = document.getElementById("rounds");
-      const holdInput = document.getElementById("hold");
-      const autoAdvanceInput = document.getElementById("autoAdvance");
-      const hapticsInput = document.getElementById("haptics");
+      // Daily rollover + session-only badges
+      function resetDailyProgress() {
+        state.done = {};
+        state.todayCount = 0;
+        state.minutes = 0;
+        state.lastDay = DAY_KEY();
+        saveState();
+      }
+      function ensureToday() {
+        const today = DAY_KEY();
+        if (!state.lastDay) {
+          state.lastDay = today;
+          saveState();
+        } else if (state.lastDay !== today) {
+          resetDailyProgress();
+        }
+        // Clear any persisted 'completed' flags so badges are session-only
+        Object.values(state.done || {}).forEach((d) => {
+          d.completed = false;
+        });
+        saveState();
+      }
+      function scheduleMidnightRollover() {
+        const now = new Date();
+        const next = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1,
+          0,
+          0,
+          5
+        );
+        setTimeout(() => {
+          resetDailyProgress();
+          renderExercises();
+          renderStats();
+          scheduleMidnightRollover();
+        }, next - now);
+      }
 
-      // Modal DOM
-      const videoModal = document.getElementById("videoModal");
-      const videoTitle = document.getElementById("videoTitle");
-      const videoBody = document.getElementById("videoBody");
-      const closeVideo = document.getElementById("closeVideo");
+      function initTheme() {
+        const btn = $("#themeBtn");
+        const setTheme = (mode) => {
+          document.documentElement.setAttribute("data-theme", mode);
+          document.documentElement.style.colorScheme = mode;
+          state.theme = mode;
+          btn.innerHTML = `<span class="icon">${
+            mode === "dark" ? "🌙" : "🌞"
+          }</span>`;
+          saveState();
+        };
+        const prefersDark =
+          window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+        setTheme(state.theme || (prefersDark ? "dark" : "light"));
+        btn.addEventListener("click", () =>
+          setTheme(state.theme === "dark" ? "light" : "dark")
+        );
+      }
 
-      // Utils
-      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-      const fmt = (s) => {
-        const m = Math.floor(s / 60)
-          .toString()
-          .padStart(2, "0");
-        const r = Math.floor(s % 60)
-          .toString()
-          .padStart(2, "0");
-        return `${m}:${r}`;
-      };
-      const vibrate = (pat) => {
-        if (!state.haptics) return;
-        if ("vibrate" in navigator) navigator.vibrate(pat);
-      };
-
-      // Checklist
-      function renderList() {
-        exList.innerHTML = "";
-        exercises.forEach((ex, i) => {
-          const row = document.createElement("div");
-          row.className = "ex-item";
-          row.role = "button";
-          row.tabIndex = 0;
-          row.setAttribute("aria-label", `Jump to ${ex.name}`);
-          row.addEventListener("click", () => goTo(i));
-          row.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              goTo(i);
-            }
-          });
-
-          const left = document.createElement("div");
-          left.innerHTML = `<div style="font-weight:600">${ex.name}</div>
-            <small>${ex.tags.join(" • ")}</small>`;
-
-          const right = document.createElement("div");
-          right.className = "check" + (state.completed[i] ? " done" : "");
-          right.innerHTML = state.completed[i] ? "✓" : "";
-
-          row.appendChild(left);
-          row.appendChild(right);
-          exList.appendChild(row);
+      function formatMMSS(sec) {
+        const s = Math.max(0, Math.round(sec));
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+      }
+      function sumMinutes() {
+        const total = Object.values(state.done).reduce(
+          (a, d) => a + (d.secs || 0),
+          0
+        );
+        return Math.round(total / 60);
+      }
+      function renderStats() {
+        todayStat.textContent = state.todayCount || 0;
+        streakStat.textContent = state.streak || 0;
+        minutesStat.textContent = sumMinutes();
+      }
+      function renderSequenceChips() {
+        const w = $("#seqChips");
+        w.innerHTML = "";
+        FLOW_ORDER.forEach((id, i) => {
+          const ex = EXERCISES.find((e) => e.id === id);
+          const c = document.createElement("div");
+          c.className = "chip";
+          c.textContent = `${i + 1}. ${ex.name}`;
+          w.appendChild(c);
         });
       }
 
-      // Main render
-      function render() {
-        const ex = exercises[state.index];
-        exHeading.textContent = ex.name;
-        purpose.textContent = ex.purpose;
-        how.textContent = ex.how;
+      function createExerciseCard(ex) {
+        const d = state.done[ex.id] || { reps: 0, secs: 0, completed: false };
+        const el = document.createElement("article");
+        el.className = `exercise${d.completed ? " done" : ""}`;
+        el.dataset.id = ex.id;
+        el.innerHTML = `
+          <div class="ex-head">
+            <div>
+              <h4 class="ex-title">${ex.name}</h4>
+              <p class="ex-targets">${ex.region}</p>
+            </div>
+            <button class="btn tiny ghost toggle-details" aria-expanded="false">
+              Details
+            </button>
+          </div>
+          <div class="meta">
+            <div><strong>How:</strong> ${ex.how}</div>
+            <div><strong>Dosage:</strong> ${ex.dosage}</div>
+            <div><strong>Targets:</strong> ${ex.targets}</div>
+          </div>
+          <div class="controls">
+            <div class="segment mode" role="tablist" aria-label="Mode">
+              <button role="tab" data-mode="reps" aria-pressed="${
+                ex.defaultMode === "reps"
+              }">Reps</button>
+              <button role="tab" data-mode="time" aria-pressed="${
+                ex.defaultMode === "time"
+              }">Timer</button>
+            </div>
+            <div class="segment timers" role="group" aria-label="Set length">
+              ${ex.durations
+                .map(
+                  (s, i) =>
+                    `<button data-secs="${s}" aria-pressed="${i === 0}">${s}s</button>`
+                )
+                .join("")}
+            </div>
+            <div class="segment repset" role="group" aria-label="Reps">
+              <button data-reps="8">8</button>
+              <button data-reps="10" aria-pressed="true">10</button>
+              <button data-reps="12">12</button>
+            </div>
+            ${
+              ex.sided
+                ? `
+            <label class="switch auto-rotate" title="Automatically switch sides">
+              <input type="checkbox" class="per-side-toggle" checked />
+              <span>Auto-rotate sides</span>
+            </label>
+            <div class="segment sidefirst" role="group" aria-label="Start side">
+              <button data-side="L" aria-pressed="true">Left</button>
+              <button data-side="R">Right</button>
+            </div>
+            <div class="segment rounds" role="group" aria-label="Rounds">
+              <button data-rounds="1" aria-pressed="true">1x</button>
+              <button data-rounds="2">2x</button>
+            </div>`
+                : ""
+            }
+          </div>
+          <div class="ex-cta">
+            <button class="btn start-timer">Start Set</button>
+            <button class="btn ghost add-reps">+ Add Reps</button>
+            <button class="btn ghost reset">Reset</button>
+            <button class="btn primary mark-done">Mark Done</button>
+          </div>
+          <p class="meta">
+            <span>Accumulated:
+              <strong><span class="acc-reps">${d.reps}</span> reps</strong>,
+              <strong><span class="acc-time">${formatMMSS(
+                d.secs
+              )}</span></strong></span>
+            <span class="muted">Goal: ~60s per region or 8–12 reps.</span>
+          </p>
+        `;
 
-        roundChip.textContent = `Rounds: ${state.round}/${state.totalRounds}`;
-        timeEl.textContent = fmt(state.remaining);
+        const meta = el.querySelector(".meta");
+        const details = el.querySelector(".toggle-details");
+        details.addEventListener("click", () => {
+          const exp = details.getAttribute("aria-expanded") === "true";
+          details.setAttribute("aria-expanded", String(!exp));
+          meta.style.display = exp ? "none" : "grid";
+        });
+        meta.style.display = state.compact ? "none" : "grid";
 
-        playPause.textContent = state.running ? "Pause Timer" : "Start Timer";
-        backBtn.disabled = state.index === 0 && state.round === 1;
-        nextBtn.textContent =
-          state.index === exercises.length - 1 &&
-          state.round === state.totalRounds
-            ? "Finish"
-            : "Next";
+        const modeSeg = el.querySelector(".segment.mode");
+        const timersSeg = el.querySelector(".segment.timers");
+        const repsSeg = el.querySelector(".segment.repset");
+        const startBtn = el.querySelector(".start-timer");
+        const addRepsBtn = el.querySelector(".add-reps");
+        const autoRotateWrap = el.querySelector(".auto-rotate");
+        const perSideToggle = el.querySelector(".per-side-toggle");
+        const sideFirstSeg = el.querySelector(".segment.sidefirst");
+        const roundsSeg = el.querySelector(".segment.rounds");
 
-        const doneCount = state.completed.filter(Boolean).length;
-        progressText.textContent = `${doneCount} of ${exercises.length} complete`;
-        progressBar.style.width = `${
-          (doneCount / exercises.length) * 100
-        }%`;
-
-        // Start/Stop label
-        startBtn.textContent = state.inSession ? "Stop Session" : "Start Session";
-        startBtn.classList.toggle("danger", state.inSession);
-        resumeBtn.disabled = !state.inSession;
-
-        // Video chip visibility
-        if (ex.videoUrl) {
-          videoChip.style.display = "inline-block";
-          videoChip.onclick = () => openVideo(ex.name, ex.videoUrl);
-        } else {
-          videoChip.style.display = "none";
-          videoChip.onclick = null;
-        }
-
-        renderList();
-      }
-
-      function markDone(i) {
-        state.completed[i] = true;
-      }
-
-      function resetTimer() {
-        state.remaining = state.holdSeconds;
-        timeEl.textContent = fmt(state.remaining);
-      }
-
-      function stopTimer() {
-        state.running = false;
-        if (state.intervalId) {
-          clearInterval(state.intervalId);
-          state.intervalId = null;
-        }
-        playPause.textContent = "Start Timer";
-      }
-
-      function startTimer() {
-        if (state.running) return;
-        state.running = true;
-        playPause.textContent = "Pause Timer";
-        const tick = () => {
-          state.remaining = Math.max(0, state.remaining - 1);
-          timeEl.textContent = fmt(state.remaining);
-          if (state.remaining === 0) {
-            vibrate([40, 60, 40]);
-            stopTimer();
-            if (state.autoAdvance) next();
+        const setMode = (mode) => {
+          $$("button", modeSeg).forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.mode === mode))
+          );
+          const useTimer = mode === "time";
+          timersSeg.style.display = useTimer ? "inline-flex" : "none";
+          repsSeg.style.display = useTimer ? "none" : "inline-flex";
+          startBtn.style.display = useTimer ? "inline-flex" : "none";
+          addRepsBtn.style.display = useTimer ? "none" : "inline-flex";
+          el.dataset.mode = mode;
+          if (ex.sided) {
+            const show = useTimer;
+            autoRotateWrap && (autoRotateWrap.style.display = show ? "" : "none");
+            sideFirstSeg && (sideFirstSeg.style.display = show ? "" : "none");
+            roundsSeg && (roundsSeg.style.display = show ? "" : "none");
           }
         };
-        timeEl.textContent = fmt(state.remaining);
-        state.intervalId = setInterval(tick, 1000);
+        setMode(ex.defaultMode);
+
+        modeSeg.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-mode]");
+          if (b) setMode(b.dataset.mode);
+        });
+        timersSeg.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-secs]");
+          if (!b) return;
+          $$("button", timersSeg).forEach((x) =>
+            x.setAttribute("aria-pressed", "false")
+          );
+          b.setAttribute("aria-pressed", "true");
+        });
+        repsSeg.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-reps]");
+          if (!b) return;
+          $$("button", repsSeg).forEach((x) =>
+            x.setAttribute("aria-pressed", "false")
+          );
+          b.setAttribute("aria-pressed", "true");
+        });
+
+        sideFirstSeg?.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-side]");
+          if (!b) return;
+          $$("button", sideFirstSeg).forEach((x) =>
+            x.setAttribute("aria-pressed", "false")
+          );
+          b.setAttribute("aria-pressed", "true");
+        });
+        roundsSeg?.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-rounds]");
+          if (!b) return;
+          $$("button", roundsSeg).forEach((x) =>
+            x.setAttribute("aria-pressed", "false")
+          );
+          b.setAttribute("aria-pressed", "true");
+        });
+
+        startBtn.addEventListener("click", () => {
+          const secs =
+            Number(
+              el.querySelector(
+                '.segment.timers button[aria-pressed="true"]'
+              )?.dataset.secs
+            ) || 30;
+          const perSideEnabled =
+            ex.sided &&
+            el.dataset.mode === "time" &&
+            (perSideToggle?.checked ?? false);
+          const startSide =
+            el.querySelector(
+              '.segment.sidefirst button[aria-pressed="true"]'
+            )?.dataset.side || "L";
+          const rounds =
+            Number(
+              el.querySelector(
+                '.segment.rounds button[aria-pressed="true"]'
+              )?.dataset.rounds
+            ) || 1;
+          openTimer(ex, secs, {
+            perSide: perSideEnabled,
+            startSide,
+            rounds,
+          });
+        });
+
+        addRepsBtn.addEventListener("click", () => {
+          const reps =
+            Number(
+              el.querySelector(
+                '.segment.repset button[aria-pressed="true"]'
+              )?.dataset.reps
+            ) || ex.defaultReps || 10;
+          addReps(ex.id, reps);
+          refreshCard(el, ex.id);
+        });
+        el.querySelector(".reset").addEventListener("click", () => {
+          state.done[ex.id] = { reps: 0, secs: 0, completed: false };
+          saveState();
+          refreshCard(el, ex.id);
+          renderStats();
+        });
+        el.querySelector(".mark-done").addEventListener("click", () => {
+          toggleDone(ex.id); // manual toggle only
+          refreshCard(el, ex.id);
+          renderStats();
+        });
+
+        return el;
       }
 
-      // Navigation
-      function next() {
-        const atLastRound = state.round >= state.totalRounds;
-        if (atLastRound) {
-          markDone(state.index);
-          if (state.index < exercises.length - 1) {
-            state.index++;
-            state.round = 1;
-          } else {
-            render();
-            toast("Session complete. Nice work!");
-            vibrate([60, 80, 60, 80, 120]);
-            return;
+      function refreshCard(el, id) {
+        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
+        el.querySelector(".acc-reps").textContent = d.reps || 0;
+        el.querySelector(".acc-time").textContent = formatMMSS(d.secs || 0);
+        el.classList.toggle("done", !!d.completed);
+      }
+
+      function renderExercises() {
+        const wrap = $("#exerciseList");
+        wrap.innerHTML = "";
+        EXERCISES.forEach((ex) => {
+          if (!state.done[ex.id]) state.done[ex.id] = { reps: 0, secs: 0 };
+          wrap.appendChild(createExerciseCard(ex));
+        });
+      }
+
+      function vibrate(ms) {
+        try {
+          navigator.vibrate?.(ms);
+        } catch {}
+      }
+      function beep() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = "sine";
+          o.frequency.value = 880;
+          o.connect(g);
+          g.connect(ctx.destination);
+          g.gain.setValueAtTime(0.0001, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(
+            0.2,
+            ctx.currentTime + 0.02
+          );
+          g.gain.exponentialRampToValueAtTime(
+            0.0001,
+            ctx.currentTime + 0.18
+          );
+          o.start();
+          o.stop(ctx.currentTime + 0.2);
+        } catch {}
+      }
+
+      let timer = null;
+      function openTimer(ex, secs, options = {}) {
+        const dlg = $("#timerDialog");
+        timerTitle.textContent = ex.name;
+        timerRegion.textContent = ex.region;
+        const sub = timerSub;
+        const perSide = !!options.perSide && !!ex.sided;
+        const startSide = options.startSide === "R" ? "R" : "L";
+        const rounds = Math.max(1, Number(options.rounds || 1));
+        const switchRest = Number(options.switchRest ?? 3);
+        const defSub =
+          ex.id === "couch" || ex.id === "9090"
+            ? "Hold steady…"
+            : "Smooth control…";
+
+        const ring = progressRing;
+        const valueEl = timerValue;
+        resumeBtn.hidden = true;
+        pauseBtn.hidden = false;
+
+        let segments = [];
+        if (perSide) {
+          const order = startSide === "R" ? ["R", "L"] : ["L", "R"];
+          for (let r = 0; r < rounds; r++) {
+            order.forEach((side, idx) => {
+              segments.push({
+                kind: "side",
+                side,
+                label: side === "L" ? "Left side" : "Right side",
+                duration: secs,
+              });
+              if (idx === 0 || (idx === 1 && r < rounds - 1)) {
+                segments.push({
+                  kind: "rest",
+                  label: "Switch sides",
+                  duration: switchRest,
+                });
+              }
+            });
           }
+          if (segments[segments.length - 1]?.kind === "rest") segments.pop();
         } else {
-          state.round++;
+          segments = [{ kind: "single", label: null, duration: secs }];
         }
-        resetTimer();
-        render();
-      }
 
-      function back() {
-        if (state.round > 1) {
-          state.round--;
-        } else if (state.index > 0) {
-          state.index--;
-          state.round = state.totalRounds;
-        } else {
-          return;
-        }
-        resetTimer();
-        render();
-      }
+        let segIdx = 0;
+        let seg = segments[segIdx];
+        let t = seg.duration;
+        valueEl.textContent = formatMMSS(t);
+        ring.style.setProperty("--p", "0%");
+        sub.textContent = seg.label || defSub;
 
-      function goTo(i) {
-        stopTimer();
-        state.index = i;
-        state.round = 1;
-        resetTimer();
-        render();
-      }
+        let activeElapsed = 0;
 
-      // Toast
-      let toastEl = null;
-      function toast(msg) {
-        if (!toastEl) {
-          toastEl = document.createElement("div");
-          toastEl.style.position = "fixed";
-          toastEl.style.bottom = "calc(env(safe-area-inset-bottom) + 20px)";
-          toastEl.style.left = "50%";
-          toastEl.style.transform = "translateX(-50%)";
-          toastEl.style.background = "var(--text)";
-          toastEl.style.color = "var(--bg)";
-          toastEl.style.padding = "12px 14px";
-          toastEl.style.borderRadius = "12px";
-          toastEl.style.boxShadow = "var(--shadow)";
-          toastEl.style.fontSize = "14px";
-          toastEl.style.zIndex = "999";
-          document.body.appendChild(toastEl);
-        }
-        toastEl.textContent = msg;
-        toastEl.style.opacity = "0.98";
-        setTimeout(() => (toastEl.style.opacity = "0"), 1600);
-      }
-
-      // Session welcome reset
-      function resetToWelcome() {
-        stopTimer();
-        state.index = 0;
-        state.round = 1;
-        state.completed = new Array(exercises.length).fill(false);
-        state.running = false;
-        state.remaining = state.holdSeconds;
-        render();
-      }
-
-      // Video modal helpers
-      function openVideo(title, url) {
-        // Pause any running timer
-        if (state.running) stopTimer();
-        videoTitle.textContent = title + " — How‑to";
-        videoBody.innerHTML = `
-          <iframe
-            src="${url}"
-            title="${title} — How‑to"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-            playsinline
-          ></iframe>
-        `;
-        videoModal.classList.add("open");
-        videoModal.setAttribute("aria-hidden", "false");
-      }
-
-      function closeVideoModal() {
-        videoModal.classList.remove("open");
-        videoModal.setAttribute("aria-hidden", "true");
-        videoBody.innerHTML = ""; // stop playback
-      }
-
-      // Event handlers
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && videoModal.classList.contains("open")) {
-          closeVideoModal();
-        }
-      });
-      closeVideo.addEventListener("click", closeVideoModal);
-      videoModal.addEventListener("click", (e) => {
-        if (e.target === videoModal) closeVideoModal();
-      });
-
-      startBtn.addEventListener("click", () => {
-        if (!state.inSession) {
-          // Start Session
-          state.totalRounds = clamp(parseInt(roundsInput.value || "2", 10), 1, 5);
-          state.holdSeconds = clamp(parseInt(holdInput.value || "20", 10), 5, 60);
-          state.remaining = state.holdSeconds;
-          state.haptics = !!hapticsInput.checked;
-          state.autoAdvance = !!autoAdvanceInput.checked;
-          state.index = 0;
-          state.round = 1;
-          state.completed = new Array(exercises.length).fill(false);
-          state.inSession = true;
-          render();
-          resumeBtn.disabled = false;
-          toast("Session started");
-        } else {
-          // Stop Session
-          state.inSession = false;
-          resetToWelcome();
-          toast("Session stopped");
-        }
-      });
-
-      resumeBtn.addEventListener("click", () => {
-        if (!state.inSession) return;
-        startTimer();
-      });
-
-      playPause.addEventListener("click", () => {
-        if (!state.inSession) {
-          toast("Start a session first");
-          return;
-        }
-        if (state.running) stopTimer();
-        else startTimer();
-      });
-
-      nextBtn.addEventListener("click", () => {
-        if (!state.inSession) {
-          toast("Start a session first");
-          return;
-        }
-        stopTimer();
-        next();
-      });
-
-      backBtn.addEventListener("click", () => {
-        if (!state.inSession) {
-          toast("Start a session first");
-          return;
-        }
-        stopTimer();
-        back();
-      });
-
-      skipBtn.addEventListener("click", () => {
-        if (!state.inSession) {
-          toast("Start a session first");
-          return;
-        }
-        stopTimer();
-        markDone(state.index);
-        next();
-      });
-
-      minus5.addEventListener("click", () => {
-        state.remaining = Math.max(0, state.remaining - 5);
-        timeEl.textContent = fmt(state.remaining);
-      });
-      plus5.addEventListener("click", () => {
-        state.remaining = Math.min(600, state.remaining + 5);
-        timeEl.textContent = fmt(state.remaining);
-      });
-
-      roundsInput.addEventListener("change", () => {
-        const v = clamp(parseInt(roundsInput.value || "2", 10), 1, 5);
-        roundsInput.value = String(v);
-        state.totalRounds = v;
-        roundChip.textContent = `Rounds: ${state.round}/${state.totalRounds}`;
-      });
-
-      holdInput.addEventListener("change", () => {
-        const v = clamp(parseInt(holdInput.value || "20", 10), 5, 60);
-        holdInput.value = String(v);
-        state.holdSeconds = v;
-        if (!state.running) {
-          state.remaining = v;
-          timeEl.textContent = fmt(state.remaining);
-        }
-      });
-
-      autoAdvanceInput.addEventListener("change", () => {
-        state.autoAdvance = !!autoAdvanceInput.checked;
-      });
-
-      hapticsInput.addEventListener("change", () => {
-        state.haptics = !!hapticsInput.checked;
-        if (state.haptics) vibrate(20);
-      });
-
-      // Init
-      render();
-
-      // iOS add-to-home hint
-      window.addEventListener("load", () => {
-        setTimeout(() => {
-          if (
-            /iPhone|iPad|iPod/i.test(navigator.userAgent) &&
-            !window.matchMedia("(display-mode: standalone)").matches
-          ) {
-            toast("Tip: Share → Add to Home Screen");
+        const tick = () => {
+          t -= 0.1;
+          if (t < 0) t = 0;
+          const p = Math.min(100, ((seg.duration - t) / seg.duration) * 100);
+          ring.style.setProperty("--p", `${p}%`);
+          valueEl.textContent = formatMMSS(t);
+          if (t <= 0) {
+            clearInterval(timer);
+            timer = null;
+            beep();
+            vibrate(80);
+            if (seg.kind === "side" || seg.kind === "single") {
+              activeElapsed += seg.duration;
+            }
+            segIdx++;
+            if (segIdx >= segments.length) {
+              valueEl.textContent = "00:00";
+              ring.style.setProperty("--p", "100%");
+              sub.textContent = "Set complete";
+              pauseBtn.hidden = true;
+              resumeBtn.hidden = true;
+              return;
+            }
+            seg = segments[segIdx];
+            t = seg.duration;
+            ring.style.setProperty("--p", "0%");
+            sub.textContent = seg.label || defSub;
+            start();
           }
-        }, 1200);
+        };
+        const start = () => {
+          if (timer) return;
+          timer = setInterval(tick, 100);
+        };
+        const pause = () => {
+          if (!timer) return;
+          clearInterval(timer);
+          timer = null;
+        };
+
+        pauseBtn.onclick = () => {
+          pause();
+          pauseBtn.hidden = true;
+          resumeBtn.hidden = false;
+        };
+        resumeBtn.onclick = () => {
+          start();
+          resumeBtn.hidden = true;
+          pauseBtn.hidden = false;
+        };
+        skipBtn.onclick = () => {
+          pause();
+          dlg.close();
+        };
+        doneBtn.onclick = () => {
+          pause();
+          let used = activeElapsed;
+          if (t > 0 && (seg.kind === "side" || seg.kind === "single")) {
+            used += seg.duration - Math.max(0, Math.round(t));
+          }
+          addTime(ex.id, used);
+          dlg.close();
+          renderStats();
+          const card = document.querySelector(
+            `.exercise[data-id="${ex.id}"]`
+          );
+          if (card) refreshCard(card, ex.id);
+          if (state.flowActive) nextFlowStep();
+        };
+
+        dlg.showModal();
+        start();
+      }
+
+      function addTime(id, secs) {
+        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
+        d.secs = (d.secs || 0) + secs;
+        state.done[id] = d;
+        maybeMarkCompleted(id); // no auto-complete now (session-only badges)
+        tallyDay();
+        saveState();
+      }
+      function addReps(id, reps) {
+        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
+        d.reps = (d.reps || 0) + reps;
+        state.done[id] = d;
+        maybeMarkCompleted(id); // no auto-complete now
+        tallyDay();
+        saveState();
+      }
+      // Stop auto-completing from time/reps; badges are manual and session-only
+      function maybeMarkCompleted(id) {
+        const d = state.done[id] || {};
+        d.completed = !!d.completed;
+        state.done[id] = d;
+      }
+      function toggleDone(id) {
+        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
+        d.completed = !d.completed;
+        state.done[id] = d;
+        tallyDay();
+        saveState();
+      }
+      function tallyDay() {
+        const completed = Object.values(state.done).filter((d) => d.completed)
+          .length;
+        state.todayCount = completed;
+        state.minutes = sumMinutes();
+        const key = "mm-v1-streak-" + DAY_KEY();
+        if (!localStorage.getItem(key) && completed > 0) {
+          localStorage.setItem(key, "1");
+          const y = new Date(Date.now() - 86400000);
+          const yKey = "mm-v1-streak-" + y.toISOString().slice(0, 10);
+          const hadY = localStorage.getItem(yKey);
+          state.streak = (state.streak || 0) + (hadY ? 1 : 1);
+        }
+      }
+
+      function renderFlowSteps() {
+        const w = $("#flowSteps");
+        w.innerHTML = "";
+        FLOW_ORDER.forEach((id, i) => {
+          const ex = EXERCISES.find((e) => e.id === id);
+          const c = document.createElement("div");
+          c.className = "chip";
+          c.style.borderColor =
+            i === state.flowIndex ? "var(--primary)" : "var(--glass-border)";
+          c.textContent = `${i + 1}. ${ex.name}`;
+          w.appendChild(c);
+        });
+      }
+      function startFlow() {
+        state.flowActive = true;
+        state.flowIndex = 0;
+        renderFlowSteps();
+        const ex = EXERCISES.find((e) => e.id === FLOW_ORDER[state.flowIndex]);
+        const secs = ex.defaultMode === "time" ? ex.defaultSecs || 30 : 30;
+        openTimer(ex, secs, {
+          perSide: !!ex.sided && ex.defaultMode === "time",
+        });
+      }
+      function nextFlowStep() {
+        state.flowIndex++;
+        if (state.flowIndex >= FLOW_ORDER.length) {
+          state.flowActive = false;
+          state.flowIndex = 0;
+          notify("Flow complete! Nice work.");
+          return;
+        }
+        renderFlowSteps();
+        const ex = EXERCISES.find((e) => e.id === FLOW_ORDER[state.flowIndex]);
+        const secs = ex.defaultMode === "time" ? ex.defaultSecs || 30 : 30;
+        setTimeout(
+          () =>
+            openTimer(ex, secs, {
+              perSide: !!ex.sided && ex.defaultMode === "time",
+            }),
+          300
+        );
+      }
+      function notify(msg) {
+        try {
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Mobility Minutes", { body: msg });
+          }
+        } catch {}
+      }
+      function initInstall() {
+        window.addEventListener("beforeinstallprompt", (e) => {
+          e.preventDefault();
+          state.installEvt = e;
+          installBtn.hidden = false;
+        });
+        installBtn.addEventListener("click", async () => {
+          if (!state.installEvt) return;
+          state.installEvt.prompt();
+          const { outcome } = await state.installEvt.userChoice;
+          if (outcome === "accepted") installBtn.hidden = true;
+          state.installEvt = null;
+        });
+      }
+      function initCompactToggle() {
+        compactToggle.checked = !!state.compact;
+        compactToggle.addEventListener("change", () => {
+          state.compact = compactToggle.checked;
+          $$(".exercise .meta").forEach(
+            (m) => (m.style.display = state.compact ? "none" : "grid")
+          );
+          saveState();
+        });
+      }
+      function initDailyResetButton() {
+        clearTodayBtn?.addEventListener("click", () => {
+          if (confirm("Reset today’s progress?")) {
+            resetDailyProgress();
+            renderExercises();
+            renderStats();
+          }
+        });
+      }
+      function initQuickStart() {
+        quickStartBtn.addEventListener("click", () =>
+          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
+        );
+        startFlowBtn.addEventListener("click", startFlow);
+      }
+      function maybeShowA2HSTip() {
+        const ua = navigator.userAgent || "";
+        const isIOS = /iphone|ipad|ipod/i.test(ua);
+        const standalone =
+          window.navigator.standalone ||
+          window.matchMedia("(display-mode: standalone)").matches;
+        if (isIOS && !standalone) {
+          a2hsTip.style.display = "block";
+          setTimeout(() => (a2hsTip.style.display = "none"), 6000);
+        }
+      }
+
+      // Boot
+      document.addEventListener("DOMContentLoaded", () => {
+        attachAppleIcons();
+        attachManifestData();
+        registerInlineSW();
+        loadState();
+        ensureToday(); // also clears any persisted badges
+        initTheme();
+        renderSequenceChips();
+        renderExercises();
+        renderStats();
+        initInstall();
+        initCompactToggle();
+        initDailyResetButton();
+        initQuickStart();
+        maybeShowA2HSTip();
+        scheduleMidnightRollover();
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden) ensureToday();
+        });
+        try {
+          if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission().catch(() => {});
+          }
+        } catch {}
       });
     </script>
   </body>
