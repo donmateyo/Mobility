@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -6,55 +6,32 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0ea5e9" />
-    <meta name="color-scheme" content="light dark" />
+    <title>Morning Mobility — 5–10 Minutes</title>
+
+    <!-- iOS PWA polish -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <link id="apple180" rel="apple-touch-icon" sizes="180x180" href="#" />
-    <link id="apple167" rel="apple-touch-icon" sizes="167x167" href="#" />
-    <link id="apple152" rel="apple-touch-icon" sizes="152x152" href="#" />
-    <link id="apple120" rel="apple-touch-icon" sizes="120x120" href="#" />
-    <title>Mobility Minutes</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Mobility" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#0a1512" />
+    <meta name="description" content="Quick 5–10 minute morning routine." />
+
     <style>
+      /* ===== Design system: Emerald + Peach Glass ===== */
       :root {
-        --bg: #0f172a;
-        --bg-elev: color-mix(in hsl, var(--bg), #ffffff 6%);
-        --card: color-mix(in hsl, var(--bg), #ffffff 8%);
-        --text: #e5e7eb;
-        --muted: #9aa4b2;
-        --primary: #0ea5e9;
-        --primary-2: #22d3ee;
-        --ok: #10b981;
-        --warn: #f59e0b;
-        --danger: #ef4444;
-        --ring: #38bdf8;
-        --glass-border: color-mix(in hsl, #ffffff, transparent 80%);
-        --shadow: 0 10px 30px hsl(210 50% 2% / 0.35);
-        --radius: 16px;
+        --bg: #0a1512;
+        --bg-2: #0e1b17;
+        --fg: #eef7f4;
+        --muted: #b6cbc3;
+        --accent: #2bd4a0; /* emerald */
+        --accent-2: #ff9b7a; /* peach */
+        --focus: #b4ffd6;
+        --glass: rgba(255, 255, 255, 0.08);
+        --glass-soft: rgba(255, 255, 255, 0.05);
+        --border: rgba(255, 255, 255, 0.18);
+        --ring: rgba(43, 212, 160, 0.35);
       }
-      html[data-theme="dark"] {
-        color-scheme: dark;
-        --bg: #0f172a;
-        --bg-elev: color-mix(in hsl, var(--bg), #ffffff 6%);
-        --card: color-mix(in hsl, var(--bg), #ffffff 8%);
-        --text: #e5e7eb;
-        --muted: #9aa4b2;
-        --glass-border: color-mix(in hsl, #ffffff, transparent 80%);
-        --shadow: 0 10px 30px hsl(210 50% 2% / 0.35);
-      }
-      html[data-theme="light"] {
-        color-scheme: light;
-        --bg: #f8fafc;
-        --bg-elev: #ffffff;
-        --card: #ffffff;
-        --text: #0f172a;
-        --muted: #64748b;
-        --glass-border: color-mix(in hsl, #000, transparent 88%);
-        --shadow: 0 8px 24px hsl(210 20% 50% / 0.15);
-      }
+
       *,
       *::before,
       *::after {
@@ -66,1499 +43,878 @@
       }
       body {
         margin: 0;
+        color: var(--fg);
+        background:
+          radial-gradient(1400px 900px at 10% 10%, #102922 0%, transparent 60%),
+          radial-gradient(1100px 700px at 85% 20%, #1a2b26 0%, transparent 60%),
+          linear-gradient(180deg, var(--bg), var(--bg-2) 60%);
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
           Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
-        color: var(--text);
-        background: radial-gradient(
-              90% 60% at 20% 0%,
-              color-mix(in srgb, var(--primary), transparent 80%),
-              transparent 60%
-            ),
-          radial-gradient(
-              70% 50% at 100% 0%,
-              color-mix(in srgb, var(--primary-2), transparent 85%),
-              transparent 60%
-            ),
-          var(--bg);
-        background-attachment: fixed;
         line-height: 1.45;
-        -webkit-tap-highlight-color: transparent;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
+
       #app {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: env(safe-area-inset-top) 16px 64px;
+        min-height: 100%;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 16px;
+        padding: 16px;
       }
-      .topbar {
+
+      .glass {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        backdrop-filter: blur(14px) saturate(125%);
+        -webkit-backdrop-filter: blur(14px) saturate(125%);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      }
+      .glass.soft {
+        background: var(--glass-soft);
+      }
+
+      .header,
+      .footer {
+        padding: 12px 16px;
+      }
+      .header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 200deg,
+          var(--accent),
+          var(--accent-2),
+          var(--accent)
+        );
+        box-shadow: 0 0 20px rgba(43, 212, 160, 0.6);
+      }
+      .header h1 {
+        font-size: 18px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+
+      .tabs {
+        display: grid;
+        grid-auto-flow: column;
+        gap: 8px;
+        padding: 8px;
+      }
+      .tab {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--fg);
+        border-radius: 14px;
+        padding: 10px 12px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        cursor: pointer;
+        transition: transform 0.08s ease, background 0.2s ease, border 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      .tab.active {
+        background: linear-gradient(
+            135deg,
+            rgba(43, 212, 160, 0.22),
+            rgba(255, 155, 122, 0.22)
+          ),
+          rgba(255, 255, 255, 0.04);
+        border-color: rgba(43, 212, 160, 0.55);
+        box-shadow: 0 0 0 3px var(--ring);
+      }
+      .tab:active {
+        transform: translateY(1px);
+      }
+
+      main {
+        display: grid;
+        gap: 16px;
+      }
+      .panel {
+        padding: 16px;
+      }
+
+      .mode {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        padding: 12px 0;
-        backdrop-filter: saturate(1.2) blur(8px);
+        margin-bottom: 12px;
       }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .brand-mark {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-      }
-      .brand-text h1 {
-        font-size: 18px;
-        margin: 0 0 2px;
-      }
-      .tagline {
-        margin: 0;
-        font-size: 12px;
+      .mode-note {
         color: var(--muted);
+        font-size: 14px;
       }
-      .actions {
-        display: flex;
-        gap: 8px;
+
+      .toggle {
+        position: relative;
+        display: inline-flex;
         align-items: center;
+        gap: 10px;
       }
+      .toggle input {
+        display: none;
+      }
+      .toggle .track {
+        width: 84px;
+        height: 38px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
+        position: relative;
+        box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
+      }
+      .toggle .track::after {
+        content: "";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #fff 0%, #e8fff7 30%, #c8ffe9 60%, #8bf6cd 100%);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 6px 14px rgba(43, 212, 160, 0.35);
+        transition: transform 0.22s ease;
+      }
+      .toggle input:checked + .track::after {
+        transform: translateX(46px);
+      }
+      .toggle .labels {
+        display: inline-grid;
+        grid-auto-flow: column;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
       .btn {
         appearance: none;
-        border: 1px solid var(--glass-border);
-        background: linear-gradient(
-              180deg,
-              color-mix(in srgb, #fff, transparent 85%),
-              transparent
-            ),
-          var(--card);
-        color: var(--text);
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--fg);
+        border-radius: 14px;
         padding: 10px 14px;
-        border-radius: 999px;
+        font-weight: 700;
         cursor: pointer;
-        transition: transform 0.1s ease, box-shadow 0.2s ease,
-          border-color 0.2s;
-        box-shadow: var(--shadow);
+        transition: transform 0.08s ease, background 0.2s ease,
+          border 0.2s ease, box-shadow 0.2s ease;
       }
-      .btn.primary {
-        background: linear-gradient(
-          180deg,
-          color-mix(in srgb, var(--primary), #fff 15%),
-          color-mix(in srgb, var(--primary), #000 10%)
-        );
-        border-color: color-mix(in srgb, var(--primary), transparent 60%);
-        color: white;
-      }
-      .btn.ghost {
-        background: color-mix(in srgb, var(--card), transparent 40%);
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.08);
       }
       .btn:active {
         transform: translateY(1px);
       }
-      .hero {
-        position: relative;
-        margin-top: 12px;
-      }
-      .hero-bg {
-        position: absolute;
-        inset: 0;
-        border-radius: calc(var(--radius) * 1.25);
+      .btn.primary {
         background: linear-gradient(
-            120deg,
-            color-mix(in srgb, var(--primary), transparent 80%),
-            transparent 50%
+            135deg,
+            rgba(43, 212, 160, 0.28),
+            rgba(255, 155, 122, 0.28)
           ),
-          var(--card);
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--shadow);
+          rgba(255, 255, 255, 0.05);
+        border-color: rgba(43, 212, 160, 0.6);
+        box-shadow: 0 0 0 3px var(--ring);
       }
-      .hero-content {
-        position: relative;
-        padding: 28px 20px;
-      }
-      .hero h2 {
-        margin: 0 0 8px;
-        letter-spacing: 0.2px;
-      }
-      .hero p {
-        margin: 0 0 16px;
-        color: var(--muted);
-      }
-      .hero-cta {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-      }
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-      }
-      .stat {
-        background: color-mix(in srgb, var(--card), transparent 20%);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius);
-        padding: 12px;
-        text-align: center;
-      }
-      .stat-number {
-        font-weight: 800;
-        font-size: 22px;
-      }
-      .stat-label {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .panel {
-        margin-top: 18px;
-        padding: 16px;
-        border-radius: calc(var(--radius) * 1.1);
-        background: var(--bg-elev);
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--shadow);
-      }
-      .panel-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-      .bullets {
-        margin: 12px 0;
-        padding-left: 18px;
-      }
-      .bullets li {
-        margin: 6px 0;
-      }
-      .chips {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .chip {
+      .btn.subtle {
+        font-size: 14px;
         padding: 8px 10px;
-        border-radius: 999px;
-        border: 1px dashed var(--glass-border);
-        background: color-mix(in srgb, var(--card), transparent 25%);
-        font-size: 12px;
-        color: var(--muted);
       }
-      .cards {
+
+      .status {
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .status-row {
         display: grid;
+        grid-template-columns: 1fr auto auto;
         gap: 12px;
-      }
-      .exercise {
-        padding: 14px;
-        border-radius: var(--radius);
-        background: linear-gradient(
-          180deg,
-          color-mix(in srgb, var(--card), transparent 0%),
-          color-mix(in srgb, var(--card), transparent 18%)
-        );
-        border: 1px solid var(--glass-border);
-        position: relative;
-        overflow: clip;
-      }
-      .exercise.done::after {
-        content: "Done";
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        font-size: 11px;
-        color: #fff;
-        background: linear-gradient(120deg, var(--ok), #2dd4bf);
-        padding: 4px 8px;
-        border-radius: 999px;
-      }
-      .ex-head {
-        display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        margin-bottom: 10px;
       }
-      .ex-title {
-        margin: 0;
-        font-size: 16px;
-      }
-      .ex-targets {
-        margin: 4px 0 0;
-        font-size: 12px;
+      .status .label {
         color: var(--muted);
+        font-size: 12px;
       }
-      .controls {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-top: 10px;
+      .status .value {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-weight: 800;
       }
-      .segment {
-        display: inline-flex;
-        border: 1px solid var(--glass-border);
+      .progress {
+        width: 100%;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
         border-radius: 999px;
         overflow: hidden;
       }
-      .segment button {
-        border: 0;
-        background: transparent;
-        color: var(--text);
-        padding: 8px 10px;
-        cursor: pointer;
+      .progress .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        background-size: 200% 100%;
+        animation: sheen 3s linear infinite;
+        transition: width 0.35s ease;
       }
-      .segment button[aria-pressed="true"] {
-        background: color-mix(in srgb, var(--primary), transparent 84%);
-        color: color-mix(in srgb, var(--text), #000 0%);
+      @keyframes sheen {
+        0% {
+          background-position: 0% 0%;
+        }
+        100% {
+          background-position: 200% 0%;
+        }
       }
-      .meta {
-        font-size: 12px;
-        color: var(--muted);
+
+      .steps {
         display: grid;
-        gap: 2px;
-        margin-top: 8px;
+        gap: 12px;
       }
-      .ex-cta {
-        margin-top: 10px;
-        display: flex;
+      .step {
+        display: grid;
         gap: 8px;
-        flex-wrap: wrap;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background:
+          linear-gradient(180deg, rgba(43, 212, 160, 0.06), transparent 70%),
+          rgba(255, 255, 255, 0.04);
       }
-      .tiny {
-        font-size: 11px;
-      }
-      .muted {
-        color: var(--muted);
-      }
-      .small {
-        font-size: 12px;
-      }
-      .switch {
-        display: inline-flex;
-        gap: 8px;
+      .step .top {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
         align-items: center;
+      }
+      .step .index {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(43, 212, 160, 0.25);
+        border: 1px solid rgba(43, 212, 160, 0.6);
+        font-weight: 900;
+      }
+      .step .title {
+        font-weight: 800;
+      }
+      .step .duration {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .step .desc {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .step .meta {
+        color: var(--muted);
         font-size: 12px;
-        color: var(--muted);
       }
-      .offline-badge {
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        padding: 8px 10px;
+
+      .celebrate {
+        display: inline-block;
+        padding: 2px 8px;
         border-radius: 999px;
-        background: linear-gradient(120deg, var(--primary), var(--ok));
-        color: white;
-        box-shadow: var(--shadow);
-        z-index: 30;
+        background: rgba(255, 155, 122, 0.18);
+        border: 1px solid rgba(255, 155, 122, 0.5);
+        animation: pop 0.6s ease;
       }
-      .a2hs-tip {
-        position: fixed;
-        left: 16px;
-        right: 16px;
-        bottom: 16px;
-        z-index: 31;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: var(--bg-elev);
-        border: 1px solid var(--glass-border);
-        color: var(--text);
-        box-shadow: var(--shadow);
-        display: none;
+      @keyframes pop {
+        0% {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
-      .timer-dialog {
-        border: 0;
-        padding: 0;
-        background: transparent;
-        width: min(560px, 92vw);
-      }
-      .timer-dialog::backdrop {
-        background: linear-gradient(0deg, #0008, #0006);
-        backdrop-filter: blur(3px);
-      }
-      .timer-surface {
-        background: var(--bg-elev);
-        border: 1px solid var(--glass-border);
-        border-radius: calc(var(--radius) * 1.2);
-        padding: 14px;
-        box-shadow: var(--shadow);
-      }
-      .timer-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .eyebrow {
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 11px;
-      }
-      .ring-wrap {
+
+      .two-col {
         display: grid;
-        place-items: center;
-        padding: 18px 6px;
+        gap: 16px;
       }
-      .ring {
-        width: 220px;
-        aspect-ratio: 1 / 1;
-        border-radius: 999px;
-        background: conic-gradient(
-            var(--ring) var(--p, 0%),
-            color-mix(in srgb, var(--ring), transparent 85%) 0%
-          ),
-          radial-gradient(
-            circle at 50% 50%,
-            color-mix(in srgb, var(--card), transparent 20%),
-            transparent 60%
-          ),
-          var(--card);
+      .two-col .col h3 {
+        margin-top: 0;
+      }
+      .bullets {
+        margin: 0;
+        padding-left: 18px;
         display: grid;
-        place-items: center;
-        border: 1px solid var(--glass-border);
-        box-shadow: var(--shadow);
-      }
-      .ring-inner {
-        width: 75%;
-        aspect-ratio: 1 / 1;
-        border-radius: 999px;
-        display: grid;
-        place-items: center;
-        background: color-mix(in srgb, var(--card), transparent 10%);
-      }
-      .timer-value {
-        font-size: 36px;
-        font-variant-numeric: tabular-nums;
-        font-weight: 700;
-      }
-      .timer-sub {
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 4px;
-        text-align: center;
-      }
-      .timer-controls {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
-      }
-      .flow-steps {
-        margin-top: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-      .flow-steps .chip {
-        border-style: solid;
       }
       .footer {
-        margin-top: 24px;
         text-align: center;
         color: var(--muted);
+      }
+
+      .tab-panel[hidden] {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+
+      @media (min-width: 720px) {
+        .two-col {
+          grid-template-columns: 1fr 1fr;
+        }
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <header class="topbar">
+      <header class="glass header">
         <div class="brand">
-          <img class="brand-mark" alt="" aria-hidden="true" id="brandIcon" />
-          <div class="brand-text">
-            <h1>Mobility Minutes</h1>
-            <p class="tagline">8–12 min daily mobility, beautifully guided</p>
-          </div>
+          <div class="logo-dot"></div>
+          <h1>Morning Mobility</h1>
         </div>
-        <div class="actions">
-          <button id="installBtn" class="btn ghost" hidden>Install</button>
-          <button id="themeBtn" class="btn ghost" aria-label="Toggle theme">
-            <span class="icon">🌙</span>
-          </button>
-        </div>
+        <button id="installBtn" class="btn subtle" hidden>Install App</button>
       </header>
 
+      <nav class="tabs glass" role="tablist" aria-label="Sections">
+        <button class="tab active" data-tab="routine" role="tab" aria-selected="true">
+          Routine
+        </button>
+        <button class="tab" data-tab="why" role="tab" aria-selected="false">
+          Why
+        </button>
+        <button class="tab" data-tab="tips" role="tab" aria-selected="false">
+          Tips
+        </button>
+        <button class="tab" data-tab="variations" role="tab" aria-selected="false">
+          Variations
+        </button>
+      </nav>
+
       <main>
-        <section class="hero">
-          <div class="hero-bg"></div>
-          <div class="hero-content">
-            <h2>Daily mobility made simple</h2>
-            <p>
-              Hit spine, hips, shoulders, and ankles in minutes. Accumulate
-              about 60 seconds per region using 10–30s holds or 8–12 reps.
-              Stay pain‑free and avoid bouncing.
-            </p>
-            <div class="hero-cta">
-              <button id="startFlowBtn" class="btn primary">
-                Start Guided Flow
-              </button>
-              <button id="quickStartBtn" class="btn">Build My Own</button>
+        <section id="routine" class="tab-panel active" role="tabpanel">
+          <div class="glass panel">
+            <div class="mode">
+              <label class="toggle" title="Toggle 5 vs 10 minutes">
+                <input type="checkbox" id="modeToggle" />
+                <span class="track"></span>
+                <span class="labels">
+                  <span>5 min</span>
+                  <span>10 min</span>
+                </span>
+              </label>
+              <div class="mode-note">Gentle, smooth, pain‑free. No bouncing.</div>
             </div>
-            <div class="stats">
-              <div class="stat">
-                <div class="stat-number" id="todayStat">0</div>
-                <div class="stat-label">Exercises Today</div>
+
+            <div class="controls">
+              <button id="startBtn" class="btn primary">Start Guided Timer</button>
+              <button id="resetBtn" class="btn" disabled>Reset</button>
+            </div>
+
+            <div class="status glass soft">
+              <div class="status-row">
+                <div class="now">
+                  <div class="label">Current</div>
+                  <div id="currentStep" class="value">—</div>
+                </div>
+                <div class="time">
+                  <div class="label">Time</div>
+                  <div id="timeLeft" class="value">00:00</div>
+                </div>
+                <div class="total">
+                  <div class="label">Total</div>
+                  <div id="totalTime" class="value">~5:40</div>
+                </div>
               </div>
-              <div class="stat">
-                <div class="stat-number" id="streakStat">0</div>
-                <div class="stat-label">Day Streak</div>
-              </div>
-              <div class="stat">
-                <div class="stat-number" id="minutesStat">0</div>
-                <div class="stat-label">Minutes</div>
+              <div class="progress">
+                <div id="progressBar" class="bar"></div>
               </div>
             </div>
+
+            <div id="routineList" class="steps"></div>
           </div>
         </section>
 
-        <section class="panel howto" aria-labelledby="howtoTitle">
-          <h3 id="howtoTitle">How to use</h3>
-          <ul class="bullets">
-            <li>Frequency: daily or 3–4x/week; ~60s per region.</li>
-            <li>Intensity: slow, mild stretch, no pain; no bouncing.</li>
-            <li>Structure: static 2–4 × 10–30s; dynamic 8–12 reps.</li>
-          </ul>
+        <section id="why" class="tab-panel" role="tabpanel" hidden>
+          <div class="glass panel">
+            <h2>Why these moves</h2>
+            <ul class="bullets">
+              <li>
+                Morning stiffness responds best to slow, gentle mobility that warms tissues
+                before deeper stretching, which reduces discomfort and supports daily movement
+                quality [16][8].
+              </li>
+              <li>
+                Hip flexor and hamstring work helps offload the low back, especially after
+                prolonged sitting or sleeping, while spinal flows restore segmental motion safely
+                [5][7].
+              </li>
+              <li>
+                Chest and neck openers counter forward‑head and rounded‑shoulder posture common
+                in students and desk work, improving comfort through the day [6][5].
+              </li>
+            </ul>
+          </div>
         </section>
 
-        <section class="panel sequence" aria-labelledby="seqTitle">
-          <h3 id="seqTitle">Quick sequencing tip</h3>
-          <p class="muted">
-            Cat‑Cow → Open Book → World’s Greatest Stretch → 90/90 → Couch
-            Stretch → Ankle Knee‑to‑Wall → Shoulder CARs → Prone Press‑Ups.
-          </p>
-          <div class="chips" id="seqChips"></div>
+        <section id="tips" class="tab-panel" role="tabpanel" hidden>
+          <div class="glass panel">
+            <h2>Tips and safety</h2>
+            <ul class="bullets">
+              <li>
+                Warm up gradually, breathe steadily, and stop at mild tension; avoid bouncing and
+                any painful end‑range positions [16].
+              </li>
+              <li>
+                Keep knees soft in forward folds and hinge at the hips; use blocks or thighs for
+                support if hamstrings are tight [5][7].
+              </li>
+              <li>
+                If floors are not ideal, many moves can start in bed or standing (cobra/mini
+                backbend in bed, knees‑to‑chest, side bend, neck stretch) to ease into the day [6].
+              </li>
+            </ul>
+          </div>
         </section>
 
-        <section class="panel" aria-labelledby="routineTitle">
-          <div class="panel-head">
-            <h3 id="routineTitle">Daily routine (8–12 min)</h3>
-            <div class="panel-controls">
-              <label class="switch"
-                ><input id="compactToggle" type="checkbox" /><span
-                  >Compact view</span
-                ></label
-              >
-              <button
-                id="clearTodayBtn"
-                class="btn tiny ghost"
-                title="Reset today’s progress"
-              >
-                Reset today
-              </button>
+        <section id="variations" class="tab-panel" role="tabpanel" hidden>
+          <div class="glass panel">
+            <h2>Optional bed or desk variations</h2>
+            <div class="two-col">
+              <div class="col">
+                <h3>In bed</h3>
+                <ul class="bullets">
+                  <li>
+                    Gentle cobra, single‑knee‑to‑chest, and supine spinal twist to wake up the
+                    spine without loading, 20–30 seconds each [6].
+                  </li>
+                </ul>
+              </div>
+              <div class="col">
+                <h3>At a desk</h3>
+                <ul class="bullets">
+                  <li>
+                    Seated upper‑back reach (hands interlaced, arms forward), cross‑body shoulder
+                    stretch, and doorway chest stretch between classes, 20–30 seconds each [6][5].
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-          <div id="exerciseList" class="cards"></div>
-        </section>
 
-        <section class="panel safety" aria-labelledby="safetyTitle">
-          <h3 id="safetyTitle">Safety and progression</h3>
-          <ul class="bullets">
-            <li>Pain‑free, no bouncing, scale to tolerance.</li>
-            <li>Short on time? Do one each for spine, hip, ankle, shoulder.</li>
-            <li>Quality over quantity; target ~60s per region or 8–12 reps.</li>
-          </ul>
+          <div class="glass panel">
+            <h2>10‑minute add‑ons</h2>
+            <ul class="bullets">
+              <li>
+                Add Thread‑the‑Needle from tabletop for mid‑back/shoulder relief, ~30–45 seconds
+                per side [7].
+              </li>
+              <li>
+                Add standing quad stretch, ~30 seconds per side to balance hip mobility [6].
+              </li>
+              <li>
+                Add doorway chest stretch or hands‑clasped chest opener, ~30 seconds to counter
+                rounded shoulders [5][6].
+              </li>
+              <li>
+                Add wall calf stretch, ~30 seconds per side to ease morning tightness [6].
+              </li>
+            </ul>
+          </div>
         </section>
       </main>
 
-      <footer class="footer">
-        <p class="muted">General guidance; not medical advice.</p>
-        <p class="muted small">Offline‑ready. Add to Home Screen.</p>
+      <footer class="glass footer">
+        <small>
+          Breathe slow, smooth, pain‑free. Hold mild tension only. Avoid bouncing
+          [16][5]. Use at your own pace.
+        </small>
       </footer>
     </div>
 
-    <dialog id="timerDialog" class="timer-dialog">
-      <form method="dialog" class="timer-surface">
-        <div class="timer-head">
-          <div>
-            <div class="eyebrow" id="timerRegion">Mobility</div>
-            <h3 id="timerTitle">Timer</h3>
-          </div>
-        </div>
-        <div class="ring-wrap">
-          <div class="ring" id="progressRing">
-            <div class="ring-inner">
-              <div class="timer-value" id="timerValue">00:30</div>
-              <div class="timer-sub" id="timerSub">Hold steady…</div>
-            </div>
-          </div>
-        </div>
-        <div class="timer-controls">
-          <button id="pauseBtn" type="button" class="btn">Pause</button>
-          <button id="resumeBtn" type="button" class="btn" hidden>
-            Resume
-          </button>
-          <button id="skipBtn" type="button" class="btn ghost">Skip</button>
-          <button id="doneBtn" type="button" class="btn primary">Done</button>
-        </div>
-        <div class="flow-steps" id="flowSteps"></div>
-      </form>
-    </dialog>
-
-    <div id="offlineBadge" class="offline-badge" hidden>Offline ready</div>
-    <div id="a2hsTip" class="a2hs-tip">
-      Tip: Share → “Add to Home Screen” after the icon appears in the top bar.
-    </div>
-
-    <script type="module">
-      // ----- Icon generation (no files needed) -----
-      function drawIcon(size, opts = { maskable: false }) {
-        const c = document.createElement("canvas");
-        c.width = c.height = size;
-        const ctx = c.getContext("2d");
-        const gBg = ctx.createLinearGradient(0, 0, size, size);
-        gBg.addColorStop(0, "#0f172a");
-        gBg.addColorStop(1, "#0b1220");
-        ctx.fillStyle = gBg;
-        ctx.fillRect(0, 0, size, size);
-        const r = Math.round(size * 0.18);
-        const gx = Math.round(size * 0.26);
-        const gy = Math.round(size * 0.22);
-        const g1 = ctx.createLinearGradient(0, 0, size, size);
-        g1.addColorStop(0, "#0ea5e9");
-        g1.addColorStop(1, "#22d3ee");
-        ctx.globalAlpha = 0.45;
-        ctx.beginPath();
-        ctx.fillStyle = g1;
-        ctx.arc(gx, gy, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = Math.max(6, size * 0.055);
-        const gStroke = ctx.createLinearGradient(0, 0, size, size);
-        gStroke.addColorStop(0, "#0ea5e9");
-        gStroke.addColorStop(1, "#22d3ee");
-        ctx.strokeStyle = gStroke;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        const yMid = size * 0.56;
-        ctx.moveTo(size * 0.24, yMid + size * 0.08);
-        ctx.bezierCurveTo(
-          size * 0.36,
-          yMid - size * 0.22,
-          size * 0.5,
-          yMid - size * 0.1,
-          size * 0.62,
-          yMid - size * 0.28
-        );
-        ctx.stroke();
-        ctx.globalAlpha = 0.7;
-        ctx.lineWidth = Math.max(4, size * 0.035);
-        ctx.strokeStyle = "#38bdf8";
-        ctx.beginPath();
-        ctx.moveTo(size * 0.22, yMid + size * 0.3);
-        ctx.lineTo(size * 0.78, yMid + size * 0.3);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "#e5e7eb";
-        ctx.font = `bold ${Math.round(size * 0.36)}px system-ui, Segoe UI, Roboto`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("M", size * 0.5, yMid - size * 0.05);
-        if (opts.maskable) {
-          const v = ctx.createRadialGradient(
-            size * 0.5,
-            size * 0.5,
-            size * 0.2,
-            size * 0.5,
-            size * 0.5,
-            size * 0.52
-          );
-          v.addColorStop(0, "rgba(0,0,0,0)");
-          v.addColorStop(1, "rgba(0,0,0,0.16)");
-          ctx.fillStyle = v;
-          ctx.fillRect(0, 0, size, size);
+    <script>
+      /* ========= Manifest + Icons (single‑file) ========= */
+      (function injectManifestAndIcons() {
+        // Build a simple emerald/peach logo as SVG, then export PNG for iOS icon as a data URL.
+        function logoSvg(size) {
+          const r = Math.round(size / 2);
+          const c = Math.round(size / 2);
+          const circleR = Math.round(size * 0.36);
+          return `
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2bd4a0"/>
+      <stop offset="1" stop-color="#ff9b7a"/>
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#2bd4a0" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="100%" height="100%" rx="${Math.round(size * 0.18)}" fill="#0a1512"/>
+  <g filter="url(#shadow)">
+    <circle cx="${c}" cy="${c}" r="${circleR}" fill="url(#g)"/>
+  </g>
+  <path d="M ${c- circleR*0.6} ${c+ circleR*0.05} q ${circleR*0.35} ${-circleR*0.9} ${circleR*1.2} 0" stroke="#ffffff" stroke-opacity="0.9" stroke-width="${Math.max(6, size*0.04)}" fill="none" stroke-linecap="round"/>
+</svg>`;
         }
-        return c.toDataURL("image/png");
-      }
 
-      const ICONS = {
-        p120: drawIcon(120),
-        p152: drawIcon(152),
-        p167: drawIcon(167),
-        p180: drawIcon(180, { maskable: true }),
-        p192: drawIcon(192),
-        p512: drawIcon(512),
-        mask512: drawIcon(512, { maskable: true }),
-      };
+        function svgToDataUrl(svg) {
+          return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        }
 
-      function attachAppleIcons() {
-        apple180.href = ICONS.p180;
-        apple167.href = ICONS.p167;
-        apple152.href = ICONS.p152;
-        apple120.href = ICONS.p120;
-        brandIcon.src = ICONS.p192;
-      }
+        // Create Apple touch icon (PNG data URL) via canvas for best iOS compatibility.
+        function makeApplePng(size = 180) {
+          const cvs = document.createElement("canvas");
+          cvs.width = size;
+          cvs.height = size;
+          const ctx = cvs.getContext("2d");
+          const img = new Image();
+          return new Promise((resolve) => {
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0, size, size);
+              resolve(cvs.toDataURL("image/png"));
+            };
+            img.src = svgToDataUrl(logoSvg(size));
+          });
+        }
 
-      function attachManifestData() {
+        // Inject manifest with maskable icons (SVG data URLs are OK for Android/most browsers).
         const manifest = {
-          name: "Mobility Minutes",
+          name: "Morning Mobility",
           short_name: "Mobility",
-          description:
-            "An elegant PWA guiding an 8–12 minute daily mobility routine.",
+          description: "A quick, effective 5–10 minute morning routine.",
           start_url: ".",
           display: "standalone",
-          background_color: "#0f172a",
-          theme_color: "#0ea5e9",
+          background_color: "#0a1512",
+          theme_color: "#0a1512",
           icons: [
-            { src: ICONS.p192, sizes: "192x192", type: "image/png" },
-            { src: ICONS.p512, sizes: "512x512", type: "image/png" },
             {
-              src: ICONS.mask512,
-              sizes: "512x512",
-              type: "image/png",
-              purpose: "maskable",
+              src: svgToDataUrl(logoSvg(192)),
+              sizes: "192x192",
+              type: "image/svg+xml",
+              purpose: "any maskable"
             },
-          ],
+            {
+              src: svgToDataUrl(logoSvg(512)),
+              sizes: "512x512",
+              type: "image/svg+xml",
+              purpose: "any maskable"
+            }
+          ]
         };
         const blob = new Blob([JSON.stringify(manifest)], {
-          type: "application/manifest+json",
+          type: "application/manifest+json"
         });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("link");
         link.rel = "manifest";
         link.href = url;
         document.head.appendChild(link);
-      }
 
-      async function registerInlineSW() {
-        if (!("serviceWorker" in navigator)) return;
-        const swCode = `
-          const CACHE = "mm-inline-v1";
-          const ICONS = {
-            "/apple-touch-icon.png": ${JSON.stringify(ICONS.p180)},
-            "/apple-touch-icon-precomposed.png": ${JSON.stringify(
-              ICONS.p180
-            )},
-            "/icon-192.png": ${JSON.stringify(ICONS.p192)},
-            "/icon-512.png": ${JSON.stringify(ICONS.p512)},
-            "/maskable-512.png": ${JSON.stringify(ICONS.mask512)}
-          };
-          const PAGE = self.location.href;
-          self.addEventListener("install", (e) => {
-            e.waitUntil(caches.open(CACHE).then((c)=>c.add(PAGE).catch(()=>{})));
-            self.skipWaiting();
-          });
-          self.addEventListener("activate",(e)=>{
-            e.waitUntil(
-              caches.keys().then(ks=>Promise.all(ks.map(k=>k===CACHE?null:caches.delete(k))))
-            );
-            self.clients.claim();
-          });
-          self.addEventListener("fetch",(e)=>{
-            const url = new URL(e.request.url);
-            if (ICONS[url.pathname]) { e.respondWith(fetch(ICONS[url.pathname])); return; }
-            if (e.request.method!=="GET") return;
-            e.respondWith(
-              caches.match(e.request).then(cached=>{
-                const net = fetch(e.request).then(res=>{
-                  const copy=res.clone();
-                  caches.open(CACHE).then(c=>c.put(e.request,copy));
-                  return res;
-                }).catch(()=> cached || (e.request.mode==="navigate"?caches.match(PAGE):undefined));
-                return cached || net;
-              })
-            );
-          });
-        `;
-        try {
-          const blob = new Blob([swCode], { type: "text/javascript" });
-          const swUrl = URL.createObjectURL(blob);
-          await navigator.serviceWorker.register(swUrl, { scope: "./" });
-          await navigator.serviceWorker.ready;
-          offlineBadge.hidden = false;
-          setTimeout(() => (offlineBadge.hidden = true), 1800);
-        } catch {}
-      }
+        // iOS Home Screen icon
+        makeApplePng(180).then((pngUrl) => {
+          const apple = document.createElement("link");
+          apple.rel = "apple-touch-icon";
+          apple.href = pngUrl;
+          document.head.appendChild(apple);
+        });
 
-      // ----- App data -----
-      const EXERCISES = [
-        {
-          id: "wgs",
-          name: "World’s Greatest Stretch",
-          region: "Hips + T‑spine",
-          defaultMode: "reps",
-          defaultReps: 8,
-          durations: [30, 45],
-          sided: true,
-          how:
-            "From a plank, step right foot outside right hand. Rotate to reach sky. Optional: thread‑the‑needle first.",
-          dosage:
-            "5–8 slow reps/side or 30–45s/side. Keep hips square, spine long.",
-          targets:
-            "Hips, hamstrings, hip flexors, glutes, thoracic spine, shoulders.",
-        },
-        {
-          id: "catcow",
-          name: "Cat‑Cow",
-          region: "Spine",
-          defaultMode: "reps",
-          defaultReps: 10,
-          durations: [30, 60],
-          sided: false,
-          how: "Hands under shoulders, knees under hips. Inhale cow, exhale cat.",
-          dosage: "8–12 controlled reps, 1–2 sets.",
-          targets: "Neck, mid‑back, low back.",
-        },
-        {
-          id: "openbook",
-          name: "Thoracic Open Book",
-          region: "T‑spine",
-          defaultMode: "reps",
-          defaultReps: 8,
-          durations: [30, 60],
-          sided: true,
-          how:
-            "Side‑lying, knees/hips ~90°. Arc top arm to open chest; keep top knee anchored.",
-          dosage: "8–10 reps/side or 30–60s/side.",
-          targets: "Thoracic rotation; shoulder/ribcage motion.",
-        },
-        {
-          id: "9090",
-          name: "90/90 Hip Stretch or Hip Switches",
-          region: "Hips (ER/IR)",
-          defaultMode: "time",
-          defaultSecs: 60,
-          durations: [30, 60],
-          sided: true,
-          how:
-            "Knees ~90°. Hinge forward (ER). Turn toward back shin (IR).",
-          dosage: "Hold 30–60s/position/side or 8–12 switches.",
-          targets: "Hip capsule ER/IR.",
-        },
-        {
-          id: "couch",
-          name: "Couch Stretch",
-          region: "Hip flexors + quads",
-          defaultMode: "time",
-          defaultSecs: 60,
-          durations: [30, 60],
-          sided: true,
-          how:
-            "Back knee near wall/couch, shin up. Stay tall, glutes on, hips square.",
-          dosage: "30–60s/side, 1–2 rounds.",
-          targets: "Hip flexors and quads.",
-        },
-        {
-          id: "ankle",
-          name: "Ankle Dorsiflexion Knee‑to‑Wall",
-          region: "Ankles",
-          defaultMode: "reps",
-          defaultReps: 12,
-          durations: [30, 60],
-          sided: true,
-          how:
-            "Toes near wall. Drive knee forward without heel lift; keep arch.",
-          dosage: "10–15 slow reps/side or 30–60s holds.",
-          targets: "Dorsiflexion for squat, gait, running.",
-        },
-        {
-          id: "cars",
-          name: "Shoulder CARs",
-          region: "Shoulders",
-          defaultMode: "reps",
-          defaultReps: 3,
-          durations: [30, 45],
-          sided: true,
-          how:
-            "Largest pain‑free arm circle; rotate humerus; reverse.",
-          dosage: "3–5 slow circles each direction per shoulder.",
-          targets: "Usable shoulder range and control.",
-        },
-        {
-          id: "pressups",
-          name: "Prone Press‑Ups (McKenzie)",
-          region: "Lumbar",
-          defaultMode: "reps",
-          defaultReps: 10,
-          durations: [30, 45],
-          sided: false,
-          how:
-            "Press chest up using arms; glutes/low back relaxed; brief pause.",
-          dosage: "10 smooth reps; stop if pain worsens.",
-          targets: "Lumbar extension (when tolerated).",
-        },
-      ];
+        window.addEventListener("beforeunload", () => URL.revokeObjectURL(url));
+      })();
 
-      const FLOW_ORDER = [
-        "catcow",
-        "openbook",
-        "wgs",
-        "9090",
-        "couch",
-        "ankle",
-        "cars",
-        "pressups",
-      ];
+      /* ========= App logic ========= */
+      const $ = (sel) => document.querySelector(sel);
 
-      const $ = (s, el = document) => el.querySelector(s);
-      const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
-      const state = {
-        theme: null,
-        compact: false,
-        done: {},
-        streak: 0,
-        todayCount: 0,
-        minutes: 0,
-        flowIndex: 0,
-        flowActive: false,
-        installEvt: null,
-        lastDay: null, // YYYY-MM-DD
-      };
-      const STORE_KEY = "mm-v1-state";
-      const DAY_KEY = () => new Date().toISOString().slice(0, 10);
+      const modeToggle = $("#modeToggle");
+      const startBtn = $("#startBtn");
+      const resetBtn = $("#resetBtn");
+      const routineList = $("#routineList");
+      const currentStepEl = $("#currentStep");
+      const timeLeftEl = $("#timeLeft");
+      const totalTimeEl = $("#totalTime");
+      const progressBar = $("#progressBar");
+      const installBtn = $("#installBtn");
 
-      function loadState() {
-        try {
-          const raw = localStorage.getItem(STORE_KEY);
-          if (raw) Object.assign(state, JSON.parse(raw));
-        } catch {}
-      }
-      function saveState() {
-        const s = (({
-          theme,
-          compact,
-          done,
-          streak,
-          todayCount,
-          minutes,
-          lastDay,
-        }) => ({ theme, compact, done, streak, todayCount, minutes, lastDay }))(
-          state
-        );
-        localStorage.setItem(STORE_KEY, JSON.stringify(s));
-      }
-
-      // Daily rollover + session-only badges
-      function resetDailyProgress() {
-        state.done = {};
-        state.todayCount = 0;
-        state.minutes = 0;
-        state.lastDay = DAY_KEY();
-        saveState();
-      }
-      function ensureToday() {
-        const today = DAY_KEY();
-        if (!state.lastDay) {
-          state.lastDay = today;
-          saveState();
-        } else if (state.lastDay !== today) {
-          resetDailyProgress();
+      const STEPS_BASE = [
+        {
+          id: "breaths-rolls",
+          title: "3 deep breaths + shoulder rolls",
+          duration: 40,
+          desc:
+            "Relax jaw, drop shoulders; slow breathing with gentle shoulder rolls [16][7].",
+          tags: ["5", "10"]
+        },
+        {
+          id: "cat-cow",
+          title: "Cat‑Cow (hands and knees)",
+          duration: 60,
+          desc:
+            "Move with breath to mobilize the whole spine; smooth, pain‑free motion [7].",
+          tags: ["5", "10"]
+        },
+        {
+          id: "lunge-half-split",
+          title: "Low lunge → Half‑split (same side)",
+          duration: 60,
+          desc:
+            "Hip flexor then hamstring stretch on one side; switch sides next [5][7].",
+          tags: ["5", "10"]
+        },
+        {
+          id: "lunge-half-split-2",
+          title: "Switch sides: Low lunge → Half‑split",
+          duration: 60,
+          desc: "Repeat on the other side for balance [5][7].",
+          tags: ["5", "10"]
+        },
+        {
+          id: "down-dog",
+          title: "Downward Dog (gentle pedaling)",
+          duration: 40,
+          desc: "Open calves and posterior chain; keep it easy [7].",
+          tags: ["5", "10"]
+        },
+        {
+          id: "forward-fold",
+          title: "Standing forward fold / ragdoll",
+          duration: 40,
+          desc: "Soft knees, hinge at hips; use blocks or thighs if tight [7][5].",
+          tags: ["5", "10"]
+        },
+        {
+          id: "neck-sidebend",
+          title: "Lateral neck tilt + overhead side bend",
+          duration: 40,
+          desc: "About 15–20s per side; gentle only [6][7].",
+          tags: ["5", "10"]
         }
-        // Clear any persisted 'completed' flags so badges are session-only
-        Object.values(state.done || {}).forEach((d) => {
-          d.completed = false;
-        });
-        saveState();
-      }
-      function scheduleMidnightRollover() {
-        const now = new Date();
-        const next = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate() + 1,
-          0,
-          0,
-          5
-        );
-        setTimeout(() => {
-          resetDailyProgress();
-          renderExercises();
-          renderStats();
-          scheduleMidnightRollover();
-        }, next - now);
-      }
+      ];
 
-      function initTheme() {
-        const btn = $("#themeBtn");
-        const setTheme = (mode) => {
-          document.documentElement.setAttribute("data-theme", mode);
-          document.documentElement.style.colorScheme = mode;
-          state.theme = mode;
-          btn.innerHTML = `<span class="icon">${
-            mode === "dark" ? "🌙" : "🌞"
-          }</span>`;
-          saveState();
-        };
-        const prefersDark =
-          window.matchMedia?.("(prefers-color-scheme: dark)").matches;
-        setTheme(state.theme || (prefersDark ? "dark" : "light"));
-        btn.addEventListener("click", () =>
-          setTheme(state.theme === "dark" ? "light" : "dark")
-        );
-      }
+      const STEPS_ADDED_10 = [
+        {
+          id: "thread-needle",
+          title: "Thread‑the‑Needle (tabletop)",
+          duration: 40,
+          desc: "Mid‑back/shoulder relief; switch sides halfway [7].",
+          tags: ["10"]
+        },
+        {
+          id: "quad-stand",
+          title: "Standing quad stretch",
+          duration: 60,
+          desc: "About 30s each side to balance hip mobility [6].",
+          tags: ["10"]
+        },
+        {
+          id: "chest-stretch",
+          title: "Doorway chest stretch / hands‑clasped opener",
+          duration: 30,
+          desc: "Counter rounded shoulders gently [5][6].",
+          tags: ["10"]
+        },
+        {
+          id: "calf-wall",
+          title: "Wall calf stretch",
+          duration: 60,
+          desc: "About 30s each side for morning tightness [6].",
+          tags: ["10"]
+        }
+      ];
 
-      function formatMMSS(sec) {
-        const s = Math.max(0, Math.round(sec));
-        const m = Math.floor(s / 60);
-        const r = s % 60;
-        return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+      function getMode() {
+        return modeToggle.checked ? "10" : "5";
       }
-      function sumMinutes() {
-        const total = Object.values(state.done).reduce(
-          (a, d) => a + (d.secs || 0),
-          0
-        );
-        return Math.round(total / 60);
+      function getSteps(mode) {
+        return mode === "10" ? [...STEPS_BASE, ...STEPS_ADDED_10] : [...STEPS_BASE];
       }
-      function renderStats() {
-        todayStat.textContent = state.todayCount || 0;
-        streakStat.textContent = state.streak || 0;
-        minutesStat.textContent = sumMinutes();
+      function formatMMSS(s) {
+        const m = Math.floor(s / 60).toString();
+        const sec = Math.floor(s % 60).toString().padStart(2, "0");
+        return `${m}:${sec}`;
       }
-      function renderSequenceChips() {
-        const w = $("#seqChips");
-        w.innerHTML = "";
-        FLOW_ORDER.forEach((id, i) => {
-          const ex = EXERCISES.find((e) => e.id === id);
-          const c = document.createElement("div");
-          c.className = "chip";
-          c.textContent = `${i + 1}. ${ex.name}`;
-          w.appendChild(c);
-        });
+      function totalDuration(steps) {
+        return steps.reduce((t, s) => t + s.duration, 0);
       }
 
-      function createExerciseCard(ex) {
-        const d = state.done[ex.id] || { reps: 0, secs: 0, completed: false };
-        const el = document.createElement("article");
-        el.className = `exercise${d.completed ? " done" : ""}`;
-        el.dataset.id = ex.id;
-        el.innerHTML = `
-          <div class="ex-head">
-            <div>
-              <h4 class="ex-title">${ex.name}</h4>
-              <p class="ex-targets">${ex.region}</p>
-            </div>
-            <button class="btn tiny ghost toggle-details" aria-expanded="false">
-              Details
-            </button>
-          </div>
-          <div class="meta">
-            <div><strong>How:</strong> ${ex.how}</div>
-            <div><strong>Dosage:</strong> ${ex.dosage}</div>
-            <div><strong>Targets:</strong> ${ex.targets}</div>
-          </div>
-          <div class="controls">
-            <div class="segment mode" role="tablist" aria-label="Mode">
-              <button role="tab" data-mode="reps" aria-pressed="${
-                ex.defaultMode === "reps"
-              }">Reps</button>
-              <button role="tab" data-mode="time" aria-pressed="${
-                ex.defaultMode === "time"
-              }">Timer</button>
-            </div>
-            <div class="segment timers" role="group" aria-label="Set length">
-              ${ex.durations
-                .map(
-                  (s, i) =>
-                    `<button data-secs="${s}" aria-pressed="${i === 0}">${s}s</button>`
-                )
-                .join("")}
-            </div>
-            <div class="segment repset" role="group" aria-label="Reps">
-              <button data-reps="8">8</button>
-              <button data-reps="10" aria-pressed="true">10</button>
-              <button data-reps="12">12</button>
-            </div>
-            ${
-              ex.sided
-                ? `
-            <label class="switch auto-rotate" title="Automatically switch sides">
-              <input type="checkbox" class="per-side-toggle" checked />
-              <span>Auto-rotate sides</span>
-            </label>
-            <div class="segment sidefirst" role="group" aria-label="Start side">
-              <button data-side="L" aria-pressed="true">Left</button>
-              <button data-side="R">Right</button>
-            </div>
-            <div class="segment rounds" role="group" aria-label="Rounds">
-              <button data-rounds="1" aria-pressed="true">1x</button>
-              <button data-rounds="2">2x</button>
-            </div>`
-                : ""
-            }
-          </div>
-          <div class="ex-cta">
-            <button class="btn start-timer">Start Set</button>
-            <button class="btn ghost add-reps">+ Add Reps</button>
-            <button class="btn ghost reset">Reset</button>
-            <button class="btn primary mark-done">Mark Done</button>
-          </div>
-          <p class="meta">
-            <span>Accumulated:
-              <strong><span class="acc-reps">${d.reps}</span> reps</strong>,
-              <strong><span class="acc-time">${formatMMSS(
-                d.secs
-              )}</span></strong></span>
-            <span class="muted">Goal: ~60s per region or 8–12 reps.</span>
-          </p>
-        `;
-
-        const meta = el.querySelector(".meta");
-        const details = el.querySelector(".toggle-details");
-        details.addEventListener("click", () => {
-          const exp = details.getAttribute("aria-expanded") === "true";
-          details.setAttribute("aria-expanded", String(!exp));
-          meta.style.display = exp ? "none" : "grid";
-        });
-        meta.style.display = state.compact ? "none" : "grid";
-
-        const modeSeg = el.querySelector(".segment.mode");
-        const timersSeg = el.querySelector(".segment.timers");
-        const repsSeg = el.querySelector(".segment.repset");
-        const startBtn = el.querySelector(".start-timer");
-        const addRepsBtn = el.querySelector(".add-reps");
-        const autoRotateWrap = el.querySelector(".auto-rotate");
-        const perSideToggle = el.querySelector(".per-side-toggle");
-        const sideFirstSeg = el.querySelector(".segment.sidefirst");
-        const roundsSeg = el.querySelector(".segment.rounds");
-
-        const setMode = (mode) => {
-          $$("button", modeSeg).forEach((b) =>
-            b.setAttribute("aria-pressed", String(b.dataset.mode === mode))
-          );
-          const useTimer = mode === "time";
-          timersSeg.style.display = useTimer ? "inline-flex" : "none";
-          repsSeg.style.display = useTimer ? "none" : "inline-flex";
-          startBtn.style.display = useTimer ? "inline-flex" : "none";
-          addRepsBtn.style.display = useTimer ? "none" : "inline-flex";
-          el.dataset.mode = mode;
-          if (ex.sided) {
-            const show = useTimer;
-            autoRotateWrap && (autoRotateWrap.style.display = show ? "" : "none");
-            sideFirstSeg && (sideFirstSeg.style.display = show ? "" : "none");
-            roundsSeg && (roundsSeg.style.display = show ? "" : "none");
-          }
-        };
-        setMode(ex.defaultMode);
-
-        modeSeg.addEventListener("click", (e) => {
-          const b = e.target.closest("button[data-mode]");
-          if (b) setMode(b.dataset.mode);
-        });
-        timersSeg.addEventListener("click", (e) => {
-          const b = e.target.closest("button[data-secs]");
-          if (!b) return;
-          $$("button", timersSeg).forEach((x) =>
-            x.setAttribute("aria-pressed", "false")
-          );
-          b.setAttribute("aria-pressed", "true");
-        });
-        repsSeg.addEventListener("click", (e) => {
-          const b = e.target.closest("button[data-reps]");
-          if (!b) return;
-          $$("button", repsSeg).forEach((x) =>
-            x.setAttribute("aria-pressed", "false")
-          );
-          b.setAttribute("aria-pressed", "true");
-        });
-
-        sideFirstSeg?.addEventListener("click", (e) => {
-          const b = e.target.closest("button[data-side]");
-          if (!b) return;
-          $$("button", sideFirstSeg).forEach((x) =>
-            x.setAttribute("aria-pressed", "false")
-          );
-          b.setAttribute("aria-pressed", "true");
-        });
-        roundsSeg?.addEventListener("click", (e) => {
-          const b = e.target.closest("button[data-rounds]");
-          if (!b) return;
-          $$("button", roundsSeg).forEach((x) =>
-            x.setAttribute("aria-pressed", "false")
-          );
-          b.setAttribute("aria-pressed", "true");
-        });
-
-        startBtn.addEventListener("click", () => {
-          const secs =
-            Number(
-              el.querySelector(
-                '.segment.timers button[aria-pressed="true"]'
-              )?.dataset.secs
-            ) || 30;
-          const perSideEnabled =
-            ex.sided &&
-            el.dataset.mode === "time" &&
-            (perSideToggle?.checked ?? false);
-          const startSide =
-            el.querySelector(
-              '.segment.sidefirst button[aria-pressed="true"]'
-            )?.dataset.side || "L";
-          const rounds =
-            Number(
-              el.querySelector(
-                '.segment.rounds button[aria-pressed="true"]'
-              )?.dataset.rounds
-            ) || 1;
-          openTimer(ex, secs, {
-            perSide: perSideEnabled,
-            startSide,
-            rounds,
-          });
-        });
-
-        addRepsBtn.addEventListener("click", () => {
-          const reps =
-            Number(
-              el.querySelector(
-                '.segment.repset button[aria-pressed="true"]'
-              )?.dataset.reps
-            ) || ex.defaultReps || 10;
-          addReps(ex.id, reps);
-          refreshCard(el, ex.id);
-        });
-        el.querySelector(".reset").addEventListener("click", () => {
-          state.done[ex.id] = { reps: 0, secs: 0, completed: false };
-          saveState();
-          refreshCard(el, ex.id);
-          renderStats();
-        });
-        el.querySelector(".mark-done").addEventListener("click", () => {
-          toggleDone(ex.id); // manual toggle only
-          refreshCard(el, ex.id);
-          renderStats();
-        });
-
-        return el;
+      function renderSteps() {
+        const mode = getMode();
+        const steps = getSteps(mode);
+        totalTimeEl.textContent = `~${formatMMSS(totalDuration(steps))}`;
+        routineList.innerHTML = steps
+          .map(
+            (s, i) => `
+    <article class="step">
+      <div class="top">
+        <div class="index">${i + 1}</div>
+        <div class="title">${s.title}</div>
+        <div class="duration">${formatMMSS(s.duration)}</div>
+      </div>
+      <div class="desc">${s.desc}</div>
+      <div class="meta">Guidelines: slow breathing, smooth, pain‑free, mild tension only. Avoid bouncing [16][5].</div>
+    </article>`
+          )
+          .join("");
       }
-
-      function refreshCard(el, id) {
-        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
-        el.querySelector(".acc-reps").textContent = d.reps || 0;
-        el.querySelector(".acc-time").textContent = formatMMSS(d.secs || 0);
-        el.classList.toggle("done", !!d.completed);
-      }
-
-      function renderExercises() {
-        const wrap = $("#exerciseList");
-        wrap.innerHTML = "";
-        EXERCISES.forEach((ex) => {
-          if (!state.done[ex.id]) state.done[ex.id] = { reps: 0, secs: 0 };
-          wrap.appendChild(createExerciseCard(ex));
-        });
-      }
-
-      function vibrate(ms) {
-        try {
-          navigator.vibrate?.(ms);
-        } catch {}
-      }
-      function beep() {
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = "sine";
-          o.frequency.value = 880;
-          o.connect(g);
-          g.connect(ctx.destination);
-          g.gain.setValueAtTime(0.0001, ctx.currentTime);
-          g.gain.exponentialRampToValueAtTime(
-            0.2,
-            ctx.currentTime + 0.02
-          );
-          g.gain.exponentialRampToValueAtTime(
-            0.0001,
-            ctx.currentTime + 0.18
-          );
-          o.start();
-          o.stop(ctx.currentTime + 0.2);
-        } catch {}
-      }
+      renderSteps();
 
       let timer = null;
-      function openTimer(ex, secs, options = {}) {
-        const dlg = $("#timerDialog");
-        timerTitle.textContent = ex.name;
-        timerRegion.textContent = ex.region;
-        const sub = timerSub;
-        const perSide = !!options.perSide && !!ex.sided;
-        const startSide = options.startSide === "R" ? "R" : "L";
-        const rounds = Math.max(1, Number(options.rounds || 1));
-        const switchRest = Number(options.switchRest ?? 3);
-        const defSub =
-          ex.id === "couch" || ex.id === "9090"
-            ? "Hold steady…"
-            : "Smooth control…";
+      let stepIdx = -1;
+      let stepTimeLeft = 0;
+      let stepsCache = [];
 
-        const ring = progressRing;
-        const valueEl = timerValue;
-        resumeBtn.hidden = true;
-        pauseBtn.hidden = false;
+      function startTimer() {
+        if (timer) return;
+        stepsCache = getSteps(getMode());
+        stepIdx = 0;
+        stepTimeLeft = stepsCache[0].duration;
+        startBtn.disabled = true;
+        modeToggle.disabled = true;
+        resetBtn.disabled = false;
+        tickUI();
+        timer = setInterval(tick, 1000);
+        tryVibrate([30, 30, 30]);
+      }
+      function resetTimer() {
+        clearInterval(timer);
+        timer = null;
+        stepIdx = -1;
+        stepTimeLeft = 0;
+        startBtn.disabled = false;
+        modeToggle.disabled = false;
+        resetBtn.disabled = true;
+        currentStepEl.innerHTML = "—";
+        timeLeftEl.textContent = "00:00";
+        progressBar.style.width = "0%";
+      }
+      function tick() {
+        if (stepIdx < 0) return;
+        stepTimeLeft -= 1;
 
-        let segments = [];
-        if (perSide) {
-          const order = startSide === "R" ? ["R", "L"] : ["L", "R"];
-          for (let r = 0; r < rounds; r++) {
-            order.forEach((side, idx) => {
-              segments.push({
-                kind: "side",
-                side,
-                label: side === "L" ? "Left side" : "Right side",
-                duration: secs,
-              });
-              if (idx === 0 || (idx === 1 && r < rounds - 1)) {
-                segments.push({
-                  kind: "rest",
-                  label: "Switch sides",
-                  duration: switchRest,
-                });
-              }
-            });
-          }
-          if (segments[segments.length - 1]?.kind === "rest") segments.pop();
-        } else {
-          segments = [{ kind: "single", label: null, duration: secs }];
-        }
-
-        let segIdx = 0;
-        let seg = segments[segIdx];
-        let t = seg.duration;
-        valueEl.textContent = formatMMSS(t);
-        ring.style.setProperty("--p", "0%");
-        sub.textContent = seg.label || defSub;
-
-        let activeElapsed = 0;
-
-        const tick = () => {
-          t -= 0.1;
-          if (t < 0) t = 0;
-          const p = Math.min(100, ((seg.duration - t) / seg.duration) * 100);
-          ring.style.setProperty("--p", `${p}%`);
-          valueEl.textContent = formatMMSS(t);
-          if (t <= 0) {
+        if (stepTimeLeft <= 0) {
+          tryVibrate([60, 40, 60]);
+          stepIdx += 1;
+          if (stepIdx >= stepsCache.length) {
             clearInterval(timer);
             timer = null;
-            beep();
-            vibrate(80);
-            if (seg.kind === "side" || seg.kind === "single") {
-              activeElapsed += seg.duration;
-            }
-            segIdx++;
-            if (segIdx >= segments.length) {
-              valueEl.textContent = "00:00";
-              ring.style.setProperty("--p", "100%");
-              sub.textContent = "Set complete";
-              pauseBtn.hidden = true;
-              resumeBtn.hidden = true;
-              return;
-            }
-            seg = segments[segIdx];
-            t = seg.duration;
-            ring.style.setProperty("--p", "0%");
-            sub.textContent = seg.label || defSub;
-            start();
+            currentStepEl.innerHTML = '<span class="celebrate">Done — nice work! 🥳</span>';
+            timeLeftEl.textContent = "00:00";
+            progressBar.style.width = "100%";
+            startBtn.disabled = false;
+            modeToggle.disabled = false;
+            return;
+          } else {
+            stepTimeLeft = stepsCache[stepIdx].duration;
           }
-        };
-        const start = () => {
-          if (timer) return;
-          timer = setInterval(tick, 100);
-        };
-        const pause = () => {
-          if (!timer) return;
-          clearInterval(timer);
-          timer = null;
-        };
-
-        pauseBtn.onclick = () => {
-          pause();
-          pauseBtn.hidden = true;
-          resumeBtn.hidden = false;
-        };
-        resumeBtn.onclick = () => {
-          start();
-          resumeBtn.hidden = true;
-          pauseBtn.hidden = false;
-        };
-        skipBtn.onclick = () => {
-          pause();
-          dlg.close();
-        };
-        doneBtn.onclick = () => {
-          pause();
-          let used = activeElapsed;
-          if (t > 0 && (seg.kind === "side" || seg.kind === "single")) {
-            used += seg.duration - Math.max(0, Math.round(t));
-          }
-          addTime(ex.id, used);
-          dlg.close();
-          renderStats();
-          const card = document.querySelector(
-            `.exercise[data-id="${ex.id}"]`
-          );
-          if (card) refreshCard(card, ex.id);
-          if (state.flowActive) nextFlowStep();
-        };
-
-        dlg.showModal();
-        start();
+        }
+        tickUI();
+      }
+      function tickUI() {
+        const step = stepsCache[stepIdx];
+        currentStepEl.textContent = step ? step.title : "—";
+        timeLeftEl.textContent = formatMMSS(stepTimeLeft);
+        const elapsed =
+          stepsCache.slice(0, stepIdx).reduce((t, s) => t + s.duration, 0) +
+          (step ? step.duration - stepTimeLeft : 0);
+        const total = stepsCache.reduce((t, s) => t + s.duration, 0) || 1;
+        const pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+        progressBar.style.width = `${pct}%`;
       }
 
-      function addTime(id, secs) {
-        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
-        d.secs = (d.secs || 0) + secs;
-        state.done[id] = d;
-        maybeMarkCompleted(id); // no auto-complete now (session-only badges)
-        tallyDay();
-        saveState();
-      }
-      function addReps(id, reps) {
-        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
-        d.reps = (d.reps || 0) + reps;
-        state.done[id] = d;
-        maybeMarkCompleted(id); // no auto-complete now
-        tallyDay();
-        saveState();
-      }
-      // Stop auto-completing from time/reps; badges are manual and session-only
-      function maybeMarkCompleted(id) {
-        const d = state.done[id] || {};
-        d.completed = !!d.completed;
-        state.done[id] = d;
-      }
-      function toggleDone(id) {
-        const d = state.done[id] || { reps: 0, secs: 0, completed: false };
-        d.completed = !d.completed;
-        state.done[id] = d;
-        tallyDay();
-        saveState();
-      }
-      function tallyDay() {
-        const completed = Object.values(state.done).filter((d) => d.completed)
-          .length;
-        state.todayCount = completed;
-        state.minutes = sumMinutes();
-        const key = "mm-v1-streak-" + DAY_KEY();
-        if (!localStorage.getItem(key) && completed > 0) {
-          localStorage.setItem(key, "1");
-          const y = new Date(Date.now() - 86400000);
-          const yKey = "mm-v1-streak-" + y.toISOString().slice(0, 10);
-          const hadY = localStorage.getItem(yKey);
-          state.streak = (state.streak || 0) + (hadY ? 1 : 1);
+      function tryVibrate(pattern) {
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate(pattern);
+          } catch {}
         }
       }
 
-      function renderFlowSteps() {
-        const w = $("#flowSteps");
-        w.innerHTML = "";
-        FLOW_ORDER.forEach((id, i) => {
-          const ex = EXERCISES.find((e) => e.id === id);
-          const c = document.createElement("div");
-          c.className = "chip";
-          c.style.borderColor =
-            i === state.flowIndex ? "var(--primary)" : "var(--glass-border)";
-          c.textContent = `${i + 1}. ${ex.name}`;
-          w.appendChild(c);
+      document.querySelectorAll(".tab").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((b) => {
+            b.classList.toggle("active", b === btn);
+            b.setAttribute("aria-selected", b === btn ? "true" : "false");
+          });
+          const tab = btn.dataset.tab;
+          document.querySelectorAll(".tab-panel").forEach((p) => {
+            const active = p.id === tab;
+            p.hidden = !active;
+            p.classList.toggle("active", active);
+          });
         });
-      }
-      function startFlow() {
-        state.flowActive = true;
-        state.flowIndex = 0;
-        renderFlowSteps();
-        const ex = EXERCISES.find((e) => e.id === FLOW_ORDER[state.flowIndex]);
-        const secs = ex.defaultMode === "time" ? ex.defaultSecs || 30 : 30;
-        openTimer(ex, secs, {
-          perSide: !!ex.sided && ex.defaultMode === "time",
-        });
-      }
-      function nextFlowStep() {
-        state.flowIndex++;
-        if (state.flowIndex >= FLOW_ORDER.length) {
-          state.flowActive = false;
-          state.flowIndex = 0;
-          notify("Flow complete! Nice work.");
-          return;
-        }
-        renderFlowSteps();
-        const ex = EXERCISES.find((e) => e.id === FLOW_ORDER[state.flowIndex]);
-        const secs = ex.defaultMode === "time" ? ex.defaultSecs || 30 : 30;
-        setTimeout(
-          () =>
-            openTimer(ex, secs, {
-              perSide: !!ex.sided && ex.defaultMode === "time",
-            }),
-          300
-        );
-      }
-      function notify(msg) {
-        try {
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Mobility Minutes", { body: msg });
-          }
-        } catch {}
-      }
-      function initInstall() {
-        window.addEventListener("beforeinstallprompt", (e) => {
-          e.preventDefault();
-          state.installEvt = e;
-          installBtn.hidden = false;
-        });
-        installBtn.addEventListener("click", async () => {
-          if (!state.installEvt) return;
-          state.installEvt.prompt();
-          const { outcome } = await state.installEvt.userChoice;
-          if (outcome === "accepted") installBtn.hidden = true;
-          state.installEvt = null;
-        });
-      }
-      function initCompactToggle() {
-        compactToggle.checked = !!state.compact;
-        compactToggle.addEventListener("change", () => {
-          state.compact = compactToggle.checked;
-          $$(".exercise .meta").forEach(
-            (m) => (m.style.display = state.compact ? "none" : "grid")
-          );
-          saveState();
-        });
-      }
-      function initDailyResetButton() {
-        clearTodayBtn?.addEventListener("click", () => {
-          if (confirm("Reset today’s progress?")) {
-            resetDailyProgress();
-            renderExercises();
-            renderStats();
-          }
-        });
-      }
-      function initQuickStart() {
-        quickStartBtn.addEventListener("click", () =>
-          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
-        );
-        startFlowBtn.addEventListener("click", startFlow);
-      }
-      function maybeShowA2HSTip() {
-        const ua = navigator.userAgent || "";
-        const isIOS = /iphone|ipad|ipod/i.test(ua);
-        const standalone =
-          window.navigator.standalone ||
-          window.matchMedia("(display-mode: standalone)").matches;
-        if (isIOS && !standalone) {
-          a2hsTip.style.display = "block";
-          setTimeout(() => (a2hsTip.style.display = "none"), 6000);
-        }
-      }
+      });
 
-      // Boot
-      document.addEventListener("DOMContentLoaded", () => {
-        attachAppleIcons();
-        attachManifestData();
-        registerInlineSW();
-        loadState();
-        ensureToday(); // also clears any persisted badges
-        initTheme();
-        renderSequenceChips();
-        renderExercises();
-        renderStats();
-        initInstall();
-        initCompactToggle();
-        initDailyResetButton();
-        initQuickStart();
-        maybeShowA2HSTip();
-        scheduleMidnightRollover();
-        document.addEventListener("visibilitychange", () => {
-          if (!document.hidden) ensureToday();
+      modeToggle.addEventListener("change", renderSteps);
+      startBtn.addEventListener("click", startTimer);
+      resetBtn.addEventListener("click", resetTimer);
+
+      /* ========= Service worker (single‑file) ========= */
+      (function registerSW() {
+        if (!("serviceWorker" in navigator)) return;
+        const swCode = `
+const CACHE_NAME = "mobility-emerald-v2";
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll([self.location.href])));
+  self.skipWaiting();
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.keys().then((keys) =>
+    Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)))
+  ));
+  self.clients.claim();
+});
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  if (url.origin === location.origin) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((resp) => {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
+          return resp;
         });
-        try {
-          if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission().catch(() => {});
-          }
-        } catch {}
+      })
+    );
+  }
+});`.trim();
+        const blob = new Blob([swCode], { type: "text/javascript" });
+        const swUrl = URL.createObjectURL(blob);
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register(swUrl)
+            .catch((e) => console.warn("SW reg failed", e));
+        });
+        window.addEventListener("beforeunload", () => URL.revokeObjectURL(swUrl));
+      })();
+
+      /* ========= Install prompt ========= */
+      let deferredPrompt = null;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.hidden = false;
+      });
+      installBtn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        installBtn.disabled = true;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        installBtn.hidden = true;
+        installBtn.disabled = false;
       });
     </script>
   </body>
