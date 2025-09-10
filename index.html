@@ -10,26 +10,31 @@
 
     <!-- iOS PWA polish -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="Mobility" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#282a36" />
     <meta name="description" content="Quick 5–10 minute morning routine." />
 
     <style>
-      /* Scheme — Black + Deep Crimson accent + Gray text */
+      /* Dracula-inspired palette */
       :root {
-        --bg: #000000;       /* pure black */
-        --bg-2: #050505;     /* subtle depth */
-        --fg: #cfcfcf;       /* primary text (gray) */
-        --muted: #9a9a9a;    /* secondary text */
-        --accent: #e0112b;   /* deep crimson */
-        --accent-2: #8b000f; /* darker crimson for gradients */
-        --focus: #e5e5e5;
-        --glass: rgba(255, 255, 255, 0.07);
-        --glass-soft: rgba(255, 255, 255, 0.045);
-        --border: rgba(255, 255, 255, 0.16);
-        --ring: rgba(224, 17, 43, 0.35);
+        --bg: #282a36; /* base */
+        --bg-2: #1f2130; /* depth */
+        --panel: #2b2e3b;
+        --fg: #f8f8f2; /* foreground */
+        --muted: #b9c0df; /* softened comment */
+        --accent: #bd93f9; /* purple */
+        --accent-2: #ff79c6; /* pink */
+        --accent-warm: #ffb86c; /* warm accent (progress sheen mix) */
+        --focus: #f1fa8c; /* yellow */
+        --glass: rgba(255, 255, 255, 0.08);
+        --glass-soft: rgba(255, 255, 255, 0.05);
+        --border: rgba(255, 255, 255, 0.14);
+        --ring: rgba(189, 147, 249, 0.35);
       }
 
       *,
@@ -45,8 +50,8 @@
         margin: 0;
         color: var(--fg);
         background:
-          radial-gradient(1300px 900px at 12% 12%, #111111 0%, transparent 60%),
-          radial-gradient(1100px 700px at 88% 22%, #0c0c0c 0%, transparent 60%),
+          radial-gradient(1350px 900px at 12% 12%, #313447 0%, transparent 60%),
+          radial-gradient(1100px 700px at 88% 22%, #26293b 0%, transparent 60%),
           linear-gradient(180deg, var(--bg), var(--bg-2) 60%);
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
           Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
@@ -67,10 +72,10 @@
         background: var(--glass);
         border: 1px solid var(--border);
         border-radius: 16px;
-        backdrop-filter: blur(14px) saturate(120%);
-        -webkit-backdrop-filter: blur(14px) saturate(120%);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(14px) saturate(125%);
+        -webkit-backdrop-filter: blur(14px) saturate(125%);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03);
       }
       .glass.soft {
         background: var(--glass-soft);
@@ -95,7 +100,7 @@
           var(--accent-2),
           var(--accent)
         );
-        box-shadow: 0 0 18px rgba(224, 17, 43, 0.55);
+        box-shadow: 0 0 18px rgba(189, 147, 249, 0.55);
       }
       .header h1 {
         font-size: 18px;
@@ -125,11 +130,11 @@
       .tab.active {
         background: linear-gradient(
             135deg,
-            rgba(224, 17, 43, 0.22),
-            rgba(139, 0, 15, 0.22)
+            rgba(189, 147, 249, 0.22),
+            rgba(255, 121, 198, 0.22)
           ),
-          rgba(255, 255, 255, 0.03);
-        border-color: rgba(224, 17, 43, 0.55);
+          rgba(255, 255, 255, 0.04);
+        border-color: rgba(189, 147, 249, 0.55);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .tab:active {
@@ -178,7 +183,7 @@
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid var(--border);
         position: relative;
-        box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.25);
+        box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
       }
       .toggle .track::after {
         content: "";
@@ -191,12 +196,12 @@
         background: radial-gradient(
           circle at 30% 30%,
           #ffffff 0%,
-          #f0f0f0 35%,
-          #e2e2e2 65%,
-          #d6d6d6 100%
+          #f6f6ff 35%,
+          #eceeff 65%,
+          #e3e5ff 100%
         );
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 6px 14px rgba(224, 17, 43, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: 0 6px 14px rgba(189, 147, 249, 0.35);
         transition: transform 0.22s ease;
       }
       .toggle input:checked + .track::after {
@@ -238,11 +243,11 @@
       .btn.primary {
         background: linear-gradient(
             135deg,
-            rgba(224, 17, 43, 0.28),
-            rgba(139, 0, 15, 0.28)
+            rgba(189, 147, 249, 0.28),
+            rgba(255, 121, 198, 0.28)
           ),
           rgba(255, 255, 255, 0.05);
-        border-color: rgba(224, 17, 43, 0.6);
+        border-color: rgba(189, 147, 249, 0.6);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .btn.subtle {
@@ -280,7 +285,12 @@
       .progress .bar {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        background: linear-gradient(
+          90deg,
+          var(--accent),
+          var(--accent-2),
+          var(--accent-warm)
+        );
         background-size: 200% 100%;
         animation: sheen 3s linear infinite;
         transition: width 0.35s ease;
@@ -304,8 +314,11 @@
         padding: 12px;
         border-radius: 16px;
         border: 1px solid var(--border);
-        background:
-          linear-gradient(180deg, rgba(224, 17, 43, 0.06), transparent 70%),
+        background: linear-gradient(
+            180deg,
+            rgba(189, 147, 249, 0.07),
+            transparent 70%
+          ),
           rgba(255, 255, 255, 0.035);
       }
       .step .top {
@@ -320,9 +333,9 @@
         display: grid;
         place-items: center;
         border-radius: 50%;
-        background: rgba(224, 17, 43, 0.25);
-        border: 1px solid rgba(224, 17, 43, 0.6);
-        color: #ffffff;
+        background: rgba(189, 147, 249, 0.22);
+        border: 1px solid rgba(189, 147, 249, 0.6);
+        color: #17181f;
         font-weight: 900;
       }
       .step .title {
@@ -345,8 +358,8 @@
         display: inline-block;
         padding: 2px 8px;
         border-radius: 999px;
-        background: rgba(224, 17, 43, 0.22);
-        border: 1px solid rgba(224, 17, 43, 0.55);
+        background: rgba(255, 121, 198, 0.22);
+        border: 1px solid rgba(255, 121, 198, 0.55);
         animation: pop 0.6s ease;
         color: #ffffff;
       }
@@ -562,14 +575,13 @@
     <script>
       /* ========= Manifest + Icons (single‑file) ========= */
       (function injectManifestAndIcons() {
-        // Theme-aware logo (black bg, deep crimson gradient)
         function logoSvg(size) {
           const c = Math.round(size / 2);
           const r = Math.round(size * 0.36);
           const cs = getComputedStyle(document.documentElement);
-          const ACC = cs.getPropertyValue("--accent").trim() || "#e0112b";
-          const ACC2 = cs.getPropertyValue("--accent-2").trim() || "#8b000f";
-          const BG = cs.getPropertyValue("--bg").trim() || "#000000";
+          const ACC = cs.getPropertyValue("--accent").trim() || "#bd93f9";
+          const ACC2 = cs.getPropertyValue("--accent-2").trim() || "#ff79c6";
+          const BG = cs.getPropertyValue("--bg").trim() || "#282a36";
           return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
   <defs>
@@ -586,7 +598,7 @@
     <circle cx="${c}" cy="${c}" r="${r}" fill="url(#g)"/>
   </g>
   <path d="M ${c- r*0.62} ${c+ r*0.05} q ${r*0.35} ${-r*0.9} ${r*1.24} 0"
-        stroke="#ffffff" stroke-opacity="0.95"
+        stroke="#f8f8f2" stroke-opacity="0.95"
         stroke-width="${Math.max(6, size*0.04)}" fill="none" stroke-linecap="round"/>
 </svg>`;
         }
@@ -608,8 +620,9 @@
           });
         }
 
-        const cs = getComputedStyle(document.documentElement);
-        const BG = cs.getPropertyValue("--bg").trim();
+        const BG = getComputedStyle(document.documentElement)
+          .getPropertyValue("--bg")
+          .trim();
 
         const manifest = {
           name: "Morning Mobility",
@@ -885,8 +898,12 @@
         const track = document.querySelector(".toggle .track");
         if (!track) return;
         const toggle = document.querySelector(".toggle");
-        const pad = parseFloat(getComputedStyle(toggle).getPropertyValue("--pad") || "4");
-        const knob = parseFloat(getComputedStyle(toggle).getPropertyValue("--knob") || "30");
+        const pad = parseFloat(
+          getComputedStyle(toggle).getPropertyValue("--pad") || "4"
+        );
+        const knob = parseFloat(
+          getComputedStyle(toggle).getPropertyValue("--knob") || "30"
+        );
         const slide = Math.max(0, track.clientWidth - 2 * pad - knob);
         track.style.setProperty("--slide", slide + "px");
       }
@@ -896,7 +913,7 @@
       (function registerSW() {
         if (!("serviceWorker" in navigator)) return;
         const swCode = `
-const CACHE_NAME = "mobility-black-deepred-v1";
+const CACHE_NAME = "mobility-dracula-v1";
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll([self.location.href])));
   self.skipWaiting();
