@@ -13,23 +13,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Mobility" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#0a1512" />
+    <meta name="theme-color" content="#0a1130" />
     <meta name="description" content="Quick 5–10 minute morning routine." />
 
     <style>
-      /* ===== Design system: Emerald + Peach Glass ===== */
+      /* ===== Design system: Cobalt + Lime Glass ===== */
       :root {
-        --bg: #0a1512;
-        --bg-2: #0e1b17;
-        --fg: #eef7f4;
-        --muted: #b6cbc3;
-        --accent: #2bd4a0; /* emerald */
-        --accent-2: #ff9b7a; /* peach */
-        --focus: #b4ffd6;
+        --bg: #0a1130;     /* deep cobalt navy */
+        --bg-2: #0b1a3f;
+        --fg: #eef1ff;
+        --muted: #b9c2e6;
+        --accent: #5b7cfa;   /* cobalt */
+        --accent-2: #a7ff4f; /* lime */
+        --focus: #d7e0ff;
         --glass: rgba(255, 255, 255, 0.08);
         --glass-soft: rgba(255, 255, 255, 0.05);
         --border: rgba(255, 255, 255, 0.18);
-        --ring: rgba(43, 212, 160, 0.35);
+        --ring: rgba(91, 124, 250, 0.35);
       }
 
       *,
@@ -45,8 +45,8 @@
         margin: 0;
         color: var(--fg);
         background:
-          radial-gradient(1400px 900px at 10% 10%, #102922 0%, transparent 60%),
-          radial-gradient(1100px 700px at 85% 20%, #1a2b26 0%, transparent 60%),
+          radial-gradient(1350px 900px at 10% 10%, #13215a 0%, transparent 60%),
+          radial-gradient(1100px 700px at 85% 20%, #101a44 0%, transparent 60%),
           linear-gradient(180deg, var(--bg), var(--bg-2) 60%);
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
           Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
@@ -90,12 +90,12 @@
         height: 14px;
         border-radius: 50%;
         background: conic-gradient(
-          from 200deg,
+          from 220deg,
           var(--accent),
           var(--accent-2),
           var(--accent)
         );
-        box-shadow: 0 0 20px rgba(43, 212, 160, 0.6);
+        box-shadow: 0 0 18px rgba(91, 124, 250, 0.55);
       }
       .header h1 {
         font-size: 18px;
@@ -125,11 +125,11 @@
       .tab.active {
         background: linear-gradient(
             135deg,
-            rgba(43, 212, 160, 0.22),
-            rgba(255, 155, 122, 0.22)
+            rgba(91, 124, 250, 0.22),
+            rgba(167, 255, 79, 0.22)
           ),
           rgba(255, 255, 255, 0.04);
-        border-color: rgba(43, 212, 160, 0.55);
+        border-color: rgba(91, 124, 250, 0.55);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .tab:active {
@@ -156,7 +156,16 @@
         font-size: 14px;
       }
 
+      /* Perfectly measured toggle (no overshoot) */
       .toggle {
+        --track-w: 84px;
+        --track-h: 38px;
+        --pad: 4px;
+        --knob: 30px;
+        --bw: 1px; /* border width */
+        --slide: calc(
+          var(--track-w) - var(--knob) - (var(--pad) * 2) - (var(--bw) * 2)
+        );
         position: relative;
         display: inline-flex;
         align-items: center;
@@ -166,29 +175,35 @@
         display: none;
       }
       .toggle .track {
-        width: 84px;
-        height: 38px;
-        border-radius: 22px;
+        width: var(--track-w);
+        height: var(--track-h);
+        border-radius: calc(var(--track-h) / 2);
         background: rgba(255, 255, 255, 0.06);
-        border: 1px solid var(--border);
+        border: var(--bw) solid var(--border);
         position: relative;
         box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
       }
       .toggle .track::after {
         content: "";
         position: absolute;
-        top: 4px;
-        left: 4px;
-        width: 30px;
-        height: 30px;
+        top: var(--pad);
+        left: var(--pad);
+        width: var(--knob);
+        height: var(--knob);
         border-radius: 50%;
-        background: radial-gradient(circle at 30% 30%, #fff 0%, #e8fff7 30%, #c8ffe9 60%, #8bf6cd 100%);
+        background: radial-gradient(
+          circle at 30% 30%,
+          #ffffff 0%,
+          #f2fff1 35%,
+          #dbffd7 65%,
+          #b9ff7c 100%
+        );
         border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 6px 14px rgba(43, 212, 160, 0.35);
+        box-shadow: 0 6px 14px rgba(167, 255, 79, 0.35);
         transition: transform 0.22s ease;
       }
       .toggle input:checked + .track::after {
-        transform: translateX(46px);
+        transform: translateX(var(--slide));
       }
       .toggle .labels {
         display: inline-grid;
@@ -226,11 +241,11 @@
       .btn.primary {
         background: linear-gradient(
             135deg,
-            rgba(43, 212, 160, 0.28),
-            rgba(255, 155, 122, 0.28)
+            rgba(91, 124, 250, 0.28),
+            rgba(167, 255, 79, 0.28)
           ),
           rgba(255, 255, 255, 0.05);
-        border-color: rgba(43, 212, 160, 0.6);
+        border-color: rgba(91, 124, 250, 0.6);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .btn.subtle {
@@ -293,7 +308,7 @@
         border-radius: 16px;
         border: 1px solid var(--border);
         background:
-          linear-gradient(180deg, rgba(43, 212, 160, 0.06), transparent 70%),
+          linear-gradient(180deg, rgba(91, 124, 250, 0.06), transparent 70%),
           rgba(255, 255, 255, 0.04);
       }
       .step .top {
@@ -308,8 +323,8 @@
         display: grid;
         place-items: center;
         border-radius: 50%;
-        background: rgba(43, 212, 160, 0.25);
-        border: 1px solid rgba(43, 212, 160, 0.6);
+        background: rgba(91, 124, 250, 0.25);
+        border: 1px solid rgba(91, 124, 250, 0.6);
         font-weight: 900;
       }
       .step .title {
@@ -332,8 +347,8 @@
         display: inline-block;
         padding: 2px 8px;
         border-radius: 999px;
-        background: rgba(255, 155, 122, 0.18);
-        border: 1px solid rgba(255, 155, 122, 0.5);
+        background: rgba(167, 255, 79, 0.18);
+        border: 1px solid rgba(167, 255, 79, 0.5);
         animation: pop 0.6s ease;
       }
       @keyframes pop {
@@ -548,35 +563,32 @@
     <script>
       /* ========= Manifest + Icons (single‑file) ========= */
       (function injectManifestAndIcons() {
-        // Build a simple emerald/peach logo as SVG, then export PNG for iOS icon as a data URL.
+        // Cobalt + Lime logo as SVG
         function logoSvg(size) {
-          const r = Math.round(size / 2);
           const c = Math.round(size / 2);
-          const circleR = Math.round(size * 0.36);
+          const r = Math.round(size * 0.36);
           return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2bd4a0"/>
-      <stop offset="1" stop-color="#ff9b7a"/>
+      <stop offset="0" stop-color="#5b7cfa"/>
+      <stop offset="1" stop-color="#a7ff4f"/>
     </linearGradient>
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#2bd4a0" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#5b7cfa" flood-opacity="0.35"/>
     </filter>
   </defs>
-  <rect width="100%" height="100%" rx="${Math.round(size * 0.18)}" fill="#0a1512"/>
+  <rect width="100%" height="100%" rx="${Math.round(size * 0.18)}" fill="#0a1130"/>
   <g filter="url(#shadow)">
-    <circle cx="${c}" cy="${c}" r="${circleR}" fill="url(#g)"/>
+    <circle cx="${c}" cy="${c}" r="${r}" fill="url(#g)"/>
   </g>
-  <path d="M ${c- circleR*0.6} ${c+ circleR*0.05} q ${circleR*0.35} ${-circleR*0.9} ${circleR*1.2} 0" stroke="#ffffff" stroke-opacity="0.9" stroke-width="${Math.max(6, size*0.04)}" fill="none" stroke-linecap="round"/>
+  <path d="M ${c- r*0.62} ${c+ r*0.05} q ${r*0.35} ${-r*0.9} ${r*1.24} 0" stroke="#ffffff" stroke-opacity="0.92" stroke-width="${Math.max(6, size*0.04)}" fill="none" stroke-linecap="round"/>
 </svg>`;
         }
+        const svgURL = (svg) =>
+          "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 
-        function svgToDataUrl(svg) {
-          return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-        }
-
-        // Create Apple touch icon (PNG data URL) via canvas for best iOS compatibility.
+        // Apple touch icon PNG for iOS
         function makeApplePng(size = 180) {
           const cvs = document.createElement("canvas");
           cvs.width = size;
@@ -588,28 +600,27 @@
               ctx.drawImage(img, 0, 0, size, size);
               resolve(cvs.toDataURL("image/png"));
             };
-            img.src = svgToDataUrl(logoSvg(size));
+            img.src = svgURL(logoSvg(size));
           });
         }
 
-        // Inject manifest with maskable icons (SVG data URLs are OK for Android/most browsers).
         const manifest = {
           name: "Morning Mobility",
           short_name: "Mobility",
           description: "A quick, effective 5–10 minute morning routine.",
           start_url: ".",
           display: "standalone",
-          background_color: "#0a1512",
-          theme_color: "#0a1512",
+          background_color: "#0a1130",
+          theme_color: "#0a1130",
           icons: [
             {
-              src: svgToDataUrl(logoSvg(192)),
+              src: svgURL(logoSvg(192)),
               sizes: "192x192",
               type: "image/svg+xml",
               purpose: "any maskable"
             },
             {
-              src: svgToDataUrl(logoSvg(512)),
+              src: svgURL(logoSvg(512)),
               sizes: "512x512",
               type: "image/svg+xml",
               purpose: "any maskable"
@@ -625,7 +636,6 @@
         link.href = url;
         document.head.appendChild(link);
 
-        // iOS Home Screen icon
         makeApplePng(180).then((pngUrl) => {
           const apple = document.createElement("link");
           apple.rel = "apple-touch-icon";
@@ -810,7 +820,8 @@
           if (stepIdx >= stepsCache.length) {
             clearInterval(timer);
             timer = null;
-            currentStepEl.innerHTML = '<span class="celebrate">Done — nice work! 🥳</span>';
+            currentStepEl.innerHTML =
+              '<span class="celebrate">Done — nice work! 🥳</span>';
             timeLeftEl.textContent = "00:00";
             progressBar.style.width = "100%";
             startBtn.disabled = false;
@@ -865,7 +876,7 @@
       (function registerSW() {
         if (!("serviceWorker" in navigator)) return;
         const swCode = `
-const CACHE_NAME = "mobility-emerald-v2";
+const CACHE_NAME = "mobility-cobalt-v1";
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll([self.location.href])));
   self.skipWaiting();
