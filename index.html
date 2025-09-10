@@ -13,23 +13,39 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Mobility" />
     <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#0a1130" />
+    <meta name="theme-color" content="#0b1213" />
     <meta name="description" content="Quick 5–10 minute morning routine." />
 
     <style>
-      /* ===== Design system: Cobalt + Lime Glass ===== */
+      /*
+      Color scheme options (pick one quickly by swapping values in :root):
+        1) Obsidian + Neon Mint (applied)
+           bg: #0b1213 / #0e1719, fg: #e8fbf7, accent: #39f3bb, accent-2: #7ad3ff
+        2) Royal Cobalt + Apricot
+           bg: #0b103a / #101a44, fg: #eef1ff, accent: #6b7dff, accent-2: #ffb37a
+        3) Dusk Orchid + Sky
+           bg: #160d20 / #1b1127, fg: #f6edff, accent: #b97aff, accent-2: #8be1ff
+        4) Forest Jade + Gold
+           bg: #0c1612 / #102019, fg: #ecfff6, accent: #41d69a, accent-2: #ffd36b
+        5) Slate + Magenta
+           bg: #0e111a / #131826, fg: #eef2ff, accent: #a26bff, accent-2: #ff3f8e
+        6) Sandstone + Teal
+           bg: #101314 / #171b1d, fg: #f6fff7, accent: #2bd4c2, accent-2: #ffd99b
+      */
+
       :root {
-        --bg: #0a1130;     /* deep cobalt navy */
-        --bg-2: #0b1a3f;
-        --fg: #eef1ff;
-        --muted: #b9c2e6;
-        --accent: #5b7cfa;   /* cobalt */
-        --accent-2: #a7ff4f; /* lime */
-        --focus: #d7e0ff;
+        /* Scheme 1 — Obsidian + Neon Mint */
+        --bg: #0b1213;
+        --bg-2: #0e1719;
+        --fg: #e8fbf7;
+        --muted: #a9c1ba;
+        --accent: #39f3bb;   /* neon mint */
+        --accent-2: #7ad3ff; /* aqua sky */
+        --focus: #d8fff1;
         --glass: rgba(255, 255, 255, 0.08);
         --glass-soft: rgba(255, 255, 255, 0.05);
         --border: rgba(255, 255, 255, 0.18);
-        --ring: rgba(91, 124, 250, 0.35);
+        --ring: rgba(57, 243, 187, 0.3);
       }
 
       *,
@@ -45,8 +61,8 @@
         margin: 0;
         color: var(--fg);
         background:
-          radial-gradient(1350px 900px at 10% 10%, #13215a 0%, transparent 60%),
-          radial-gradient(1100px 700px at 85% 20%, #101a44 0%, transparent 60%),
+          radial-gradient(1350px 900px at 10% 10%, #12302b 0%, transparent 60%),
+          radial-gradient(1100px 700px at 85% 20%, #132c2a 0%, transparent 60%),
           linear-gradient(180deg, var(--bg), var(--bg-2) 60%);
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
           Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
@@ -90,12 +106,12 @@
         height: 14px;
         border-radius: 50%;
         background: conic-gradient(
-          from 220deg,
+          from 200deg,
           var(--accent),
           var(--accent-2),
           var(--accent)
         );
-        box-shadow: 0 0 18px rgba(91, 124, 250, 0.55);
+        box-shadow: 0 0 18px rgba(57, 243, 187, 0.5);
       }
       .header h1 {
         font-size: 18px;
@@ -125,11 +141,11 @@
       .tab.active {
         background: linear-gradient(
             135deg,
-            rgba(91, 124, 250, 0.22),
-            rgba(167, 255, 79, 0.22)
+            color-mix(in oklab, var(--accent) 25%, transparent),
+            color-mix(in oklab, var(--accent-2) 25%, transparent)
           ),
           rgba(255, 255, 255, 0.04);
-        border-color: rgba(91, 124, 250, 0.55);
+        border-color: color-mix(in oklab, var(--accent) 55%, #ffffff00);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .tab:active {
@@ -156,16 +172,13 @@
         font-size: 14px;
       }
 
-      /* Perfectly measured toggle (no overshoot) */
+      /* Toggle: JS sets --slide exactly based on clientWidth so it never overshoots */
       .toggle {
         --track-w: 84px;
         --track-h: 38px;
         --pad: 4px;
         --knob: 30px;
-        --bw: 1px; /* border width */
-        --slide: calc(
-          var(--track-w) - var(--knob) - (var(--pad) * 2) - (var(--bw) * 2)
-        );
+        --slide: 0px; /* will be updated by JS */
         position: relative;
         display: inline-flex;
         align-items: center;
@@ -179,7 +192,7 @@
         height: var(--track-h);
         border-radius: calc(var(--track-h) / 2);
         background: rgba(255, 255, 255, 0.06);
-        border: var(--bw) solid var(--border);
+        border: 1px solid var(--border);
         position: relative;
         box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
       }
@@ -194,12 +207,12 @@
         background: radial-gradient(
           circle at 30% 30%,
           #ffffff 0%,
-          #f2fff1 35%,
-          #dbffd7 65%,
-          #b9ff7c 100%
+          #f1fff9 35%,
+          #d3ffef 65%,
+          #a7ffe1 100%
         );
         border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 6px 14px rgba(167, 255, 79, 0.35);
+        box-shadow: 0 6px 14px rgba(57, 243, 187, 0.35);
         transition: transform 0.22s ease;
       }
       .toggle input:checked + .track::after {
@@ -241,11 +254,11 @@
       .btn.primary {
         background: linear-gradient(
             135deg,
-            rgba(91, 124, 250, 0.28),
-            rgba(167, 255, 79, 0.28)
+            color-mix(in oklab, var(--accent) 28%, transparent),
+            color-mix(in oklab, var(--accent-2) 28%, transparent)
           ),
           rgba(255, 255, 255, 0.05);
-        border-color: rgba(91, 124, 250, 0.6);
+        border-color: color-mix(in oklab, var(--accent) 60%, #ffffff00);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .btn.subtle {
@@ -308,7 +321,7 @@
         border-radius: 16px;
         border: 1px solid var(--border);
         background:
-          linear-gradient(180deg, rgba(91, 124, 250, 0.06), transparent 70%),
+          linear-gradient(180deg, color-mix(in oklab, var(--accent) 8%, transparent), transparent 70%),
           rgba(255, 255, 255, 0.04);
       }
       .step .top {
@@ -323,8 +336,8 @@
         display: grid;
         place-items: center;
         border-radius: 50%;
-        background: rgba(91, 124, 250, 0.25);
-        border: 1px solid rgba(91, 124, 250, 0.6);
+        background: color-mix(in oklab, var(--accent) 25%, transparent);
+        border: 1px solid color-mix(in oklab, var(--accent) 60%, transparent);
         font-weight: 900;
       }
       .step .title {
@@ -347,8 +360,8 @@
         display: inline-block;
         padding: 2px 8px;
         border-radius: 999px;
-        background: rgba(167, 255, 79, 0.18);
-        border: 1px solid rgba(167, 255, 79, 0.5);
+        background: color-mix(in oklab, var(--accent-2) 18%, transparent);
+        border: 1px solid color-mix(in oklab, var(--accent-2) 50%, transparent);
         animation: pop 0.6s ease;
       }
       @keyframes pop {
@@ -563,7 +576,7 @@
     <script>
       /* ========= Manifest + Icons (single‑file) ========= */
       (function injectManifestAndIcons() {
-        // Cobalt + Lime logo as SVG
+        // Logo matches current theme (accent + accent-2 over bg)
         function logoSvg(size) {
           const c = Math.round(size / 2);
           const r = Math.round(size * 0.36);
@@ -571,14 +584,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5b7cfa"/>
-      <stop offset="1" stop-color="#a7ff4f"/>
+      <stop offset="0" stop-color="${getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#39f3bb'}"/>
+      <stop offset="1" stop-color="${getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim()||'#7ad3ff'}"/>
     </linearGradient>
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#5b7cfa" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="black" flood-opacity="0.35"/>
     </filter>
   </defs>
-  <rect width="100%" height="100%" rx="${Math.round(size * 0.18)}" fill="#0a1130"/>
+  <rect width="100%" height="100%" rx="${Math.round(size * 0.18)}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#0b1213'}"/>
   <g filter="url(#shadow)">
     <circle cx="${c}" cy="${c}" r="${r}" fill="url(#g)"/>
   </g>
@@ -588,7 +601,6 @@
         const svgURL = (svg) =>
           "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 
-        // Apple touch icon PNG for iOS
         function makeApplePng(size = 180) {
           const cvs = document.createElement("canvas");
           cvs.width = size;
@@ -610,8 +622,12 @@
           description: "A quick, effective 5–10 minute morning routine.",
           start_url: ".",
           display: "standalone",
-          background_color: "#0a1130",
-          theme_color: "#0a1130",
+          background_color: getComputedStyle(document.documentElement)
+            .getPropertyValue("--bg")
+            .trim(),
+          theme_color: getComputedStyle(document.documentElement)
+            .getPropertyValue("--bg")
+            .trim(),
           icons: [
             {
               src: svgURL(logoSvg(192)),
@@ -868,15 +884,40 @@
         });
       });
 
-      modeToggle.addEventListener("change", renderSteps);
-      startBtn.addEventListener("click", startTimer);
-      resetBtn.addEventListener("click", resetTimer);
+      modeToggle.addEventListener("change", () => {
+        renderSteps();
+        requestAnimationFrame(updateToggleSlide);
+      });
+      window.addEventListener("resize", () => {
+        updateToggleSlide();
+      });
+
+      // Exact slide calculation based on real layout pixels (fixes overshoot on iOS)
+      function updateToggleSlide() {
+        const track = document.querySelector(".toggle .track");
+        if (!track) return;
+        const cs = getComputedStyle(track);
+        const pad = parseFloat(
+          getComputedStyle(document.querySelector(".toggle")).getPropertyValue(
+            "--pad"
+          ) || "4"
+        );
+        const knob = parseFloat(
+          getComputedStyle(document.querySelector(".toggle")).getPropertyValue(
+            "--knob"
+          ) || "30"
+        );
+        // clientWidth excludes borders. Distance from left pad position to right pad position.
+        const slide = Math.max(0, track.clientWidth - 2 * pad - knob);
+        track.style.setProperty("--slide", slide + "px");
+      }
+      updateToggleSlide();
 
       /* ========= Service worker (single‑file) ========= */
       (function registerSW() {
         if (!("serviceWorker" in navigator)) return;
         const swCode = `
-const CACHE_NAME = "mobility-cobalt-v1";
+const CACHE_NAME = "mobility-obsidian-mint-v1";
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll([self.location.href])));
   self.skipWaiting();
