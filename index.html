@@ -17,19 +17,19 @@
     <meta name="description" content="Quick 5–10 minute morning routine." />
 
     <style>
-      /* Scheme — Black + Red accent + Gray text */
+      /* Scheme — Black + Deep Crimson accent + Gray text */
       :root {
         --bg: #000000;       /* pure black */
         --bg-2: #050505;     /* subtle depth */
         --fg: #cfcfcf;       /* primary text (gray) */
         --muted: #9a9a9a;    /* secondary text */
-        --accent: #ff4d4f;   /* red */
-        --accent-2: #ff7a70; /* red-orange for gradients */
+        --accent: #e0112b;   /* deep crimson */
+        --accent-2: #8b000f; /* darker crimson for gradients */
         --focus: #e5e5e5;
         --glass: rgba(255, 255, 255, 0.07);
         --glass-soft: rgba(255, 255, 255, 0.045);
         --border: rgba(255, 255, 255, 0.16);
-        --ring: rgba(255, 77, 79, 0.35);
+        --ring: rgba(224, 17, 43, 0.35);
       }
 
       *,
@@ -95,7 +95,7 @@
           var(--accent-2),
           var(--accent)
         );
-        box-shadow: 0 0 18px rgba(255, 77, 79, 0.55);
+        box-shadow: 0 0 18px rgba(224, 17, 43, 0.55);
       }
       .header h1 {
         font-size: 18px;
@@ -125,11 +125,11 @@
       .tab.active {
         background: linear-gradient(
             135deg,
-            rgba(255, 77, 79, 0.22),
-            rgba(255, 122, 112, 0.22)
+            rgba(224, 17, 43, 0.22),
+            rgba(139, 0, 15, 0.22)
           ),
           rgba(255, 255, 255, 0.03);
-        border-color: rgba(255, 77, 79, 0.55);
+        border-color: rgba(224, 17, 43, 0.55);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .tab:active {
@@ -196,7 +196,7 @@
           #d6d6d6 100%
         );
         border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 6px 14px rgba(255, 77, 79, 0.35);
+        box-shadow: 0 6px 14px rgba(224, 17, 43, 0.35);
         transition: transform 0.22s ease;
       }
       .toggle input:checked + .track::after {
@@ -238,11 +238,11 @@
       .btn.primary {
         background: linear-gradient(
             135deg,
-            rgba(255, 77, 79, 0.28),
-            rgba(255, 122, 112, 0.28)
+            rgba(224, 17, 43, 0.28),
+            rgba(139, 0, 15, 0.28)
           ),
           rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 77, 79, 0.6);
+        border-color: rgba(224, 17, 43, 0.6);
         box-shadow: 0 0 0 3px var(--ring);
       }
       .btn.subtle {
@@ -305,7 +305,7 @@
         border-radius: 16px;
         border: 1px solid var(--border);
         background:
-          linear-gradient(180deg, rgba(255, 77, 79, 0.06), transparent 70%),
+          linear-gradient(180deg, rgba(224, 17, 43, 0.06), transparent 70%),
           rgba(255, 255, 255, 0.035);
       }
       .step .top {
@@ -320,8 +320,8 @@
         display: grid;
         place-items: center;
         border-radius: 50%;
-        background: rgba(255, 77, 79, 0.25);
-        border: 1px solid rgba(255, 77, 79, 0.6);
+        background: rgba(224, 17, 43, 0.25);
+        border: 1px solid rgba(224, 17, 43, 0.6);
         color: #ffffff;
         font-weight: 900;
       }
@@ -345,8 +345,8 @@
         display: inline-block;
         padding: 2px 8px;
         border-radius: 999px;
-        background: rgba(255, 122, 112, 0.2);
-        border: 1px solid rgba(255, 122, 112, 0.55);
+        background: rgba(224, 17, 43, 0.22);
+        border: 1px solid rgba(224, 17, 43, 0.55);
         animation: pop 0.6s ease;
         color: #ffffff;
       }
@@ -562,13 +562,13 @@
     <script>
       /* ========= Manifest + Icons (single‑file) ========= */
       (function injectManifestAndIcons() {
-        // Theme-aware logo (black bg, red gradient)
+        // Theme-aware logo (black bg, deep crimson gradient)
         function logoSvg(size) {
           const c = Math.round(size / 2);
           const r = Math.round(size * 0.36);
           const cs = getComputedStyle(document.documentElement);
-          const ACC = cs.getPropertyValue("--accent").trim() || "#ff4d4f";
-          const ACC2 = cs.getPropertyValue("--accent-2").trim() || "#ff7a70";
+          const ACC = cs.getPropertyValue("--accent").trim() || "#e0112b";
+          const ACC2 = cs.getPropertyValue("--accent-2").trim() || "#8b000f";
           const BG = cs.getPropertyValue("--bg").trim() || "#000000";
           return `
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
@@ -896,7 +896,7 @@
       (function registerSW() {
         if (!("serviceWorker" in navigator)) return;
         const swCode = `
-const CACHE_NAME = "mobility-black-red-v1";
+const CACHE_NAME = "mobility-black-deepred-v1";
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll([self.location.href])));
   self.skipWaiting();
