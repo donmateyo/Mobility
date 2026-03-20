@@ -1,969 +1,800 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <title>Morning Mobility — 5–10 Minutes</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workout Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --bg-elevated: #1a1a1a;
+      --card: #242424;
+      --border: #333;
+      --fg: #e8e4e0;
+      --muted: #8a8580;
+      --accent: #e07a4f;
+      --accent-glow: rgba(224, 122, 79, 0.3);
+      --success: #6abf69;
+      --warning: #d4a03c;
+    }
 
-    <!-- iOS PWA polish -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="Mobility" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#282a36" />
-    <meta name="description" content="Quick 5–10 minute morning routine." />
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-    <style>
-      /* Dracula-inspired palette */
-      :root {
-        --bg: #282a36; /* base */
-        --bg-2: #1f2130; /* depth */
-        --panel: #2b2e3b;
-        --fg: #f8f8f2; /* foreground */
-        --muted: #b9c0df; /* softened comment */
-        --accent: #bd93f9; /* purple */
-        --accent-2: #ff79c6; /* pink */
-        --accent-warm: #ffb86c; /* warm accent (progress sheen mix) */
-        --focus: #f1fa8c; /* yellow */
-        --glass: rgba(255, 255, 255, 0.08);
-        --glass-soft: rgba(255, 255, 255, 0.05);
-        --border: rgba(255, 255, 255, 0.14);
-        --ring: rgba(189, 147, 249, 0.35);
-      }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
 
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        color: var(--fg);
-        background:
-          radial-gradient(1350px 900px at 12% 12%, #313447 0%, transparent 60%),
-          radial-gradient(1100px 700px at 88% 22%, #26293b 0%, transparent 60%),
-          linear-gradient(180deg, var(--bg), var(--bg-2) 60%);
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-          Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
-        line-height: 1.45;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
+    /* Subtle background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(224, 122, 79, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(106, 191, 105, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-      #app {
-        min-height: 100%;
-        display: grid;
-        grid-template-rows: auto auto 1fr auto;
-        gap: 16px;
-        padding: 16px;
-      }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
 
-      .glass {
-        background: var(--glass);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        backdrop-filter: blur(14px) saturate(125%);
-        -webkit-backdrop-filter: blur(14px) saturate(125%);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-      }
-      .glass.soft {
-        background: var(--glass-soft);
-      }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-top: 1rem;
+    }
 
-      .header,
-      .footer {
-        padding: 12px 16px;
-      }
-      .header .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .logo-dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: conic-gradient(
-          from 220deg,
-          var(--accent),
-          var(--accent-2),
-          var(--accent)
-        );
-        box-shadow: 0 0 18px rgba(189, 147, 249, 0.55);
-      }
-      .header h1 {
-        font-size: 18px;
-        margin: 0;
-        letter-spacing: 0.2px;
-      }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
 
-      .tabs {
-        display: grid;
-        grid-auto-flow: column;
-        gap: 8px;
-        padding: 8px;
-      }
-      .tab {
-        appearance: none;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--fg);
-        border-radius: 14px;
-        padding: 10px 12px;
-        font-weight: 700;
-        letter-spacing: 0.2px;
-        cursor: pointer;
-        transition: transform 0.08s ease, background 0.2s ease, border 0.2s ease,
-          box-shadow 0.2s ease;
-      }
-      .tab.active {
-        background: linear-gradient(
-            135deg,
-            rgba(189, 147, 249, 0.22),
-            rgba(255, 121, 198, 0.22)
-          ),
-          rgba(255, 255, 255, 0.04);
-        border-color: rgba(189, 147, 249, 0.55);
-        box-shadow: 0 0 0 3px var(--ring);
-      }
-      .tab:active {
-        transform: translateY(1px);
-      }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
 
-      main {
-        display: grid;
-        gap: 16px;
-      }
-      .panel {
-        padding: 16px;
-      }
+    /* Mode Tabs */
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
 
-      .mode {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-      .mode-note {
-        color: var(--muted);
-        font-size: 14px;
-      }
+    .mode-tab {
+      flex: 1;
+      padding: 0.875rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
 
-      /* Toggle measured by JS to prevent overshoot */
-      .toggle {
-        --track-w: 84px;
-        --track-h: 38px;
-        --pad: 4px;
-        --knob: 30px;
-        --slide: 0px; /* set by JS */
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .toggle input {
-        display: none;
-      }
-      .toggle .track {
-        width: var(--track-w);
-        height: var(--track-h);
-        border-radius: calc(var(--track-h) / 2);
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid var(--border);
-        position: relative;
-        box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.18);
-      }
-      .toggle .track::after {
-        content: "";
-        position: absolute;
-        top: var(--pad);
-        left: var(--pad);
-        width: var(--knob);
-        height: var(--knob);
-        border-radius: 50%;
-        background: radial-gradient(
-          circle at 30% 30%,
-          #ffffff 0%,
-          #f6f6ff 35%,
-          #eceeff 65%,
-          #e3e5ff 100%
-        );
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        box-shadow: 0 6px 14px rgba(189, 147, 249, 0.35);
-        transition: transform 0.22s ease;
-      }
-      .toggle input:checked + .track::after {
-        transform: translateX(var(--slide));
-      }
-      .toggle .labels {
-        display: inline-grid;
-        grid-auto-flow: column;
-        gap: 6px;
-        color: var(--muted);
-        font-size: 14px;
-      }
+    .mode-tab:hover {
+      border-color: var(--accent);
+      color: var(--fg);
+    }
 
-      .controls {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 12px;
-      }
+    .mode-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
 
-      .btn {
-        appearance: none;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--fg);
-        border-radius: 14px;
-        padding: 10px 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: transform 0.08s ease, background 0.2s ease,
-          border 0.2s ease, box-shadow 0.2s ease;
-      }
-      .btn:hover {
-        background: rgba(255, 255, 255, 0.08);
-      }
-      .btn:active {
-        transform: translateY(1px);
-      }
-      .btn.primary {
-        background: linear-gradient(
-            135deg,
-            rgba(189, 147, 249, 0.28),
-            rgba(255, 121, 198, 0.28)
-          ),
-          rgba(255, 255, 255, 0.05);
-        border-color: rgba(189, 147, 249, 0.6);
-        box-shadow: 0 0 0 3px var(--ring);
-      }
-      .btn.subtle {
-        font-size: 14px;
-        padding: 8px 10px;
-      }
+    .mode-tab:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
-      .status {
-        padding: 12px;
-        margin-bottom: 12px;
-      }
-      .status-row {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .status .label {
-        color: var(--muted);
-        font-size: 12px;
-      }
-      .status .value {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-weight: 800;
-      }
-      .progress {
-        width: 100%;
-        height: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        overflow: hidden;
-      }
-      .progress .bar {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(
-          90deg,
-          var(--accent),
-          var(--accent-2),
-          var(--accent-warm)
-        );
-        background-size: 200% 100%;
-        animation: sheen 3s linear infinite;
-        transition: width 0.35s ease;
-      }
-      @keyframes sheen {
-        0% {
-          background-position: 0% 0%;
-        }
-        100% {
-          background-position: 200% 0%;
-        }
-      }
+    /* Timer Display */
+    .timer-display {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
 
-      .steps {
-        display: grid;
-        gap: 12px;
-      }
-      .step {
-        display: grid;
-        gap: 8px;
-        padding: 12px;
-        border-radius: 16px;
-        border: 1px solid var(--border);
-        background: linear-gradient(
-            180deg,
-            rgba(189, 147, 249, 0.07),
-            transparent 70%
-          ),
-          rgba(255, 255, 255, 0.035);
-      }
-      .step .top {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 10px;
-        align-items: center;
-      }
-      .step .index {
-        width: 30px;
-        height: 30px;
-        display: grid;
-        place-items: center;
-        border-radius: 50%;
-        background: rgba(189, 147, 249, 0.22);
-        border: 1px solid rgba(189, 147, 249, 0.6);
-        color: #17181f;
-        font-weight: 900;
-      }
-      .step .title {
-        font-weight: 800;
-      }
-      .step .duration {
-        color: var(--muted);
-        font-size: 13px;
-      }
-      .step .desc {
-        color: var(--muted);
-        font-size: 14px;
-      }
-      .step .meta {
-        color: var(--muted);
-        font-size: 12px;
-      }
+    .timer-main {
+      font-family: 'DM Mono', monospace;
+      font-size: 4rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+    }
 
-      .celebrate {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: rgba(255, 121, 198, 0.22);
-        border: 1px solid rgba(255, 121, 198, 0.55);
-        animation: pop 0.6s ease;
-        color: #ffffff;
+    .timer-round {
+      font-size: 0.875rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .current-exercise {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--card);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .current-exercise strong {
+      color: var(--accent);
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--muted);
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .settings-header {
+      padding: 1rem 1.25rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .settings-header:hover {
+      background: var(--card);
+    }
+
+    .settings-toggle {
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+
+    .settings-toggle.open {
+      transform: rotate(180deg);
+    }
+
+    .settings-content {
+      padding: 1.25rem;
+      display: none;
+    }
+
+    .settings-content.open {
+      display: block;
+    }
+
+    .setting-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .setting-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .setting-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.15s ease;
+    }
+
+    .setting-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .setting-input::placeholder {
+      color: var(--muted);
+    }
+
+    .exercise-row {
+      display: grid;
+      grid-template-columns: 1fr 80px 100px;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .exercise-row input {
+      padding: 0.625rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .add-exercise {
+      margin-top: 0.75rem;
+      padding: 0.625rem;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .add-exercise:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Rules Section */
+    .rules {
+      margin-top: 2rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .rules h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .rule {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .rule:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .rule strong {
+      color: var(--warning);
+    }
+
+    /* Round Counter for AMRAP */
+    .round-counter {
+      text-align: center;
+      padding: 1rem;
+      background: var(--card);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .round-counter-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--success);
+    }
+
+    .round-counter-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem;
       }
-      @keyframes pop {
-        0% {
-          transform: scale(0.9);
-          opacity: 0;
-        }
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
+      
+      .timer-main {
+        font-size: 3rem;
       }
-
-      .two-col {
-        display: grid;
-        gap: 16px;
+      
+      .exercise-row {
+        grid-template-columns: 1fr;
       }
-      .two-col .col h3 {
-        margin-top: 0;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition-duration: 0.01ms !important;
       }
-      .bullets {
-        margin: 0;
-        padding-left: 18px;
-        display: grid;
-        gap: 8px;
-      }
-      .footer {
-        text-align: center;
-        color: var(--muted);
-      }
+    }
 
-      .tab-panel[hidden] {
-        display: none;
-      }
-      .tab-panel.active {
-        display: block;
-      }
+    /* Timer states */
+    .timer-display.running {
+      border-color: var(--accent);
+    }
 
-      @media (min-width: 720px) {
-        .two-col {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="app">
-      <header class="glass header">
-        <div class="brand">
-          <div class="logo-dot"></div>
-          <h1>Morning Mobility</h1>
-        </div>
-        <button id="installBtn" class="btn subtle" hidden>Install App</button>
-      </header>
+    .timer-display.resting {
+      border-color: var(--success);
+    }
 
-      <nav class="tabs glass" role="tablist" aria-label="Sections">
-        <button class="tab active" data-tab="routine" role="tab" aria-selected="true">
-          Routine
-        </button>
-        <button class="tab" data-tab="why" role="tab" aria-selected="false">
-          Why
-        </button>
-        <button class="tab" data-tab="tips" role="tab" aria-selected="false">
-          Tips
-        </button>
-        <button class="tab" data-tab="variations" role="tab" aria-selected="false">
-          Variations
-        </button>
-      </nav>
+    /* Audio indicator */
+    .audio-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
 
-      <main>
-        <section id="routine" class="tab-panel active" role="tabpanel">
-          <div class="glass panel">
-            <div class="mode">
-              <label class="toggle" title="Toggle 5 vs 10 minutes">
-                <input type="checkbox" id="modeToggle" />
-                <span class="track"></span>
-                <span class="labels">
-                  <span>5 min</span>
-                  <span>10 min</span>
-                </span>
-              </label>
-              <div class="mode-note">Gentle, smooth, pain‑free. No bouncing.</div>
-            </div>
+    .audio-toggle:hover {
+      color: var(--fg);
+    }
 
-            <div class="controls">
-              <button id="startBtn" class="btn primary">Start Guided Timer</button>
-              <button id="resetBtn" class="btn" disabled>Reset</button>
-            </div>
+    .audio-toggle.active {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <button class="audio-toggle" id="audioToggle" aria-label="Toggle audio alerts" title="Toggle sound">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <path id="soundWaves" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+    </svg>
+  </button>
 
-            <div class="status glass soft">
-              <div class="status-row">
-                <div class="now">
-                  <div class="label">Current</div>
-                  <div id="currentStep" class="value">—</div>
-                </div>
-                <div class="time">
-                  <div class="label">Time</div>
-                  <div id="timeLeft" class="value">00:00</div>
-                </div>
-                <div class="total">
-                  <div class="label">Total</div>
-                  <div id="totalTime" class="value">~5:40</div>
-                </div>
-              </div>
-              <div class="progress">
-                <div id="progressBar" class="bar"></div>
-              </div>
-            </div>
+  <div class="container">
+    <header>
+      <h1>Workout Timer</h1>
+      <p class="subtitle">High intensity, fully customizable</p>
+    </header>
 
-            <div id="routineList" class="steps"></div>
-          </div>
-        </section>
-
-        <section id="why" class="tab-panel" role="tabpanel" hidden>
-          <div class="glass panel">
-            <h2>Why these moves</h2>
-            <ul class="bullets">
-              <li>
-                Morning stiffness responds best to slow, gentle mobility that warms tissues
-                before deeper stretching, which reduces discomfort and supports daily movement
-                quality [16][8].
-              </li>
-              <li>
-                Hip flexor and hamstring work helps offload the low back, especially after
-                prolonged sitting or sleeping, while spinal flows restore segmental motion safely
-                [5][7].
-              </li>
-              <li>
-                Chest and neck openers counter forward‑head and rounded‑shoulder posture common
-                in students and desk work, improving comfort through the day [6][5].
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section id="tips" class="tab-panel" role="tabpanel" hidden>
-          <div class="glass panel">
-            <h2>Tips and safety</h2>
-            <ul class="bullets">
-              <li>
-                Warm up gradually, breathe steadily, and stop at mild tension; avoid bouncing and
-                any painful end‑range positions [16].
-              </li>
-              <li>
-                Keep knees soft in forward folds and hinge at the hips; use blocks or thighs for
-                support if hamstrings are tight [5][7].
-              </li>
-              <li>
-                If floors are not ideal, many moves can start in bed or standing (cobra/mini
-                backbend in bed, knees‑to‑chest, side bend, neck stretch) to ease into the day [6].
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section id="variations" class="tab-panel" role="tabpanel" hidden>
-          <div class="glass panel">
-            <h2>Optional bed or desk variations</h2>
-            <div class="two-col">
-              <div class="col">
-                <h3>In bed</h3>
-                <ul class="bullets">
-                  <li>
-                    Gentle cobra, single‑knee‑to‑chest, and supine spinal twist to wake up the
-                    spine without loading, 20–30 seconds each [6].
-                  </li>
-                </ul>
-              </div>
-              <div class="col">
-                <h3>At a desk</h3>
-                <ul class="bullets">
-                  <li>
-                    Seated upper‑back reach (hands interlaced, arms forward), cross‑body shoulder
-                    stretch, and doorway chest stretch between classes, 20–30 seconds each [6][5].
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass panel">
-            <h2>10‑minute add‑ons</h2>
-            <ul class="bullets">
-              <li>
-                Add Thread‑the‑Needle from tabletop for mid‑back/shoulder relief, ~30–45 seconds
-                per side [7].
-              </li>
-              <li>
-                Add standing quad stretch, ~30 seconds per side to balance hip mobility [6].
-              </li>
-              <li>
-                Add doorway chest stretch or hands‑clasped chest opener, ~30 seconds to counter
-                rounded shoulders [5][6].
-              </li>
-              <li>
-                Add wall calf stretch, ~30 seconds per side to ease morning tightness [6].
-              </li>
-            </ul>
-          </div>
-        </section>
-      </main>
-
-      <footer class="glass footer">
-        <small>
-          Breathe slow, smooth, pain‑free. Hold mild tension only. Avoid bouncing
-          [16][5]. Use at your own pace.
-        </small>
-      </footer>
+    <div class="mode-tabs" role="tablist">
+      <button class="mode-tab active" role="tab" aria-selected="true" data-mode="emom">EMOM</button>
+      <button class="mode-tab" role="tab" aria-selected="false" data-mode="amrap">AMRAP</button>
     </div>
 
-    <script>
-      /* ========= Manifest + Icons (single‑file) ========= */
-      (function injectManifestAndIcons() {
-        function logoSvg(size) {
-          const c = Math.round(size / 2);
-          const r = Math.round(size * 0.36);
-          const cs = getComputedStyle(document.documentElement);
-          const ACC = cs.getPropertyValue("--accent").trim() || "#bd93f9";
-          const ACC2 = cs.getPropertyValue("--accent-2").trim() || "#ff79c6";
-          const BG = cs.getPropertyValue("--bg").trim() || "#282a36";
-          return `
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${ACC}"/>
-      <stop offset="1" stop-color="${ACC2}"/>
-    </linearGradient>
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="${ACC}" flood-opacity="0.35"/>
-    </filter>
-  </defs>
-  <rect width="100%" height="100%" rx="${Math.round(size * 0.18)}" fill="${BG}"/>
-  <g filter="url(#shadow)">
-    <circle cx="${c}" cy="${c}" r="${r}" fill="url(#g)"/>
-  </g>
-  <path d="M ${c- r*0.62} ${c+ r*0.05} q ${r*0.35} ${-r*0.9} ${r*1.24} 0"
-        stroke="#f8f8f2" stroke-opacity="0.95"
-        stroke-width="${Math.max(6, size*0.04)}" fill="none" stroke-linecap="round"/>
-</svg>`;
-        }
-        const svgURL = (svg) =>
-          "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-
-        function makeApplePng(size = 180) {
-          const cvs = document.createElement("canvas");
-          cvs.width = size;
-          cvs.height = size;
-          const ctx = cvs.getContext("2d");
-          const img = new Image();
-          return new Promise((resolve) => {
-            img.onload = () => {
-              ctx.drawImage(img, 0, 0, size, size);
-              resolve(cvs.toDataURL("image/png"));
-            };
-            img.src = svgURL(logoSvg(size));
-          });
-        }
-
-        const BG = getComputedStyle(document.documentElement)
-          .getPropertyValue("--bg")
-          .trim();
-
-        const manifest = {
-          name: "Morning Mobility",
-          short_name: "Mobility",
-          description: "A quick, effective 5–10 minute morning routine.",
-          start_url: ".",
-          display: "standalone",
-          background_color: BG,
-          theme_color: BG,
-          icons: [
-            {
-              src: svgURL(logoSvg(192)),
-              sizes: "192x192",
-              type: "image/svg+xml",
-              purpose: "any maskable"
-            },
-            {
-              src: svgURL(logoSvg(512)),
-              sizes: "512x512",
-              type: "image/svg+xml",
-              purpose: "any maskable"
-            }
-          ]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], {
-          type: "application/manifest+json"
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("link");
-        link.rel = "manifest";
-        link.href = url;
-        document.head.appendChild(link);
-
-        makeApplePng(180).then((pngUrl) => {
-          const apple = document.createElement("link");
-          apple.rel = "apple-touch-icon";
-          apple.href = pngUrl;
-          document.head.appendChild(apple);
-        });
-
-        window.addEventListener("beforeunload", () => URL.revokeObjectURL(url));
-      })();
-
-      /* ========= App logic ========= */
-      const $ = (sel) => document.querySelector(sel);
-
-      const modeToggle = $("#modeToggle");
-      const startBtn = $("#startBtn");
-      const resetBtn = $("#resetBtn");
-      const routineList = $("#routineList");
-      const currentStepEl = $("#currentStep");
-      const timeLeftEl = $("#timeLeft");
-      const totalTimeEl = $("#totalTime");
-      const progressBar = $("#progressBar");
-      const installBtn = $("#installBtn");
-
-      const STEPS_BASE = [
-        {
-          id: "breaths-rolls",
-          title: "3 deep breaths + shoulder rolls",
-          duration: 40,
-          desc:
-            "Relax jaw, drop shoulders; slow breathing with gentle shoulder rolls [16][7].",
-          tags: ["5", "10"]
-        },
-        {
-          id: "cat-cow",
-          title: "Cat‑Cow (hands and knees)",
-          duration: 60,
-          desc:
-            "Move with breath to mobilize the whole spine; smooth, pain‑free motion [7].",
-          tags: ["5", "10"]
-        },
-        {
-          id: "lunge-half-split",
-          title: "Low lunge → Half‑split (same side)",
-          duration: 60,
-          desc:
-            "Hip flexor then hamstring stretch on one side; switch sides next [5][7].",
-          tags: ["5", "10"]
-        },
-        {
-          id: "lunge-half-split-2",
-          title: "Switch sides: Low lunge → Half‑split",
-          duration: 60,
-          desc: "Repeat on the other side for balance [5][7].",
-          tags: ["5", "10"]
-        },
-        {
-          id: "down-dog",
-          title: "Downward Dog (gentle pedaling)",
-          duration: 40,
-          desc: "Open calves and posterior chain; keep it easy [7].",
-          tags: ["5", "10"]
-        },
-        {
-          id: "forward-fold",
-          title: "Standing forward fold / ragdoll",
-          duration: 40,
-          desc: "Soft knees, hinge at hips; use blocks or thighs if tight [7][5].",
-          tags: ["5", "10"]
-        },
-        {
-          id: "neck-sidebend",
-          title: "Lateral neck tilt + overhead side bend",
-          duration: 40,
-          desc: "About 15–20s per side; gentle only [6][7].",
-          tags: ["5", "10"]
-        }
-      ];
-
-      const STEPS_ADDED_10 = [
-        {
-          id: "thread-needle",
-          title: "Thread‑the‑Needle (tabletop)",
-          duration: 40,
-          desc: "Mid‑back/shoulder relief; switch sides halfway [7].",
-          tags: ["10"]
-        },
-        {
-          id: "quad-stand",
-          title: "Standing quad stretch",
-          duration: 60,
-          desc: "About 30s each side to balance hip mobility [6].",
-          tags: ["10"]
-        },
-        {
-          id: "chest-stretch",
-          title: "Doorway chest stretch / hands‑clasped opener",
-          duration: 30,
-          desc: "Counter rounded shoulders gently [5][6].",
-          tags: ["10"]
-        },
-        {
-          id: "calf-wall",
-          title: "Wall calf stretch",
-          duration: 60,
-          desc: "About 30s each side for morning tightness [6].",
-          tags: ["10"]
-        }
-      ];
-
-      function getMode() {
-        return modeToggle.checked ? "10" : "5";
-      }
-      function getSteps(mode) {
-        return mode === "10" ? [...STEPS_BASE, ...STEPS_ADDED_10] : [...STEPS_BASE];
-      }
-      function formatMMSS(s) {
-        const m = Math.floor(s / 60).toString();
-        const sec = Math.floor(s % 60).toString().padStart(2, "0");
-        return `${m}:${sec}`;
-      }
-      function totalDuration(steps) {
-        return steps.reduce((t, s) => t + s.duration, 0);
-      }
-
-      function renderSteps() {
-        const mode = getMode();
-        const steps = getSteps(mode);
-        totalTimeEl.textContent = `~${formatMMSS(totalDuration(steps))}`;
-        routineList.innerHTML = steps
-          .map(
-            (s, i) => `
-    <article class="step">
-      <div class="top">
-        <div class="index">${i + 1}</div>
-        <div class="title">${s.title}</div>
-        <div class="duration">${formatMMSS(s.duration)}</div>
+    <div class="timer-display" id="timerDisplay">
+      <div class="timer-main" id="timerMain">20:00</div>
+      <div class="timer-round" id="timerRound">Ready to start</div>
+      <div class="current-exercise" id="currentExercise">
+        <strong>Odd minutes:</strong> 10 Kettlebell Swings | <strong>Even minutes:</strong> 8 Goblet Squats
       </div>
-      <div class="desc">${s.desc}</div>
-      <div class="meta">Guidelines: slow breathing, smooth, pain‑free, mild tension only. Avoid bouncing [16][5].</div>
-    </article>`
-          )
-          .join("");
-      }
-      renderSteps();
+    </div>
 
-      let timer = null;
-      let stepIdx = -1;
-      let stepTimeLeft = 0;
-      let stepsCache = [];
+    <div class="round-counter" id="roundCounter" style="display: none;">
+      <div class="round-counter-value" id="roundValue">0</div>
+      <div class="round-counter-label">Rounds Completed</div>
+    </div>
 
-      function startTimer() {
-        if (timer) return;
-        stepsCache = getSteps(getMode());
-        stepIdx = 0;
-        stepTimeLeft = stepsCache[0].duration;
-        startBtn.disabled = true;
-        modeToggle.disabled = true;
-        resetBtn.disabled = false;
-        tickUI();
-        timer = setInterval(tick, 1000);
-        tryVibrate([30, 30, 30]);
-      }
-      function resetTimer() {
-        clearInterval(timer);
-        timer = null;
-        stepIdx = -1;
-        stepTimeLeft = 0;
-        startBtn.disabled = false;
-        modeToggle.disabled = false;
-        resetBtn.disabled = true;
-        currentStepEl.innerHTML = "—";
-        timeLeftEl.textContent = "00:00";
-        progressBar.style.width = "0%";
-      }
-      function tick() {
-        if (stepIdx < 0) return;
-        stepTimeLeft -= 1;
+    <div class="controls">
+      <button class="btn btn-primary" id="startBtn">Start</button>
+      <button class="btn btn-secondary" id="resetBtn">Reset</button>
+    </div>
 
-        if (stepTimeLeft <= 0) {
-          tryVibrate([60, 40, 60]);
-          stepIdx += 1;
-          if (stepIdx >= stepsCache.length) {
-            clearInterval(timer);
-            timer = null;
-            currentStepEl.innerHTML =
-              '<span class="celebrate">Done — nice work! 🥳</span>';
-            timeLeftEl.textContent = "00:00";
-            progressBar.style.width = "100%";
-            startBtn.disabled = false;
-            modeToggle.disabled = false;
-            return;
-          } else {
-            stepTimeLeft = stepsCache[stepIdx].duration;
-          }
+    <div class="settings-panel">
+      <div class="settings-header" id="settingsHeader">
+        <span>Customize Workout</span>
+        <span class="settings-toggle" id="settingsToggle">&#9662;</span>
+      </div>
+      <div class="settings-content" id="settingsContent">
+        <!-- EMOM Settings -->
+        <div id="emomSettings">
+          <div class="setting-group">
+            <label class="setting-label">Duration (minutes)</label>
+            <input type="number" class="setting-input" id="emomDuration" value="20" min="1" max="60">
+          </div>
+          
+          <div class="setting-group">
+            <label class="setting-label">Odd Minute Exercise</label>
+            <div class="exercise-row">
+              <input type="text" class="setting-input" id="oddExercise" value="Kettlebell Swings" placeholder="Exercise name">
+              <input type="number" class="setting-input" id="oddReps" value="10" min="1" placeholder="Reps">
+              <input type="text" class="setting-input" id="oddWeight" value="50-70lb" placeholder="Weight">
+            </div>
+          </div>
+          
+          <div class="setting-group">
+            <label class="setting-label">Even Minute Exercise</label>
+            <div class="exercise-row">
+              <input type="text" class="setting-input" id="evenExercise" value="Goblet Squats" placeholder="Exercise name">
+              <input type="number" class="setting-input" id="evenReps" value="8" min="1" placeholder="Reps">
+              <input type="text" class="setting-input" id="evenWeight" value="35-50lb" placeholder="Weight">
+            </div>
+          </div>
+        </div>
+
+        <!-- AMRAP Settings -->
+        <div id="amrapSettings" style="display: none;">
+          <div class="setting-group">
+            <label class="setting-label">Duration (minutes)</label>
+            <input type="number" class="setting-input" id="amrapDuration" value="12" min="1" max="60">
+          </div>
+          
+          <div class="setting-group">
+            <label class="setting-label">Circuit Exercises</label>
+            <div id="exerciseList">
+              <div class="exercise-row">
+                <input type="text" class="setting-input" value="Kettlebell Swings" placeholder="Exercise">
+                <input type="number" class="setting-input" value="10" min="1" placeholder="Reps">
+                <input type="text" class="setting-input" value="70lb" placeholder="Weight">
+              </div>
+              <div class="exercise-row">
+                <input type="text" class="setting-input" value="Dumbbell Thrusters" placeholder="Exercise">
+                <input type="number" class="setting-input" value="10" min="1" placeholder="Reps">
+                <input type="text" class="setting-input" value="25lb each" placeholder="Weight">
+              </div>
+              <div class="exercise-row">
+                <input type="text" class="setting-input" value="Burpees" placeholder="Exercise">
+                <input type="number" class="setting-input" value="10" min="1" placeholder="Reps">
+                <input type="text" class="setting-input" value="bodyweight" placeholder="Weight">
+              </div>
+            </div>
+            <button class="add-exercise" id="addExercise">+ Add Exercise</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rules">
+      <h3>Rules for Success</h3>
+      <div class="rule"><strong>1. Prioritize the Hinge:</strong> Use your hips to snap the weight up, not your lower back.</div>
+      <div class="rule"><strong>2. Intensity = Weight:</strong> If you could jog after, go heavier next time.</div>
+      <div class="rule"><strong>3. The Torch Factor:</strong> Breathless by minute 5? Good. You're doing it right.</div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let mode = 'emom';
+    let isRunning = false;
+    let timeRemaining = 20 * 60;
+    let currentMinute = 0;
+    let roundsCompleted = 0;
+    let timerInterval = null;
+    let audioEnabled = false;
+
+    // Audio context for beeps
+    let audioContext = null;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playBeep(frequency, duration) {
+      if (!audioEnabled || !audioContext) return;
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    }
+
+    // DOM Elements
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerMain = document.getElementById('timerMain');
+    const timerRound = document.getElementById('timerRound');
+    const currentExercise = document.getElementById('currentExercise');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const settingsHeader = document.getElementById('settingsHeader');
+    const settingsContent = document.getElementById('settingsContent');
+    const settingsToggle = document.getElementById('settingsToggle');
+    const roundCounter = document.getElementById('roundCounter');
+    const roundValue = document.getElementById('roundValue');
+    const audioToggle = document.getElementById('audioToggle');
+    const soundWaves = document.getElementById('soundWaves');
+
+    // Mode tabs
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        if (isRunning) return;
+        
+        document.querySelectorAll('.mode-tab').forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        
+        mode = tab.dataset.mode;
+        updateDisplay();
+        
+        document.getElementById('emomSettings').style.display = mode === 'emom' ? 'block' : 'none';
+        document.getElementById('amrapSettings').style.display = mode === 'amrap' ? 'block' : 'none';
+        roundCounter.style.display = mode === 'amrap' ? 'block' : 'none';
+      });
+    });
+
+    // Settings toggle
+    settingsHeader.addEventListener('click', () => {
+      settingsContent.classList.toggle('open');
+      settingsToggle.classList.toggle('open');
+    });
+
+    // Audio toggle
+    audioToggle.addEventListener('click', () => {
+      initAudio();
+      audioEnabled = !audioEnabled;
+      audioToggle.classList.toggle('active', audioEnabled);
+      soundWaves.style.opacity = audioEnabled ? '1' : '0.3';
+    });
+
+    // Add exercise (AMRAP)
+    document.getElementById('addExercise').addEventListener('click', () => {
+      const exerciseList = document.getElementById('exerciseList');
+      const row = document.createElement('div');
+      row.className = 'exercise-row';
+      row.innerHTML = `
+        <input type="text" class="setting-input" placeholder="Exercise">
+        <input type="number" class="setting-input" min="1" placeholder="Reps">
+        <input type="text" class="setting-input" placeholder="Weight">
+      `;
+      exerciseList.appendChild(row);
+    });
+
+    // Format time
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Get settings
+    function getEMOMSettings() {
+      return {
+        duration: parseInt(document.getElementById('emomDuration').value) || 20,
+        oddExercise: document.getElementById('oddExercise').value || 'Exercise A',
+        oddReps: document.getElementById('oddReps').value || '10',
+        oddWeight: document.getElementById('oddWeight').value || '',
+        evenExercise: document.getElementById('evenExercise').value || 'Exercise B',
+        evenReps: document.getElementById('evenReps').value || '10',
+        evenWeight: document.getElementById('evenWeight').value || ''
+      };
+    }
+
+    function getAMRAPSettings() {
+      const duration = parseInt(document.getElementById('amrapDuration').value) || 12;
+      const rows = document.querySelectorAll('#exerciseList .exercise-row');
+      const exercises = [];
+      
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        exercises.push({
+          name: inputs[0].value || 'Exercise',
+          reps: inputs[1].value || '10',
+          weight: inputs[2].value || ''
+        });
+      });
+      
+      return { duration, exercises };
+    }
+
+    // Update display
+    function updateDisplay() {
+      if (mode === 'emom') {
+        const settings = getEMOMSettings();
+        timeRemaining = settings.duration * 60;
+        timerMain.textContent = formatTime(timeRemaining);
+        timerRound.textContent = 'Ready to start';
+        currentExercise.innerHTML = `<strong>Odd:</strong> ${settings.oddReps} ${settings.oddExercise}${settings.oddWeight ? ` (${settings.oddWeight})` : ''} | <strong>Even:</strong> ${settings.evenReps} ${settings.evenExercise}${settings.evenWeight ? ` (${settings.evenWeight})` : ''}`;
+      } else {
+        const settings = getAMRAPSettings();
+        timeRemaining = settings.duration * 60;
+        timerMain.textContent = formatTime(timeRemaining);
+        timerRound.textContent = 'Ready to start';
+        
+        const exerciseText = settings.exercises.map(e => 
+          `${e.reps} ${e.name}${e.weight ? ` (${e.weight})` : ''}`
+        ).join(' → ');
+        currentExercise.innerHTML = exerciseText;
+      }
+    }
+
+    // Timer tick
+    function tick() {
+      timeRemaining--;
+      
+      const totalDuration = mode === 'emom' 
+        ? getEMOMSettings().duration * 60 
+        : getAMRAPSettings().duration * 60;
+      
+      const elapsed = totalDuration - timeRemaining;
+      const currentMinuteNum = Math.floor(elapsed / 60) + 1;
+      
+      timerMain.textContent = formatTime(timeRemaining);
+      
+      // EMOM logic
+      if (mode === 'emom') {
+        const settings = getEMOMSettings();
+        const isOddMinute = currentMinuteNum % 2 === 1;
+        
+        // New minute - play beep and update display
+        if (elapsed % 60 === 0 && timeRemaining < totalDuration) {
+          playBeep(isOddMinute ? 880 : 660, 0.15);
+          timerDisplay.classList.remove('resting');
+          timerDisplay.classList.add('running');
         }
-        tickUI();
-      }
-      function tickUI() {
-        const step = stepsCache[stepIdx];
-        currentStepEl.textContent = step ? step.title : "—";
-        timeLeftEl.textContent = formatMMSS(stepTimeLeft);
-        const elapsed =
-          stepsCache.slice(0, stepIdx).reduce((t, s) => t + s.duration, 0) +
-          (step ? step.duration - stepTimeLeft : 0);
-        const total = stepsCache.reduce((t, s) => t + s.duration, 0) || 1;
-        const pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
-        progressBar.style.width = `${pct}%`;
-      }
-
-      function tryVibrate(pattern) {
-        if (navigator.vibrate) {
-          try {
-            navigator.vibrate(pattern);
-          } catch {}
+        
+        timerRound.textContent = `Minute ${currentMinuteNum} of ${settings.duration}`;
+        
+        if (isOddMinute) {
+          currentExercise.innerHTML = `<strong>NOW:</strong> ${settings.oddReps} ${settings.oddExercise}${settings.oddWeight ? ` (${settings.oddWeight})` : ''}`;
+        } else {
+          currentExercise.innerHTML = `<strong>NOW:</strong> ${settings.evenReps} ${settings.evenExercise}${settings.evenWeight ? ` (${settings.evenWeight})` : ''}`;
         }
+        
+        // Rest indicator (last 30 seconds of minute)
+        const secondsInMinute = elapsed % 60;
+        if (secondsInMinute >= 45) {
+          timerDisplay.classList.remove('running');
+          timerDisplay.classList.add('resting');
+          timerRound.textContent = `Minute ${currentMinuteNum} - REST`;
+        }
+      } else {
+        // AMRAP logic
+        timerRound.textContent = `Keep moving!`;
+        timerDisplay.classList.add('running');
       }
-
-      document.querySelectorAll(".tab").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".tab").forEach((b) => {
-            b.classList.toggle("active", b === btn);
-            b.setAttribute("aria-selected", b === btn ? "true" : "false");
-          });
-          const tab = btn.dataset.tab;
-          document.querySelectorAll(".tab-panel").forEach((p) => {
-            const active = p.id === tab;
-            p.hidden = !active;
-            p.classList.toggle("active", active);
-          });
-        });
-      });
-
-      modeToggle.addEventListener("change", () => {
-        renderSteps();
-        requestAnimationFrame(updateToggleSlide);
-      });
-      window.addEventListener("resize", updateToggleSlide);
-
-      function updateToggleSlide() {
-        const track = document.querySelector(".toggle .track");
-        if (!track) return;
-        const toggle = document.querySelector(".toggle");
-        const pad = parseFloat(
-          getComputedStyle(toggle).getPropertyValue("--pad") || "4"
-        );
-        const knob = parseFloat(
-          getComputedStyle(toggle).getPropertyValue("--knob") || "30"
-        );
-        const slide = Math.max(0, track.clientWidth - 2 * pad - knob);
-        track.style.setProperty("--slide", slide + "px");
+      
+      // Timer complete
+      if (timeRemaining <= 0) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        startBtn.textContent = 'Start';
+        timerDisplay.classList.remove('running', 'resting');
+        timerRound.textContent = 'Workout complete!';
+        playBeep(440, 0.5);
+        setTimeout(() => playBeep(550, 0.5), 200);
+        setTimeout(() => playBeep(660, 0.8), 400);
       }
-      updateToggleSlide();
+    }
 
-      /* ========= Service worker (single‑file) ========= */
-      (function registerSW() {
-        if (!("serviceWorker" in navigator)) return;
-        const swCode = `
-const CACHE_NAME = "mobility-dracula-v1";
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll([self.location.href])));
-  self.skipWaiting();
-});
-self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.keys().then((keys) =>
-    Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)))
-  ));
-  self.clients.claim();
-});
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  if (url.origin === location.origin) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        return cached || fetch(event.request).then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
-          return resp;
-        });
-      })
-    );
-  }
-});`.trim();
-        const blob = new Blob([swCode], { type: "text/javascript" });
-        const swUrl = URL.createObjectURL(blob);
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register(swUrl)
-            .catch((e) => console.warn("SW reg failed", e));
-        });
-        window.addEventListener("beforeunload", () => URL.revokeObjectURL(swUrl));
-      })();
+    // Start/Pause
+    startBtn.addEventListener('click', () => {
+      initAudio();
+      
+      if (isRunning) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        startBtn.textContent = 'Resume';
+        timerDisplay.classList.remove('running', 'resting');
+      } else {
+        if (timeRemaining <= 0) {
+          updateDisplay();
+        }
+        isRunning = true;
+        startBtn.textContent = 'Pause';
+        timerInterval = setInterval(tick, 1000);
+        timerDisplay.classList.add('running');
+        playBeep(660, 0.1);
+      }
+    });
 
-      /* ========= Install prompt ========= */
-      let deferredPrompt = null;
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBtn.hidden = false;
+    // Reset
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      isRunning = false;
+      startBtn.textContent = 'Start';
+      roundsCompleted = 0;
+      roundValue.textContent = '0';
+      timerDisplay.classList.remove('running', 'resting');
+      updateDisplay();
+    });
+
+    // Round counter for AMRAP
+    roundCounter.addEventListener('click', () => {
+      if (mode === 'amrap' && isRunning) {
+        roundsCompleted++;
+        roundValue.textContent = roundsCompleted;
+        playBeep(880, 0.05);
+      }
+    });
+
+    // Update on settings change
+    document.querySelectorAll('.setting-input').forEach(input => {
+      input.addEventListener('change', () => {
+        if (!isRunning) {
+          updateDisplay();
+        }
       });
-      installBtn.addEventListener("click", async () => {
-        if (!deferredPrompt) return;
-        installBtn.disabled = true;
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-        installBtn.hidden = true;
-        installBtn.disabled = false;
-      });
-    </script>
-  </body>
+    });
+
+    // Initial display
+    updateDisplay();
+  </script>
+</body>
 </html>
