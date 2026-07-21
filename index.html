@@ -79,6 +79,8 @@
       margin: 0;
       min-width: 320px;
       min-height: 100vh;
+      overflow-x: hidden;
+      overflow-x: clip;
       background: var(--bg);
       color: var(--text);
       font-family: Inter, "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
@@ -168,9 +170,38 @@
     }
     .icon-btn:hover, .round-btn:hover { background: var(--surface-2); border-color: var(--accent); }
 
-    main { width: min(calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)), var(--max)); margin: 0 auto; }
+    main { width: min(calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)), var(--max)); margin: 0 auto; touch-action: pan-y pinch-zoom; }
     .view { padding: 32px 0 18px; animation: view-in .25s ease both; }
+    .view.is-swipe-tracking { animation: none; user-select: none; will-change: transform, opacity; }
+    .view.is-swipe-transition { animation: none; will-change: transform, opacity; }
+    .view.is-swipe-settled { animation: none; }
     @keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
+
+    .swipe-hint {
+      --swipe-progress: 0;
+      position: fixed;
+      z-index: 82;
+      top: 50%;
+      right: max(12px, env(safe-area-inset-right));
+      max-width: min(52vw, 190px);
+      padding: 8px 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      box-shadow: var(--shadow);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(12px, -50%, 0) scale(.96);
+      transition: opacity .12s linear, transform .18s cubic-bezier(.16, 1, .3, 1);
+      white-space: nowrap;
+      backdrop-filter: blur(14px);
+    }
+    .swipe-hint[data-side="left"] { right: auto; left: max(12px, env(safe-area-inset-left)); transform: translate3d(-12px, -50%, 0) scale(.96); }
+    .swipe-hint.is-visible { opacity: calc(.22 + (var(--swipe-progress) * .78)); transform: translate3d(0, -50%, 0) scale(1); }
+    .app-shell.is-swipe-transitioning main, .app-shell.is-swipe-transitioning .bottom-nav { pointer-events: none; }
 
     .eyebrow {
       display: inline-flex;
@@ -189,47 +220,6 @@
     h1 { margin-bottom: 14px; font-size: clamp(2.3rem, 7vw, 5.6rem); font-weight: 600; letter-spacing: -.04em; }
     h2 { margin-bottom: 12px; font-size: clamp(1.65rem, 4.5vw, 2.75rem); font-weight: 600; }
     h3 { margin-bottom: 8px; font-size: 1.15rem; font-weight: 500; }
-    .lede { max-width: 680px; color: var(--muted); font-size: clamp(1rem, 2.5vw, 1.16rem); }
-
-    .hero {
-      position: relative;
-      overflow: hidden;
-      min-height: 390px;
-      display: grid;
-      align-items: end;
-      grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
-      gap: 28px;
-      padding: clamp(26px, 5vw, 56px);
-      border: 1px solid var(--control-line);
-      border-radius: var(--radius-lg);
-      background: var(--surface);
-      box-shadow: none;
-    }
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 4px;
-      background: var(--accent);
-    }
-    .hero-copy, .hero-panel { position: relative; z-index: 1; }
-    .hero h1 { max-width: 780px; }
-    .accent-text { color: var(--accent); }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
-    .hero-panel {
-      align-self: stretch;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 22px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--surface-2);
-    }
-    .hero-panel-label { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; }
-    .hero-panel-value { margin: 8px 0 2px; font-size: clamp(3rem, 8vw, 5rem); font-weight: 600; letter-spacing: -.045em; line-height: .95; }
-    .hero-panel-meta { color: var(--muted); font-size: 14px; }
-
     .btn {
       min-height: 50px;
       display: inline-flex;
@@ -259,7 +249,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1px;
-      margin: 18px 0 42px;
+      margin: 0 0 42px;
       overflow: hidden;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -354,6 +344,9 @@
       gap: 10px;
       margin-bottom: 18px;
     }
+    .library-toolbar { grid-template-columns: minmax(220px, 1.2fr) repeat(4, minmax(130px, .42fr)); margin-bottom: 10px; }
+    .library-meta { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .library-meta .field-help { margin: 0; }
     .field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
     .field > label, .field-label { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .05em; text-transform: uppercase; }
     input, select, textarea {
@@ -388,15 +381,23 @@
     }
     .exercise-card h3 { margin: 14px 0 8px; }
     .exercise-cue { color: var(--muted); font-size: 13px; }
+    .badge-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
     .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
     .tag { min-height: 24px; padding: 3px 8px; font-size: 11px; }
+    .tag.custom-tag { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
     .difficulty { margin-left: auto; }
     .difficulty[data-tier="beginner"] { color: var(--work); }
     .difficulty[data-tier="advanced"] { color: var(--rest); }
     .exercise-footer { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 9px; margin-top: auto; }
     .exercise-footer .field > label { font-size: 11px; }
+    .exercise-details { margin: 0 0 14px; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .exercise-details summary { color: var(--text); cursor: pointer; font-weight: 500; }
+    .exercise-details p { margin: 8px 0 0; }
+    .exercise-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .exercise-card.is-archived { border-style: dashed; background: color-mix(in srgb, var(--surface) 88%, var(--surface-2)); }
 
     .builder-layout { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(310px, .88fr); gap: 18px; align-items: start; }
+    .builder-layout.single-column { grid-template-columns: minmax(0, 1fr); }
     .panel { padding: 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
     .panel + .panel { margin-top: 16px; }
     .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
@@ -431,30 +432,38 @@
       text-align: center;
       color: var(--muted);
     }
+    .empty-state .btn { margin-top: 12px; }
     .selected-exercise {
       display: grid;
-      grid-template-columns: auto minmax(120px, 1fr) minmax(130px, .62fr) minmax(82px, .38fr) minmax(82px, .38fr) minmax(82px, .38fr) auto;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 9px;
-      align-items: end;
+      align-items: center;
       padding: 13px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--surface-2);
     }
+    .selected-exercise.is-unavailable { border-color: color-mix(in srgb, var(--danger) 55%, var(--line)); }
+    .selected-exercise.is-unavailable .selected-name strong { color: var(--danger); }
     .drag-order { align-self: center; color: var(--faint); font-weight: 500; font-variant-numeric: tabular-nums; }
     .selected-name { align-self: center; min-width: 0; }
     .selected-name strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .selected-name small { color: var(--muted); }
-    .row-actions { grid-column: 7; display: flex; gap: 5px; align-self: center; }
+    .selected-fields { grid-column: 2 / 4; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 9px; align-items: end; }
+    .row-actions { grid-column: 3; grid-row: 1; display: flex; gap: 5px; align-self: center; }
     .mini-btn { width: 44px; height: 44px; padding: 0; border: 1px solid var(--control-line); border-radius: 11px; background: var(--surface); color: var(--muted); font-weight: 500; }
     .mini-btn:hover { color: var(--text); border-color: var(--accent); }
     .mini-btn.remove:hover { color: var(--danger); }
+    .mini-btn:disabled { cursor: not-allowed; opacity: .34; border-color: var(--line); }
 
     .exercise-picker { position: sticky; top: calc(var(--header-h) + 16px); max-height: calc(100vh - var(--header-h) - var(--nav-h) - 34px); overflow: hidden; display: flex; flex-direction: column; }
+    .picker-filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .picker-create { margin-bottom: 12px; }
     .picker-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 4px; }
     .picker-item { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
     .picker-item strong { display: block; font-size: 14px; }
     .picker-item small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .picker-item .picker-use { color: var(--accent); }
     .builder-actions { position: sticky; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px); z-index: 10; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 16px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 
     .history-list { display: flex; flex-direction: column; gap: 10px; }
@@ -514,10 +523,14 @@
       box-shadow: 0 30px 90px rgba(0,0,0,.48);
     }
     dialog::backdrop { background: rgba(7, 12, 14, .76); }
+    #exerciseDialog { width: min(calc(100% - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)), 760px); }
     .dialog-inner { max-height: min(88vh, 860px); overflow-y: auto; padding: 24px; }
     .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
     .dialog-head h2 { margin-bottom: 5px; }
     .dialog-head p { margin-bottom: 0; color: var(--muted); }
+    .field-full { grid-column: 1 / -1; }
+    .form-section { margin-top: 18px; }
+    .form-section-title { margin: 0 0 10px; font-size: .95rem; font-weight: 600; }
     .review-hero { padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
     .review-hero h3 { margin: 9px 0; font-size: 1.55rem; }
     .review-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
@@ -629,8 +642,8 @@
     .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 
     @media (max-width: 1000px) {
-      .hero { grid-template-columns: 1fr; min-height: 470px; }
-      .hero-panel { max-width: 350px; min-height: 150px; }
+      .library-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .library-toolbar .field:first-child { grid-column: 1 / -1; }
       .card-grid, .exercise-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .protocol-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .builder-layout { grid-template-columns: 1fr; }
@@ -648,22 +661,16 @@
       .header-actions .icon-btn:first-child { display: none; }
       main { width: min(calc(100% - 22px - env(safe-area-inset-left) - env(safe-area-inset-right)), var(--max)); }
       .view { padding-top: 20px; }
-      .hero { min-height: 520px; padding: 24px 20px; border-radius: var(--radius-lg); }
-      .hero-actions { display: grid; grid-template-columns: 1fr; }
-      .hero-panel { width: 100%; max-width: none; min-height: 130px; }
       .stats-strip { grid-template-columns: repeat(2, 1fr); margin-bottom: 32px; }
       .stat { min-height: 80px; }
       .card-grid, .exercise-grid { grid-template-columns: 1fr; }
       .protocol-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .section-head, .page-title { align-items: flex-start; flex-direction: column; }
       .toolbar { grid-template-columns: 1fr; }
+      .library-toolbar .field:first-child { grid-column: auto; }
+      .library-meta { align-items: flex-start; flex-direction: column; }
       .form-grid, .form-grid.three { grid-template-columns: 1fr 1fr; }
-      .selected-exercise { grid-template-columns: auto minmax(0, 1fr) auto; }
-      .selected-exercise .row-field { grid-column: span 1; }
-      .selected-exercise .row-field.weight-field { grid-column: 1 / span 3; }
-      .selected-exercise .row-actions { grid-column: 3; grid-row: 1; }
-      .selected-exercise .drag-order { grid-column: 1; grid-row: 1; }
-      .selected-exercise .selected-name { grid-column: 2; grid-row: 1; }
+      .selected-fields { grid-column: 1 / -1; }
       .history-item { grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; }
       .history-score { grid-column: 2; text-align: left; }
       .history-duration { grid-column: 3; grid-row: 1; }
@@ -693,6 +700,7 @@
       .bottom-nav { width: calc(100% - 12px - env(safe-area-inset-left) - env(safe-area-inset-right)); padding: 5px; border-radius: 12px; }
       .nav-btn { min-height: 56px; font-size: 11px; }
       .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+      .selected-fields { grid-template-columns: 1fr; }
       .builder-summary { grid-template-columns: 1fr 1fr; }
       .builder-actions { grid-template-columns: 1fr; }
       .score-fields { grid-template-columns: 1fr; }
@@ -710,6 +718,10 @@
       .timer-cue { display: none; }
       .timer-controls { max-width: 760px; }
       .timer-control { min-height: 48px; }
+    }
+
+    @media (any-pointer: coarse) {
+      main { width: min(calc(100% - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)), var(--max)); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -746,22 +758,7 @@
 
     <main id="mainContent" tabindex="-1">
       <section class="view" id="view-workouts" data-view="workouts">
-        <div class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow">Built for your bells</p>
-            <h1>Train hard.<br><span class="accent-text">Stay precise.</span></h1>
-            <p class="lede">Drift-free intervals, proven training formats, and every movement matched to your 35, 50, and 70 lb kettlebells, 25 and 35 lb dumbbells, or bodyweight.</p>
-            <div class="hero-actions">
-              <button class="btn btn-primary" id="quickStart" type="button">Start 4-minute Tabata <span aria-hidden="true">→</span></button>
-              <button class="btn btn-ghost" type="button" data-nav-target="builder">Build a workout</button>
-            </div>
-          </div>
-          <div class="hero-panel" aria-label="Most recent training summary">
-            <span class="hero-panel-label">Last 7 days</span>
-            <strong class="hero-panel-value" id="heroMinutes">0</strong>
-            <span class="hero-panel-meta">focused minutes · <span id="heroSessions">0</span> sessions</span>
-          </div>
-        </div>
+        <h1 class="sr-only">Workouts</h1>
 
         <div class="stats-strip" aria-label="Training totals">
           <div class="stat"><span class="stat-label">Completed</span><strong class="stat-value" id="statCompleted">0</strong></div>
@@ -802,19 +799,24 @@
       </section>
 
       <section class="view" id="view-library" data-view="library" hidden>
-        <div class="page-title"><div><p class="eyebrow">Movement catalog</p><h1>Exercise library</h1><p>Every option works with your exact home-gym setup.</p></div></div>
-        <div class="toolbar" role="search">
-          <div class="field"><label for="librarySearch">Search movements</label><input id="librarySearch" type="search" placeholder="Try swing, carry, squat…" autocomplete="off"></div>
+        <div class="page-title"><div><p class="eyebrow">Exercise catalog</p><h1>Exercise library</h1><p>Built-in coaching plus exercises you create for your own training.</p></div><button class="btn btn-primary btn-small" type="button" data-open-exercise-editor="library">New exercise</button></div>
+        <div class="toolbar library-toolbar" role="search">
+          <div class="field"><label for="librarySearch">Search exercises</label><input id="librarySearch" type="search" placeholder="Try swing, carry, squat…" autocomplete="off"></div>
           <div class="field"><label for="libraryCategory">Category</label><select id="libraryCategory"><option value="all">All categories</option></select></div>
           <div class="field"><label for="libraryDifficulty">Difficulty</label><select id="libraryDifficulty"><option value="all">All levels</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
+          <div class="field"><label for="libraryEquipment">Equipment</label><select id="libraryEquipment"><option value="all">All equipment</option><option value="kettlebell">Kettlebell</option><option value="dumbbell">Dumbbell</option><option value="bodyweight">Bodyweight</option><option value="other">Other / unloaded</option></select></div>
+          <div class="field"><label for="librarySource">Source</label><select id="librarySource"><option value="all">Built-in & custom</option><option value="builtin">Built-in only</option><option value="custom">Custom only</option><option value="archived">Archived custom</option></select></div>
         </div>
-        <p id="libraryCount" class="field-help" aria-live="polite"></p>
+        <div class="library-meta">
+          <p id="libraryCount" class="field-help" aria-live="polite"></p>
+          <button class="btn btn-ghost btn-small" id="clearLibraryFilters" type="button">Clear filters</button>
+        </div>
         <div class="exercise-grid" id="exerciseGrid"></div>
       </section>
 
       <section class="view" id="view-builder" data-view="builder" hidden>
         <div class="page-title"><div><p class="eyebrow">Custom programming</p><h1>Workout builder</h1><p>Choose a protocol, tune the work, and save it to this device.</p></div><button class="btn btn-ghost btn-small" id="resetBuilder" type="button">Reset</button></div>
-        <div class="builder-layout">
+        <div class="builder-layout" id="builderLayout">
           <div>
             <div class="panel">
               <fieldset>
@@ -835,7 +837,7 @@
               <div class="panel-head"><h3>3. Exercise sequence</h3><span class="field-help">Use arrows to reorder</span></div>
               <div class="builder-summary" aria-label="Workout estimate">
                 <div class="summary-cell"><small>Duration</small><strong id="builderDuration">—</strong></div>
-                <div class="summary-cell"><small>Movements</small><strong id="builderMovementCount">0</strong></div>
+                <div class="summary-cell"><small>Exercises</small><strong id="builderMovementCount">0</strong></div>
                 <div class="summary-cell"><small>Intervals</small><strong id="builderIntervalCount">0</strong></div>
               </div>
               <div class="selected-list" id="selectedExerciseList"></div>
@@ -846,10 +848,14 @@
               <button class="btn btn-primary" id="startBuilderWorkout" type="button">Review & start</button>
             </div>
           </div>
-          <aside class="panel exercise-picker" aria-labelledby="pickerTitle">
+          <aside class="panel exercise-picker" id="exercisePickerPanel" aria-labelledby="pickerTitle">
             <div class="panel-head"><h3 id="pickerTitle">Add exercises</h3><span class="protocol-badge" id="pickerCount">0</span></div>
             <div class="field" style="margin-bottom:10px"><label for="pickerSearch">Find an exercise</label><input id="pickerSearch" type="search" placeholder="Search library" autocomplete="off"></div>
-            <div class="field" style="margin-bottom:12px"><label for="pickerCategory">Movement type</label><select id="pickerCategory"><option value="all">All categories</option></select></div>
+            <div class="picker-filter-row">
+              <div class="field"><label for="pickerCategory">Category</label><select id="pickerCategory"><option value="all">All categories</option></select></div>
+              <div class="field"><label for="pickerDifficulty">Difficulty</label><select id="pickerDifficulty"><option value="all">All levels</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
+            </div>
+            <button class="btn btn-ghost btn-small btn-wide picker-create" type="button" data-open-exercise-editor="builder">Create custom exercise</button>
             <div class="picker-list" id="pickerList"></div>
           </aside>
         </div>
@@ -876,8 +882,8 @@
             <div class="default-weight-grid" id="defaultWeightGrid"></div>
           </div>
           <div class="panel">
-            <h2>Custom workout data</h2>
-            <p class="field-help">Export a portable JSON backup or merge a previous backup. Your data never leaves this browser.</p>
+            <h2>Custom training data</h2>
+            <p class="field-help">Export custom exercises and workouts together, or merge a previous backup. Your data never leaves this browser.</p>
             <div class="dialog-actions" style="justify-content:flex-start">
               <button class="btn" id="exportWorkouts" type="button">Export JSON</button>
               <input class="sr-only" id="importWorkouts" type="file" accept="application/json,.json">
@@ -886,12 +892,14 @@
           </div>
           <div class="panel">
             <h2>Local data</h2>
-            <p class="field-help">Reset all settings, custom workouts, exercise weights, and history stored by Mateo HIIT on this device.</p>
+            <p class="field-help">Reset all settings, custom exercises, custom workouts, exercise weights, and history stored by Mateo HIIT on this device.</p>
             <button class="btn btn-danger" id="resetAllData" type="button">Reset all app data</button>
           </div>
         </div>
       </section>
     </main>
+
+    <div class="swipe-hint" id="swipeHint" aria-hidden="true"></div>
 
     <nav class="bottom-nav" aria-label="Primary navigation">
       <button class="nav-btn" type="button" data-view-target="workouts" aria-current="page">Workouts</button>
@@ -932,6 +940,38 @@
     <div class="dialog-inner">
       <div class="dialog-head"><div><h2 id="confirmTitle">Are you sure?</h2><p id="confirmMessage"></p></div><button class="icon-btn" type="button" data-confirm-cancel aria-label="Cancel">×</button></div>
       <div class="dialog-actions"><button class="btn btn-ghost" type="button" data-confirm-cancel>Cancel</button><button class="btn btn-danger" id="confirmAction" type="button">Confirm</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="exerciseDialog" aria-labelledby="exerciseDialogTitle" aria-describedby="exerciseDialogDescription">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <div><p class="eyebrow">Exercise editor</p><h2 id="exerciseDialogTitle">New exercise</h2><p id="exerciseDialogDescription">Create a reusable exercise for your library and workout builder.</p></div>
+        <button class="icon-btn" type="button" data-close-dialog="exerciseDialog" aria-label="Close exercise editor">×</button>
+      </div>
+      <form id="exerciseForm" novalidate>
+        <input id="exerciseId" type="hidden">
+        <div class="form-grid">
+          <div class="field"><label for="exerciseName">Exercise name</label><input id="exerciseName" maxlength="60" required autocomplete="off" placeholder="e.g. Band pull-apart"></div>
+          <div class="field"><label for="exerciseShort">Timer label <span class="field-help">optional</span></label><input id="exerciseShort" maxlength="36" autocomplete="off" placeholder="Short display name"></div>
+          <div class="field"><label for="exerciseCategory">Category</label><select id="exerciseCategory"></select></div>
+          <div class="field"><label for="exerciseTargetType">Target type</label><select id="exerciseTargetType"><option value="reps">Repetitions</option><option value="text">Time or distance</option></select></div>
+          <div class="field"><label for="exerciseTier">Difficulty</label><select id="exerciseTier"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></div>
+          <div class="field"><label for="exerciseIntensity">Intensity</label><select id="exerciseIntensity"><option value="Low">Low</option><option value="Moderate" selected>Moderate</option><option value="High">High</option><option value="Very high">Very high</option></select></div>
+        </div>
+        <div class="form-grid form-section">
+          <div class="field"><label for="exercisePattern">Movement pattern</label><input id="exercisePattern" maxlength="80" autocomplete="off" placeholder="e.g. Horizontal pull"></div>
+          <div class="field"><label for="exerciseEquipmentName">Equipment</label><input id="exerciseEquipmentName" maxlength="80" autocomplete="off" placeholder="e.g. Resistance band"></div>
+          <div class="field"><label for="exerciseLoadProfile">Tracked load</label><select id="exerciseLoadProfile"></select></div>
+          <div class="field"><label for="exerciseDefaultWeight">Default load</label><select id="exerciseDefaultWeight"></select></div>
+        </div>
+        <div class="form-grid form-section">
+          <div class="field field-full"><label for="exerciseCue">Coaching cue</label><textarea id="exerciseCue" maxlength="300" placeholder="The one cue that helps you perform the movement well"></textarea></div>
+          <div class="field field-full"><label for="exerciseRegression">Easier option or scaling note</label><textarea id="exerciseRegression" maxlength="300" placeholder="Optional regression, lighter variation, or safety note"></textarea></div>
+        </div>
+        <div class="notice form-section" id="exerciseFormError" role="alert" tabindex="-1" hidden></div>
+        <div class="dialog-actions"><button class="btn btn-ghost" type="button" data-close-dialog="exerciseDialog">Cancel</button><button class="btn btn-primary" id="saveExercise" type="submit">Save exercise</button></div>
+      </form>
     </div>
   </dialog>
 
@@ -981,9 +1021,13 @@
 
   <script>
     'use strict';
-    // ----- Domain data: the only loads and movements available in this gym -----
-    const APP_VERSION = 1;
+    // ----- Domain data: built-in catalog plus device-local custom movements -----
+    const APP_VERSION = 2;
+    const MAX_CUSTOM_EXERCISES = 250;
     const STORAGE_KEY = 'forge-hiit-state-v1';
+    const VIEW_ORDER = ['workouts','library','builder','history','settings'];
+    const VIEW_LABELS = {workouts:'Workouts', library:'Library', builder:'Builder', history:'History', settings:'Settings'};
+    const SWIPE_IGNORE_SELECTOR = 'button, a, input, textarea, select, label, summary, [contenteditable], [role="button"], [role="slider"], [data-swipe-ignore]';
 
     const WEIGHTS = {
       BW: 'Bodyweight',
@@ -997,12 +1041,24 @@
       DB35_PAIR: 'Pair of 35 lb DBs'
     };
 
+    const WEIGHT_PROFILES = {
+      bodyweight:{ label:'Bodyweight', weights:['BW'] },
+      unloaded:{ label:'No tracked load', weights:['UNLOADED'] },
+      kettlebell:{ label:'Kettlebell set', weights:['KB35','KB50','KB70'] },
+      dumbbell_single:{ label:'Single dumbbell', weights:['DB25_SINGLE','DB35_SINGLE'] },
+      dumbbell_pair:{ label:'Dumbbell pair', weights:['DB25_PAIR','DB35_PAIR'] },
+      dumbbell_all:{ label:'Any dumbbell setup', weights:['DB25_SINGLE','DB35_SINGLE','DB25_PAIR','DB35_PAIR'] },
+      all:{ label:'Any available load', weights:Object.keys(WEIGHTS) }
+    };
+
     const CATEGORY_LABELS = {
       ballistic: 'Ballistic / Power',
       strength: 'Grind / Strength',
       dumbbell: 'Dumbbell',
       bodyweight: 'Bodyweight / Metcon',
-      carry: 'Loaded Carry'
+      carry: 'Loaded Carry',
+      core: 'Core / Stability',
+      mobility: 'Mobility / Recovery'
     };
 
     const EXERCISES = [
@@ -1039,12 +1095,33 @@
       { id:'hollow-hold', name:'Hollow Hold', short:'Hollow Hold', category:'bodyweight', tier:'intermediate', intensity:'Moderate', pattern:'Anti-extension', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Press the lower back into the floor and shorten the lever if it begins to arch.', regression:'Bend the knees or keep one foot on the floor.' },
       { id:'bodyweight-squat', name:'Bodyweight Squat', short:'Bodyweight Squat', category:'bodyweight', tier:'beginner', intensity:'Moderate', pattern:'Squat', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Sit between the hips with the feet planted and stand by driving evenly through the floor.', regression:'Use a shallower pain-free range while maintaining balance.' },
 
+      { id:'kb-halo', name:'Kettlebell Halo', short:'KB Halo', category:'mobility', tier:'beginner', intensity:'Low', pattern:'Shoulder mobility · Core', equipment:'Kettlebell / unloaded', weights:['UNLOADED','KB35'], defaultWeight:'UNLOADED', cue:'Keep the ribs stacked and guide the hands slowly around the head without craning the neck.', regression:'Trace the same path unloaded or reduce the range to stay pain-free.' },
+      { id:'kb-single-leg-rdl', name:'Kettlebell Single-Leg Romanian Deadlift', short:'Single-Leg KB RDL', category:'strength', tier:'intermediate', intensity:'Moderate', pattern:'Hinge · Balance', equipment:'Kettlebell', weights:['KB35','KB50','KB70'], defaultWeight:'KB35', cue:'Reach the free leg back as the hips stay square and the planted foot maintains full contact.', regression:'Use a kickstand stance or lightly support the free hand.' },
+      { id:'kb-goblet-reverse-lunge', name:'Kettlebell Goblet Reverse Lunge', short:'Goblet Reverse Lunge', category:'strength', tier:'intermediate', intensity:'High', pattern:'Lunge · Core', equipment:'Kettlebell', weights:['KB35','KB50','KB70'], defaultWeight:'KB35', cue:'Hold the bell close, step back softly, and keep the front foot planted as the rear knee lowers.', regression:'Use bodyweight or shorten the range while keeping the torso tall.' },
+      { id:'kb-windmill', name:'Kettlebell Windmill', short:'KB Windmill', category:'strength', tier:'advanced', intensity:'Moderate', pattern:'Hinge · Rotation · Overhead', equipment:'Kettlebell / unloaded', weights:['UNLOADED','KB35'], defaultWeight:'UNLOADED', cue:'Keep the top arm stacked, shift the hips back, and rotate only through a controlled pain-free range.', regression:'Practice unloaded with the lower hand sliding along the lead leg.' },
+
+      { id:'db-romanian-deadlift', name:'Dumbbell Romanian Deadlift', short:'DB Romanian Deadlift', category:'dumbbell', tier:'beginner', intensity:'Moderate', pattern:'Hinge', equipment:'Dumbbell pair', weights:['DB25_PAIR','DB35_PAIR'], defaultWeight:'DB35_PAIR', cue:'Push the hips back with soft knees while the dumbbells track close to the legs and the spine stays long.', regression:'Use the 25 lb pair and stop the descent when hamstring tension is clear.' },
+      { id:'db-floor-press', name:'Dumbbell Floor Press', short:'DB Floor Press', category:'dumbbell', tier:'beginner', intensity:'Moderate', pattern:'Horizontal push', equipment:'Dumbbell pair', weights:['DB25_PAIR','DB35_PAIR'], defaultWeight:'DB25_PAIR', cue:'Keep the wrists stacked and lower under control until the upper arms gently contact the floor.', regression:'Press one dumbbell at a time or use the 25 lb pair.' },
+      { id:'db-bent-over-row', name:'Dumbbell Bent-Over Row', short:'DB Bent-Over Row', category:'dumbbell', tier:'beginner', intensity:'Moderate', pattern:'Horizontal pull', equipment:'Dumbbell pair', weights:['DB25_PAIR','DB35_PAIR'], defaultWeight:'DB25_PAIR', cue:'Hold a stable hinge and pull both elbows toward the hips without shrugging or lifting the torso.', regression:'Row one dumbbell with the free hand supported on the thigh.' },
+      { id:'db-front-squat', name:'Dumbbell Front Squat', short:'DB Front Squat', category:'dumbbell', tier:'intermediate', intensity:'High', pattern:'Squat · Core', equipment:'One or two dumbbells', weights:['DB25_SINGLE','DB35_SINGLE','DB25_PAIR','DB35_PAIR'], defaultWeight:'DB25_PAIR', cue:'Keep the dumbbells secure at the shoulders and sit between the hips with the whole foot planted.', regression:'Use one dumbbell in a goblet hold or switch to bodyweight.' },
+
+      { id:'reverse-lunge', name:'Bodyweight Reverse Lunge', short:'Reverse Lunge', category:'bodyweight', tier:'beginner', intensity:'Moderate', pattern:'Lunge', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Step back quietly and lower with control while the front knee tracks over the toes.', regression:'Use a smaller step and hold a stable support for balance.' },
+      { id:'bear-crawl', name:'Bear Crawl', short:'Bear Crawl', category:'bodyweight', tier:'intermediate', intensity:'High', pattern:'Locomotion · Core', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Keep the knees hovering low and move opposite hand and foot without rocking the hips.', regression:'Use a stationary bear hold or take one controlled step at a time.' },
+      { id:'high-knees', name:'High Knees', short:'High Knees', category:'bodyweight', tier:'beginner', intensity:'High', pattern:'Locomotion · Running', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Stay tall, land under the hips, and drive the arms while lifting each knee comfortably.', regression:'March quickly without leaving the floor.' },
+      { id:'skater-hop', name:'Skater Hop', short:'Skater Hop', category:'bodyweight', tier:'intermediate', intensity:'High', pattern:'Lateral jump · Balance', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Push laterally, land softly on one foot, and stabilize before changing direction.', regression:'Use a wide lateral step without jumping.' },
+
+      { id:'glute-bridge', name:'Glute Bridge', short:'Glute Bridge', category:'core', tier:'beginner', intensity:'Low', pattern:'Hip extension', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Brace gently, drive through the feet, and finish with the hips extended without arching the lower back.', regression:'Use a smaller range and pause briefly at the top.' },
+      { id:'dead-bug', name:'Dead Bug', short:'Dead Bug', category:'core', tier:'beginner', intensity:'Low', pattern:'Anti-extension · Coordination', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Keep the lower back connected to the floor while opposite arm and leg reach away slowly.', regression:'Move only the arms or tap one heel at a time.' },
+      { id:'side-plank', name:'Side Plank', short:'Side Plank', category:'core', tier:'beginner', intensity:'Moderate', pattern:'Anti-lateral flexion', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Stack the shoulders and hips while pressing the floor away and holding a straight body line.', regression:'Bend the lower knee and support from the knee and forearm.' },
+      { id:'plank-shoulder-tap', name:'Plank Shoulder Tap', short:'Shoulder Tap', category:'core', tier:'intermediate', intensity:'Moderate', pattern:'Anti-rotation · Core', equipment:'Bodyweight', weights:['BW'], defaultWeight:'BW', cue:'Widen the feet and tap one shoulder at a time while keeping the hips as still as possible.', regression:'Tap from the knees or hold a high plank without lifting a hand.' },
+
       { id:'suitcase-carry', name:'Kettlebell Suitcase Carry', short:'Suitcase Carry', category:'carry', tier:'intermediate', intensity:'High', pattern:'Carry · Anti-lateral flexion', equipment:'Kettlebell', weights:['KB35','KB50','KB70'], defaultWeight:'KB70', cue:'Walk tall with the bell on one side and prevent the torso from leaning toward or away from it.', regression:'Use a lighter bell or march in place for 20 seconds per side.', carry:true },
       { id:'rack-carry', name:'Single-Kettlebell Rack Carry', short:'Rack Carry', category:'carry', tier:'intermediate', intensity:'High', pattern:'Carry · Core', equipment:'Kettlebell', weights:['KB35','KB50','KB70'], defaultWeight:'KB50', cue:'Keep the bell quiet in the rack with the wrist neutral and the ribs stacked over the pelvis.', regression:'Use the 35 lb bell or a suitcase carry.', carry:true },
       { id:'overhead-carry', name:'Single-Kettlebell Overhead Carry', short:'Overhead Carry', category:'carry', tier:'advanced', intensity:'High', pattern:'Carry · Overhead stability', equipment:'Kettlebell', weights:['KB35','KB50','KB70'], defaultWeight:'KB35', cue:'Maintain a firm vertical lockout and walk only while the shoulder stays stable and pain-free.', regression:'Use a rack carry until overhead position is secure.', carry:true }
     ];
 
     const EXERCISE_BY_ID = Object.fromEntries(EXERCISES.map(exercise => [exercise.id, exercise]));
+    let CUSTOM_EXERCISE_BY_ID = Object.create(null);
 
     const PROTOCOLS = [
       { id:'tabata', name:'Tabata', code:'20:10', summary:'Fast fixed rounds with classic ratios.', defaults:{work:20,rest:10,rounds:8} },
@@ -1120,8 +1197,10 @@
 
     const DEFAULT_STATE = {
       settings:{ sound:true, vibration:true, countdown:3, theme:'dark', wakeLock:true },
-      weightDefaults:{}, customWorkouts:[], history:[]
+      weightDefaults:{}, customExercises:[], customWorkouts:[], history:[]
     };
+
+    let appState = null;
 
     const deepClone = value => typeof structuredClone === 'function'
       ? structuredClone(value)
@@ -1134,6 +1213,23 @@
 
     function clampInt(value, min, max, fallback = min) {
       return Math.round(clamp(value, min, max, fallback));
+    }
+
+    function normalizeWorkoutConfig(mode, rawConfig = {}) {
+      const protocol = PROTOCOL_BY_ID[mode];
+      if (!protocol) return {};
+      const source = rawConfig && typeof rawConfig === 'object' && !Array.isArray(rawConfig) ? rawConfig : {};
+      const read = (key, min, max) => clampInt(source[key], min, max, protocol.defaults[key] ?? min);
+      const config = {};
+      if (mode === 'tabata') Object.assign(config, {work:read('work',5,600), rest:read('rest',0,600), rounds:read('rounds',1,100)});
+      else if (mode === 'emom') Object.assign(config, {interval:read('interval',15,600), rounds:read('rounds',1,100)});
+      else if (mode === 'amrap') Object.assign(config, {duration:read('duration',1,180), warmup:read('warmup',0,3600), cooldown:read('cooldown',0,3600)});
+      else if (mode === 'interval') Object.assign(config, {work:read('work',5,3600), rest:read('rest',0,3600), rounds:read('rounds',1,200), warmup:read('warmup',0,3600), cooldown:read('cooldown',0,3600)});
+      else if (mode === 'circuit') Object.assign(config, {work:read('work',5,3600), rest:read('rest',0,3600), rounds:read('rounds',1,100), warmup:read('warmup',0,3600), cooldown:read('cooldown',0,3600)});
+      else if (mode === 'ladder') Object.assign(config, {direction:['down','up','pyramid'].includes(source.direction) ? source.direction : protocol.defaults.direction, maxReps:read('maxReps',2,30), work:read('work',10,600), rest:read('rest',0,600), warmup:read('warmup',0,3600), cooldown:read('cooldown',0,3600)});
+      else if (mode === 'rest') config.duration = read('duration',5,7200);
+      if (typeof source.includeFinalRest === 'boolean') config.includeFinalRest = source.includeFinalRest;
+      return config;
     }
 
     function uid(prefix = 'id') {
@@ -1164,15 +1260,60 @@
 
     function formatWeight(weightId) { return WEIGHTS[weightId] || 'Choose load'; }
 
-    function getExercise(id) { return EXERCISE_BY_ID[id] || null; }
+    function normalizeCustomExercise(raw, options = {}) {
+      if (!raw || typeof raw !== 'object') return null;
+      const name = String(raw.name || '').trim().slice(0, 60);
+      if (!name) return null;
+      const usedIds = options.usedIds || new Set([...Object.keys(EXERCISE_BY_ID), ...Object.keys(CUSTOM_EXERCISE_BY_ID)]);
+      const candidateId = String(raw.id || '').trim().toLowerCase();
+      let id = !options.forceNewId && /^custom-exercise-[a-z0-9-]{1,84}$/.test(candidateId) && !usedIds.has(candidateId) ? candidateId : uid('custom-exercise');
+      while (usedIds.has(id) || EXERCISE_BY_ID[id]) id = uid('custom-exercise');
+      usedIds.add(id);
+      const category = Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, raw.category) ? raw.category : 'strength';
+      const tier = ['beginner','intermediate','advanced'].includes(raw.tier) ? raw.tier : 'beginner';
+      const intensity = ['Low','Moderate','High','Very high'].includes(raw.intensity) ? raw.intensity : 'Moderate';
+      const weights = [...new Set((Array.isArray(raw.weights) ? raw.weights : []).filter(id => Object.prototype.hasOwnProperty.call(WEIGHTS, id)))].slice(0, Object.keys(WEIGHTS).length);
+      if (!weights.length) weights.push('BW');
+      const defaultWeight = weights.includes(raw.defaultWeight) ? raw.defaultWeight : weights[0];
+      const targetType = raw.targetType === 'text' || raw.carry === true ? 'text' : 'reps';
+      const now = new Date().toISOString();
+      const cue = String(raw.cue || '').trim().slice(0, 300) || 'Move with control and stop before technique breaks down.';
+      const regression = String(raw.regression || '').trim().slice(0, 300) || 'Reduce the load, range, or pace until every repetition is controlled.';
+      return {
+        id, name, short:String(raw.short || name).trim().slice(0, 36) || name.slice(0, 36),
+        category, tier, intensity,
+        pattern:String(raw.pattern || CATEGORY_LABELS[category]).trim().slice(0, 80) || CATEGORY_LABELS[category],
+        equipment:String(raw.equipment || formatWeight(defaultWeight)).trim().slice(0, 80) || 'Custom',
+        weights, defaultWeight, targetType, carry:targetType === 'text', custom:true,
+        cue, regression,
+        archived:raw.archived === true,
+        createdAt:typeof raw.createdAt === 'string' ? raw.createdAt : now,
+        updatedAt:typeof raw.updatedAt === 'string' ? raw.updatedAt : now
+      };
+    }
+
+    function rebuildCustomExerciseIndex(exercises = appState?.customExercises || []) {
+      CUSTOM_EXERCISE_BY_ID = Object.fromEntries(exercises.map(exercise => [exercise.id, exercise]));
+    }
+
+    function getExercise(id, customExercises = null) {
+      if (EXERCISE_BY_ID[id]) return EXERCISE_BY_ID[id];
+      if (Array.isArray(customExercises)) return customExercises.find(exercise => exercise.id === id) || null;
+      return CUSTOM_EXERCISE_BY_ID[id] || null;
+    }
+
+    function allExercises({includeArchived = false} = {}) {
+      const custom = appState?.customExercises || [];
+      return [...EXERCISES, ...custom.filter(exercise => includeArchived || !exercise.archived)];
+    }
 
     function getDefaultWeight(exercise) {
       const saved = appState.weightDefaults[exercise.id];
       return exercise.weights.includes(saved) ? saved : exercise.defaultWeight;
     }
 
-    function itemFor(exerciseId, values = {}) {
-      const exercise = getExercise(exerciseId);
+    function itemFor(exerciseId, values = {}, customExercises = null) {
+      const exercise = getExercise(exerciseId, customExercises);
       if (!exercise) return null;
       const weight = exercise.weights.includes(values.weight) ? values.weight : getDefaultWeight(exercise);
       return {
@@ -1181,7 +1322,7 @@
         reps: clampInt(values.reps ?? (exercise.carry ? 0 : 10), 0, 999, exercise.carry ? 0 : 10),
         work: clamp(values.work ?? 40, 5, 3600, 40),
         rest: clamp(values.rest ?? 20, 0, 3600, 20),
-        target: typeof values.target === 'string' && values.target.trim() ? values.target.trim().slice(0, 60) : (exercise.carry ? '40 sec or 30 m' : '')
+        target: typeof values.target === 'string' && values.target.trim() ? values.target.trim().slice(0, 60) : (exercise.carry ? (exercise.custom ? 'Time or distance' : '40 sec or 30 m') : '')
       };
     }
 
@@ -1313,20 +1454,24 @@
     function loadState() {
       try {
         const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-        if (!parsed || typeof parsed !== 'object') return deepClone(DEFAULT_STATE);
+        if (!parsed || typeof parsed !== 'object') { rebuildCustomExerciseIndex([]); return deepClone(DEFAULT_STATE); }
+        const usedExerciseIds = new Set(Object.keys(EXERCISE_BY_ID));
+        const customExercises = (Array.isArray(parsed.customExercises) ? parsed.customExercises : []).slice(0, MAX_CUSTOM_EXERCISES).flatMap(raw => {
+          const exercise = normalizeCustomExercise(raw, {usedIds:usedExerciseIds});
+          return exercise ? [exercise] : [];
+        });
+        rebuildCustomExerciseIndex(customExercises);
         const rawCustom = Array.isArray(parsed.customWorkouts) ? parsed.customWorkouts : [];
         const customWorkouts = rawCustom.flatMap(workout => {
           if (!workout || typeof workout !== 'object' || typeof workout.name !== 'string' || !PROTOCOL_BY_ID[workout.mode] || !Array.isArray(workout.items)) return [];
           const items = workout.items.flatMap(item => {
-            const exercise = getExercise(item?.exerciseId);
+            const exercise = getExercise(item?.exerciseId, customExercises);
             if (!exercise) return [];
             const weight = exercise.weights.includes(item.weight) ? item.weight : exercise.defaultWeight;
-            return [{exerciseId:exercise.id, weight, reps:clampInt(item.reps,0,999,exercise.carry ? 0 : 10), work:clamp(item.work,5,3600,40), rest:clamp(item.rest,0,3600,20), target:typeof item.target === 'string' ? item.target.slice(0,60) : (exercise.carry ? '40 sec or 30 m' : '')}];
+            return [{exerciseId:exercise.id, weight, reps:clampInt(item.reps,0,999,exercise.carry ? 0 : 10), work:clamp(item.work,5,3600,40), rest:clamp(item.rest,0,3600,20), target:typeof item.target === 'string' ? item.target.slice(0,60) : (exercise.carry ? (exercise.custom ? 'Time or distance' : '40 sec or 30 m') : '')}];
           });
           if (workout.mode !== 'rest' && !items.length) return [];
-          const config = workout.config && typeof workout.config === 'object' && !Array.isArray(workout.config) ? {...PROTOCOL_BY_ID[workout.mode].defaults, ...workout.config} : {...PROTOCOL_BY_ID[workout.mode].defaults};
-          if ('rounds' in config) config.rounds = clampInt(config.rounds,1,200,PROTOCOL_BY_ID[workout.mode].defaults.rounds || 1);
-          if ('maxReps' in config) config.maxReps = clampInt(config.maxReps,2,30,10);
+          const config = normalizeWorkoutConfig(workout.mode, workout.config);
           return [{
             id:typeof workout.id === 'string' ? workout.id.slice(0,100) : uid('recovered'),
             name:workout.name.trim().slice(0,60) || 'Recovered workout', mode:workout.mode,
@@ -1345,24 +1490,28 @@
         const state = {
           settings:{...DEFAULT_STATE.settings, ...(parsed.settings && typeof parsed.settings === 'object' && !Array.isArray(parsed.settings) ? parsed.settings : {})},
           weightDefaults: parsed.weightDefaults && typeof parsed.weightDefaults === 'object' && !Array.isArray(parsed.weightDefaults) ? {...parsed.weightDefaults} : {},
+          customExercises,
           customWorkouts,
           history
         };
         state.settings.countdown = clampInt(state.settings.countdown, 0, 10, 3);
         if (!['dark','light','system'].includes(state.settings.theme)) state.settings.theme = 'dark';
         for (const [id, weight] of Object.entries(state.weightDefaults)) {
-          const exercise = getExercise(id);
+          const exercise = getExercise(id, customExercises);
           if (!exercise || !exercise.weights.includes(weight)) delete state.weightDefaults[id];
         }
         return state;
       } catch (error) {
+        rebuildCustomExerciseIndex([]);
         return deepClone(DEFAULT_STATE);
       }
     }
 
-    let appState = loadState();
+    appState = loadState();
     let builderState = null;
     let builderDirty = false;
+    let editingExerciseId = null;
+    let exerciseEditorContext = 'library';
     let pendingWorkout = null;
     let pendingConfirmAction = null;
     let pendingConfirmCancel = null;
@@ -1444,18 +1593,33 @@
       }
     }
 
-    function setView(viewName, {focus = true} = {}) {
-      $$('.view').forEach(view => { view.hidden = view.dataset.view !== viewName; });
-      $$('.nav-btn').forEach(button => {
-        if (button.dataset.viewTarget === viewName) button.setAttribute('aria-current','page');
-        else button.removeAttribute('aria-current');
-      });
+    function renderAppView(viewName) {
       if (viewName === 'library') renderExerciseLibrary();
       if (viewName === 'builder') renderBuilder();
       if (viewName === 'history') renderHistory();
       if (viewName === 'settings') renderSettings();
       if (viewName === 'workouts') renderDashboard();
-      window.scrollTo({top:0, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    }
+
+    function setView(viewName, {focus = true, instantScroll = false, swipe = false, render = true} = {}) {
+      if (!swipe) {
+        cancelActiveSwipe(true);
+        cancelSwipeTransition();
+      }
+      const views = $$('.view');
+      if (!swipe) views.forEach(view => view.classList.remove('is-swipe-settled'));
+      views.forEach(view => { view.hidden = view.dataset.view !== viewName; });
+      $$('.nav-btn').forEach(button => {
+        if (button.dataset.viewTarget === viewName) button.setAttribute('aria-current','page');
+        else button.removeAttribute('aria-current');
+      });
+      if (render) renderAppView(viewName);
+      if (instantScroll) {
+        const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, 0);
+        document.documentElement.style.scrollBehavior = previousScrollBehavior;
+      } else window.scrollTo({top:0, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
       if (focus) {
         const heading = document.querySelector(`.view[data-view="${viewName}"] h1, .view[data-view="${viewName}"] h2`);
         if (heading) {
@@ -1464,6 +1628,275 @@
           heading.addEventListener('blur', () => heading.removeAttribute('tabindex'), {once:true});
         }
       }
+    }
+
+    let activeSwipeGesture = null;
+    let swipeTransitioning = false;
+    let swipeTransitionVersion = 0;
+    let swipeAnimations = [];
+
+    function hasHorizontalScrollAncestor(target, boundary) {
+      for (let element = target; element && element !== boundary; element = element.parentElement) {
+        if (element.scrollWidth <= element.clientWidth + 3) continue;
+        const overflow = getComputedStyle(element).overflowX;
+        if (overflow === 'auto' || overflow === 'scroll') return true;
+      }
+      return false;
+    }
+
+    function hideSwipeHint() {
+      const hint = $('#swipeHint');
+      hint.classList.remove('is-visible');
+      hint.style.removeProperty('--swipe-progress');
+    }
+
+    function updateSwipeHint(state) {
+      const hint = $('#swipeHint');
+      if (Math.abs(state.dx) < 4 || state.targetIndex === state.viewIndex || state.targetIndex < 0 || state.targetIndex >= VIEW_ORDER.length) return hideSwipeHint();
+      const targetName = VIEW_ORDER[state.targetIndex];
+      const movingForward = state.dx < 0;
+      hint.dataset.side = movingForward ? 'right' : 'left';
+      hint.textContent = movingForward ? `${VIEW_LABELS[targetName]} →` : `← ${VIEW_LABELS[targetName]}`;
+      hint.style.setProperty('--swipe-progress', String(Math.min(1, Math.abs(state.dx) / state.threshold)));
+      hint.classList.add('is-visible');
+    }
+
+    function renderSwipeFrame(state) {
+      state.frame = 0;
+      if (activeSwipeGesture !== state || !state.horizontal) return;
+      const direction = Math.sign(state.dx);
+      state.targetIndex = direction < 0 ? state.viewIndex + 1 : direction > 0 ? state.viewIndex - 1 : state.viewIndex;
+      const atEdge = state.targetIndex < 0 || state.targetIndex >= VIEW_ORDER.length;
+      let visual = 0;
+      if (!state.reducedMotion && direction) {
+        if (atEdge) visual = clamp(state.dx * .16, -44, 44, 0);
+        else {
+          const magnitude = Math.abs(state.dx) * .62;
+          const softLimit = state.width * .3;
+          const resisted = magnitude <= softLimit ? magnitude : softLimit + (magnitude - softLimit) * .08;
+          visual = direction * Math.min(resisted, state.width * .34);
+        }
+      }
+      state.visualDx = visual;
+      state.visualOpacity = 1 - Math.min(.11, Math.abs(visual) / state.width * .32);
+      state.view.style.transform = `translate3d(${visual}px, 0, 0)`;
+      state.view.style.opacity = String(state.visualOpacity);
+      updateSwipeHint(state);
+    }
+
+    function queueSwipeFrame(state) {
+      if (!state.frame) state.frame = requestAnimationFrame(() => renderSwipeFrame(state));
+    }
+
+    function detachSwipePointer(state) {
+      if (activeSwipeGesture === state) activeSwipeGesture = null;
+      if (state.frame) cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      state.view.classList.remove('is-swipe-tracking');
+      const main = $('#mainContent');
+      try { if (main.hasPointerCapture?.(state.pointerId)) main.releasePointerCapture(state.pointerId); } catch (error) {}
+    }
+
+    function resetSwipeVisual(state, keepSettled = true) {
+      state.view.style.removeProperty('transform');
+      state.view.style.removeProperty('opacity');
+      state.view.classList.remove('is-swipe-tracking','is-swipe-transition');
+      state.view.classList.toggle('is-swipe-settled', keepSettled && !state.view.hidden);
+      hideSwipeHint();
+    }
+
+    function createSwipeAnimation(element, keyframes, options) {
+      if (typeof element.animate !== 'function') return null;
+      const animation = element.animate(keyframes, {...options, fill:'both'});
+      swipeAnimations.push(animation);
+      return animation;
+    }
+
+    function releaseSwipeAnimation(animation) {
+      if (!animation) return;
+      swipeAnimations = swipeAnimations.filter(item => item !== animation);
+      try { animation.cancel(); } catch (error) {}
+    }
+
+    async function waitForSwipeAnimation(animation) {
+      if (!animation) return;
+      try { await animation.finished; } catch (error) {}
+    }
+
+    function cancelSwipeTransition() {
+      if (!swipeTransitioning && !swipeAnimations.length) return;
+      swipeTransitionVersion++;
+      swipeAnimations.forEach(animation => { try { animation.cancel(); } catch (error) {} });
+      swipeAnimations = [];
+      swipeTransitioning = false;
+      $('#appShell').classList.remove('is-swipe-transitioning');
+      $$('.view').forEach(view => {
+        view.style.removeProperty('transform');
+        view.style.removeProperty('opacity');
+        view.classList.remove('is-swipe-tracking','is-swipe-transition');
+        view.classList.toggle('is-swipe-settled', !view.hidden);
+      });
+      hideSwipeHint();
+    }
+
+    async function finishSwipeGesture(state, commit) {
+      if (activeSwipeGesture !== state) return;
+      if (state.frame) cancelAnimationFrame(state.frame);
+      state.frame = 0;
+      renderSwipeFrame(state);
+      detachSwipePointer(state);
+      hideSwipeHint();
+
+      const targetName = commit ? VIEW_ORDER[state.targetIndex] : null;
+      const canAnimate = !state.reducedMotion && typeof state.view.animate === 'function';
+      if (!canAnimate) {
+        resetSwipeVisual(state);
+        if (targetName) {
+          const incoming = document.querySelector(`.view[data-view="${targetName}"]`);
+          incoming?.classList.add('is-swipe-settled');
+          setView(targetName, {focus:true, instantScroll:true, swipe:true});
+          state.view.classList.remove('is-swipe-settled');
+        }
+        return;
+      }
+
+      if (targetName) renderAppView(targetName);
+
+      swipeTransitioning = true;
+      const transitionVersion = ++swipeTransitionVersion;
+      $('#appShell').classList.add('is-swipe-transitioning');
+      state.view.classList.add('is-swipe-transition');
+      const direction = Math.sign(state.dx);
+      const exitDistance = direction * Math.min(160, state.width * .26);
+      let exitAnimation = null;
+      let incomingAnimation = null;
+
+      try {
+        if (!commit) {
+          exitAnimation = createSwipeAnimation(state.view, [
+            {transform:`translate3d(${state.visualDx}px, 0, 0)`, opacity:state.visualOpacity},
+            {transform:'translate3d(0, 0, 0)', opacity:1}
+          ], {duration:190, easing:'cubic-bezier(.2, .9, .2, 1)'});
+          await waitForSwipeAnimation(exitAnimation);
+          if (transitionVersion !== swipeTransitionVersion) return;
+          releaseSwipeAnimation(exitAnimation); exitAnimation = null;
+          resetSwipeVisual(state);
+          return;
+        }
+
+        exitAnimation = createSwipeAnimation(state.view, [
+          {transform:`translate3d(${state.visualDx}px, 0, 0)`, opacity:state.visualOpacity},
+          {transform:`translate3d(${exitDistance}px, 0, 0)`, opacity:.68}
+        ], {duration:125, easing:'cubic-bezier(.4, 0, 1, 1)'});
+        await waitForSwipeAnimation(exitAnimation);
+        if (transitionVersion !== swipeTransitionVersion) return;
+
+        const incoming = document.querySelector(`.view[data-view="${targetName}"]`);
+        incoming?.classList.remove('is-swipe-settled');
+        incoming?.classList.add('is-swipe-transition');
+        setView(targetName, {focus:true, instantScroll:true, swipe:true, render:false});
+        state.view.style.removeProperty('transform');
+        state.view.style.removeProperty('opacity');
+        state.view.classList.remove('is-swipe-tracking','is-swipe-transition','is-swipe-settled');
+        releaseSwipeAnimation(exitAnimation); exitAnimation = null;
+
+        if (incoming) {
+          incomingAnimation = createSwipeAnimation(incoming, [
+            {transform:`translate3d(${-direction * 54}px, 0, 0)`, opacity:.72},
+            {transform:'translate3d(0, 0, 0)', opacity:1}
+          ], {duration:215, easing:'cubic-bezier(.16, 1, .3, 1)'});
+          await waitForSwipeAnimation(incomingAnimation);
+          if (transitionVersion !== swipeTransitionVersion) return;
+          releaseSwipeAnimation(incomingAnimation); incomingAnimation = null;
+          incoming.classList.remove('is-swipe-transition');
+          incoming.classList.add('is-swipe-settled');
+        }
+      } finally {
+        releaseSwipeAnimation(exitAnimation);
+        releaseSwipeAnimation(incomingAnimation);
+        if (transitionVersion === swipeTransitionVersion) {
+          swipeTransitioning = false;
+          $('#appShell').classList.remove('is-swipe-transitioning');
+        }
+      }
+    }
+
+    function cancelActiveSwipe(immediate = false) {
+      const state = activeSwipeGesture;
+      if (!state) return;
+      if (!immediate && state.horizontal) finishSwipeGesture(state, false);
+      else { detachSwipePointer(state); resetSwipeVisual(state); }
+    }
+
+    function bindSwipeNavigation() {
+      const main = $('#mainContent');
+      main.addEventListener('pointerdown', event => {
+        if (!event.isPrimary || (event.pointerType !== 'touch' && event.pointerType !== 'pen') || event.button !== 0 || swipeTransitioning) return;
+        if (!$('#timerView').hidden || document.querySelector('dialog[open]') || $('#appShell').inert || $('#appShell').getAttribute('aria-hidden') === 'true') return;
+        if (event.clientX <= 24 || event.clientX >= window.innerWidth - 24) return;
+        const target = event.target instanceof Element ? event.target : null;
+        if (!target || target.closest(SWIPE_IGNORE_SELECTOR) || hasHorizontalScrollAncestor(target, main)) return;
+        const view = target.closest('.view:not([hidden])');
+        if (!view) return;
+        const viewIndex = VIEW_ORDER.indexOf(view.dataset.view);
+        if (viewIndex < 0) return;
+        const width = Math.max(320, Math.min(main.clientWidth || window.innerWidth, window.innerWidth));
+        activeSwipeGesture = {
+          pointerId:event.pointerId, view, viewIndex, width,
+          threshold:Math.min(110, Math.max(58, width * .18)),
+          startX:event.clientX, startY:event.clientY, startTime:event.timeStamp,
+          lastX:event.clientX, lastTime:event.timeStamp, dx:0, dy:0, velocity:0,
+          visualDx:0, visualOpacity:1, targetIndex:viewIndex, horizontal:false, frame:0,
+          reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches
+        };
+      });
+
+      main.addEventListener('pointermove', event => {
+        const state = activeSwipeGesture;
+        if (!state || state.pointerId !== event.pointerId) return;
+        state.dx = event.clientX - state.startX;
+        state.dy = event.clientY - state.startY;
+        const absoluteX = Math.abs(state.dx), absoluteY = Math.abs(state.dy);
+        if (!state.horizontal) {
+          if (Math.max(absoluteX, absoluteY) < 12) return;
+          if (absoluteY > absoluteX * 1.15) return cancelActiveSwipe(true);
+          if (absoluteX < absoluteY * 1.3) return;
+          state.horizontal = true;
+          state.view.classList.add('is-swipe-settled','is-swipe-tracking');
+          try { main.setPointerCapture(event.pointerId); } catch (error) {}
+        }
+        const elapsed = Math.max(1, event.timeStamp - state.lastTime);
+        const instantVelocity = (event.clientX - state.lastX) / elapsed;
+        state.velocity = state.velocity * .64 + instantVelocity * .36;
+        state.lastX = event.clientX;
+        state.lastTime = event.timeStamp;
+        queueSwipeFrame(state);
+      });
+
+      main.addEventListener('pointerup', event => {
+        const state = activeSwipeGesture;
+        if (!state || state.pointerId !== event.pointerId) return;
+        if (!state.horizontal) return cancelActiveSwipe(true);
+        state.dx = event.clientX - state.startX;
+        state.dy = event.clientY - state.startY;
+        if (event.timeStamp - state.lastTime > 90) state.velocity *= .3;
+        const directionMatches = Math.sign(state.velocity) === Math.sign(state.dx);
+        const quickFlick = directionMatches && Math.abs(state.dx) >= 38 && Math.abs(state.velocity) >= .48 && event.timeStamp - state.startTime < 520;
+        state.targetIndex = state.dx < 0 ? state.viewIndex + 1 : state.viewIndex - 1;
+        const hasTarget = state.targetIndex >= 0 && state.targetIndex < VIEW_ORDER.length;
+        finishSwipeGesture(state, hasTarget && (Math.abs(state.dx) >= state.threshold || quickFlick));
+      });
+
+      main.addEventListener('pointercancel', event => {
+        if (activeSwipeGesture?.pointerId === event.pointerId) cancelActiveSwipe(true);
+      });
+      main.addEventListener('lostpointercapture', event => {
+        if (activeSwipeGesture?.pointerId === event.pointerId) cancelActiveSwipe(true);
+      });
+      window.addEventListener('resize', () => { cancelActiveSwipe(true); cancelSwipeTransition(); });
+      window.addEventListener('blur', () => { cancelActiveSwipe(true); cancelSwipeTransition(); });
+      window.addEventListener('pagehide', () => { cancelActiveSwipe(true); cancelSwipeTransition(); });
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { cancelActiveSwipe(true); cancelSwipeTransition(); } });
     }
 
     function workoutModeLabel(workout) {
@@ -1502,49 +1935,204 @@
       const totalSeconds = completed.reduce((sum, entry) => sum + clamp(entry.duration, 0, 999999, 0), 0);
       const weekStart = Date.now() - 7 * 24 * 60 * 60 * 1000;
       const thisWeek = completed.filter(entry => new Date(entry.date).getTime() >= weekStart);
-      const weekSeconds = thisWeek.reduce((sum, entry) => sum + clamp(entry.duration, 0, 999999, 0), 0);
       $('#statCompleted').textContent = completed.length;
       $('#statMinutes').textContent = `${Math.round(totalSeconds / 60)}m`;
       $('#statWeek').textContent = thisWeek.length;
-      $('#heroMinutes').textContent = Math.round(weekSeconds / 60);
-      $('#heroSessions').textContent = thisWeek.length;
     }
 
-    function fillCategorySelect(select) {
-      const current = select.value || 'all';
-      select.innerHTML = `<option value="all">All categories</option>${Object.entries(CATEGORY_LABELS).map(([id,label]) => `<option value="${id}">${escapeHTML(label)}</option>`).join('')}`;
-      select.value = Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, current) ? current : 'all';
+    function fillCategorySelect(select, includeAll = true) {
+      const fallback = includeAll ? 'all' : 'strength';
+      const current = select.value || fallback;
+      select.innerHTML = `${includeAll ? '<option value="all">All categories</option>' : ''}${Object.entries(CATEGORY_LABELS).map(([id,label]) => `<option value="${id}">${escapeHTML(label)}</option>`).join('')}`;
+      select.value = Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, current) ? current : fallback;
     }
 
     function weightOptions(exercise, selected) {
       return exercise.weights.map(id => `<option value="${id}" ${id === selected ? 'selected' : ''}>${escapeHTML(formatWeight(id))}</option>`).join('');
     }
 
-    function filteredExercises(search, category, difficulty = 'all') {
+    function exerciseEquipmentGroup(exercise) {
+      const weights = exercise.weights || [];
+      const label = String(exercise.equipment || '').toLowerCase();
+      const hasKettlebell = weights.some(id => id.startsWith('KB'));
+      const hasDumbbell = weights.some(id => id.startsWith('DB'));
+      if (label.includes('kettlebell') || (hasKettlebell && !hasDumbbell)) return 'kettlebell';
+      if (label.includes('dumbbell') || (hasDumbbell && !hasKettlebell)) return 'dumbbell';
+      if (label.includes('bodyweight') || (weights.length === 1 && weights[0] === 'BW')) return 'bodyweight';
+      return 'other';
+    }
+
+    function filteredExercises(search, category = 'all', difficulty = 'all', source = 'all', equipment = 'all') {
       const query = String(search || '').trim().toLowerCase();
-      return EXERCISES.filter(exercise => {
-        const matchesQuery = !query || `${exercise.name} ${exercise.pattern} ${exercise.equipment} ${CATEGORY_LABELS[exercise.category]}`.toLowerCase().includes(query);
-        return matchesQuery && (category === 'all' || exercise.category === category) && (difficulty === 'all' || exercise.tier === difficulty);
+      const tokens = query.split(/\s+/).filter(Boolean);
+      const includeArchived = source === 'archived';
+      return allExercises({includeArchived}).filter(exercise => {
+        if (source === 'builtin' && exercise.custom) return false;
+        if (source === 'custom' && !exercise.custom) return false;
+        if (source === 'archived' && (!exercise.custom || !exercise.archived)) return false;
+        if (source !== 'archived' && exercise.archived) return false;
+        const searchable = `${exercise.name} ${exercise.short} ${exercise.pattern} ${exercise.equipment} ${exercise.cue} ${exercise.regression} ${exercise.intensity} ${CATEGORY_LABELS[exercise.category]}`.toLowerCase();
+        const matchesQuery = !tokens.length || tokens.every(token => searchable.includes(token));
+        return matchesQuery && (category === 'all' || exercise.category === category) && (difficulty === 'all' || exercise.tier === difficulty) && (equipment === 'all' || exerciseEquipmentGroup(exercise) === equipment);
+      }).sort((a, b) => {
+        if (query) {
+          const rank = exercise => exercise.name.toLowerCase().startsWith(query) ? 0 : exercise.name.toLowerCase().includes(query) ? 1 : 2;
+          const difference = rank(a) - rank(b);
+          if (difference) return difference;
+        }
+        return a.name.localeCompare(b.name);
       });
     }
 
     function renderExerciseLibrary() {
-      const exercises = filteredExercises($('#librarySearch').value, $('#libraryCategory').value, $('#libraryDifficulty').value);
-      $('#libraryCount').textContent = `${exercises.length} movement${exercises.length === 1 ? '' : 's'} shown`;
+      const query = $('#librarySearch').value;
+      const exercises = filteredExercises(query, $('#libraryCategory').value, $('#libraryDifficulty').value, $('#librarySource').value, $('#libraryEquipment').value);
+      const customCount = exercises.filter(exercise => exercise.custom).length;
+      $('#libraryCount').textContent = `${exercises.length} exercise${exercises.length === 1 ? '' : 's'} shown${customCount ? ` · ${customCount} custom` : ''}`;
       $('#exerciseGrid').innerHTML = exercises.map(exercise => {
         const selected = getDefaultWeight(exercise);
+        const customActions = exercise.custom ? `<div class="exercise-card-actions"><button class="btn btn-ghost btn-small" type="button" data-edit-exercise="${exercise.id}" aria-label="Edit ${escapeHTML(exercise.short)}">Edit</button><button class="btn btn-ghost btn-small" type="button" data-toggle-exercise-archive="${exercise.id}" aria-label="${exercise.archived ? 'Restore' : 'Archive'} ${escapeHTML(exercise.short)}">${exercise.archived ? 'Restore' : 'Archive'}</button></div>` : '';
         return `
-          <article class="exercise-card">
-            <div class="card-top"><span class="protocol-badge">${escapeHTML(CATEGORY_LABELS[exercise.category])}</span><span class="difficulty" data-tier="${exercise.tier}">${escapeHTML(exercise.tier)}</span></div>
+          <article class="exercise-card${exercise.archived ? ' is-archived' : ''}" data-exercise-card="${exercise.id}">
+            <div class="card-top"><div class="badge-group"><span class="protocol-badge">${escapeHTML(CATEGORY_LABELS[exercise.category])}</span>${exercise.custom ? '<span class="tag custom-tag">Custom</span>' : ''}${exercise.archived ? '<span class="tag">Archived</span>' : ''}</div><span class="difficulty" data-tier="${exercise.tier}">${escapeHTML(exercise.tier)}</span></div>
             <h3>${escapeHTML(exercise.name)}</h3>
             <p class="exercise-cue">${escapeHTML(exercise.cue)}</p>
             <div class="tag-row"><span class="tag">${escapeHTML(exercise.pattern)}</span><span class="tag">${escapeHTML(exercise.intensity)}</span><span class="tag">${escapeHTML(exercise.equipment)}</span></div>
-            <div class="exercise-footer">
+            <details class="exercise-details"><summary>Technique & scaling</summary><p>${escapeHTML(exercise.regression)}</p></details>
+            <div class="exercise-footer" ${exercise.archived ? 'hidden' : ''}>
               <div class="field"><label for="library-weight-${exercise.id}">Default load</label><select id="library-weight-${exercise.id}" data-library-weight="${exercise.id}">${weightOptions(exercise, selected)}</select></div>
-              <button class="btn btn-small" type="button" data-add-from-library="${exercise.id}">Add</button>
+              <button class="btn btn-small" type="button" data-add-from-library="${exercise.id}" aria-label="Add ${escapeHTML(exercise.short)} to the workout builder">Add</button>
             </div>
+            ${customActions}
           </article>`;
-      }).join('') || `<div class="empty-state" style="grid-column:1/-1"><strong>No movements found.</strong><br>Try clearing a filter or using a broader search.</div>`;
+      }).join('') || `<div class="empty-state" style="grid-column:1/-1"><strong>No exercises found.</strong><br>Clear a filter or create your own exercise.${query.trim() ? `<br><button class="btn btn-small" type="button" data-open-exercise-editor="library" data-exercise-prefill="${escapeHTML(query.trim().slice(0,60))}">Create “${escapeHTML(query.trim().slice(0,40))}”</button>` : ''}</div>`;
+    }
+
+    function loadProfileForExercise(exercise) {
+      const signature = [...exercise.weights].sort().join('|');
+      return Object.entries(WEIGHT_PROFILES).find(([,profile]) => [...profile.weights].sort().join('|') === signature)?.[0] || null;
+    }
+
+    function updateExerciseLoadOptions(selected = '') {
+      const existing = editingExerciseId ? getExercise(editingExerciseId) : null;
+      const profile = $('#exerciseLoadProfile').value === 'current' && existing ? {weights:existing.weights} : WEIGHT_PROFILES[$('#exerciseLoadProfile').value] || WEIGHT_PROFILES.bodyweight;
+      $('#exerciseDefaultWeight').innerHTML = profile.weights.map(id => `<option value="${id}">${escapeHTML(formatWeight(id))}</option>`).join('');
+      $('#exerciseDefaultWeight').value = profile.weights.includes(selected) ? selected : profile.weights[0];
+    }
+
+    function openExerciseEditor(exerciseId = null, context = 'library', prefill = '') {
+      const exercise = exerciseId ? getExercise(exerciseId) : null;
+      if (exerciseId && (!exercise || !exercise.custom)) return;
+      editingExerciseId = exercise?.id || null;
+      exerciseEditorContext = context === 'builder' ? 'builder' : 'library';
+      $('#exerciseForm').reset();
+      $$('#exerciseForm [aria-invalid]').forEach(field => { field.removeAttribute('aria-invalid'); field.removeAttribute('aria-describedby'); });
+      $('#exerciseFormError').hidden = true;
+      $('#exerciseFormError').textContent = '';
+      fillCategorySelect($('#exerciseCategory'), false);
+      $('#exerciseId').value = exercise?.id || '';
+      $('#exerciseName').value = exercise?.name || String(prefill || '').slice(0, 60);
+      $('#exerciseShort').value = exercise?.short || '';
+      $('#exerciseCategory').value = exercise?.category || 'strength';
+      $('#exerciseTargetType').value = exercise?.targetType || (exercise?.carry ? 'text' : 'reps');
+      $('#exerciseTier').value = exercise?.tier || 'beginner';
+      $('#exerciseIntensity').value = exercise?.intensity || 'Moderate';
+      $('#exercisePattern').value = exercise?.pattern || '';
+      $('#exerciseEquipmentName').value = exercise?.equipment || '';
+      $('#exerciseLoadProfile').querySelector('option[value="current"]')?.remove();
+      const loadProfile = exercise ? loadProfileForExercise(exercise) : 'bodyweight';
+      if (exercise && !loadProfile) $('#exerciseLoadProfile').add(new Option('Current saved loads', 'current'));
+      $('#exerciseLoadProfile').value = loadProfile || 'current';
+      updateExerciseLoadOptions(exercise?.defaultWeight || '');
+      $('#exerciseCue').value = exercise?.cue || '';
+      $('#exerciseRegression').value = exercise?.regression || '';
+      $('#exerciseDialogTitle').textContent = exercise ? 'Edit exercise' : 'New exercise';
+      $('#exerciseDialogDescription').textContent = exercise ? 'Changes update every saved workout that uses this exercise.' : 'Create a reusable exercise for your library and workout builder.';
+      $('#saveExercise').textContent = exercise ? 'Update exercise' : 'Save exercise';
+      openDialog($('#exerciseDialog'));
+      requestAnimationFrame(() => $('#exerciseName').focus());
+    }
+
+    function showExerciseFormError(message, field = $('#exerciseName')) {
+      const error = $('#exerciseFormError');
+      error.textContent = message;
+      error.hidden = false;
+      field?.setAttribute('aria-invalid','true');
+      field?.setAttribute('aria-describedby','exerciseFormError');
+      field?.focus();
+    }
+
+    function migrateExerciseReferences(exercise) {
+      const migrateItems = items => {
+        for (const item of items || []) {
+          if (item.exerciseId !== exercise.id) continue;
+          if (!exercise.weights.includes(item.weight)) item.weight = exercise.defaultWeight;
+          if (exercise.carry) { item.target = item.target || 'Time or distance'; item.reps = 0; }
+          else { item.reps = clampInt(item.reps, 0, 999, 10) || 10; item.target = ''; }
+        }
+      };
+      appState.customWorkouts.forEach(workout => migrateItems(workout.items));
+      migrateItems(builderState?.items);
+      migrateItems(pendingWorkout?.items);
+      if (!exercise.weights.includes(appState.weightDefaults[exercise.id])) appState.weightDefaults[exercise.id] = exercise.defaultWeight;
+    }
+
+    function saveCustomExercise(event) {
+      event.preventDefault();
+      const name = $('#exerciseName').value.trim().slice(0, 60);
+      if (!name) return showExerciseFormError('Give this exercise a name.');
+      const duplicate = allExercises({includeArchived:true}).find(exercise => exercise.id !== editingExerciseId && exercise.name.trim().toLowerCase() === name.toLowerCase());
+      if (duplicate) return showExerciseFormError('An exercise with this name already exists. Choose a more specific name.');
+      const existing = editingExerciseId ? getExercise(editingExerciseId) : null;
+      if (!existing && appState.customExercises.length >= MAX_CUSTOM_EXERCISES) return showExerciseFormError(`Your custom library can hold up to ${MAX_CUSTOM_EXERCISES} exercises. Export a backup before resetting local data.`);
+      const profile = $('#exerciseLoadProfile').value === 'current' && existing ? {weights:existing.weights} : WEIGHT_PROFILES[$('#exerciseLoadProfile').value] || WEIGHT_PROFILES.bodyweight;
+      const usedIds = new Set([...Object.keys(EXERCISE_BY_ID), ...appState.customExercises.filter(exercise => exercise.id !== editingExerciseId).map(exercise => exercise.id)]);
+      const exercise = normalizeCustomExercise({
+        id:existing?.id, name, short:$('#exerciseShort').value, category:$('#exerciseCategory').value,
+        targetType:$('#exerciseTargetType').value, tier:$('#exerciseTier').value, intensity:$('#exerciseIntensity').value,
+        pattern:$('#exercisePattern').value, equipment:$('#exerciseEquipmentName').value,
+        weights:profile.weights, defaultWeight:$('#exerciseDefaultWeight').value,
+        cue:$('#exerciseCue').value, regression:$('#exerciseRegression').value,
+        archived:existing?.archived, createdAt:existing?.createdAt, updatedAt:new Date().toISOString()
+      }, {usedIds});
+      if (!exercise) return showExerciseFormError('Check the exercise details and try again.');
+      if (existing) {
+        const index = appState.customExercises.findIndex(item => item.id === existing.id);
+        appState.customExercises[index] = exercise;
+      } else appState.customExercises.unshift(exercise);
+      rebuildCustomExerciseIndex();
+      migrateExerciseReferences(exercise);
+      if (!existing && exerciseEditorContext === 'builder') {
+        ensureBuilder();
+        if (builderState.mode === 'rest') { builderState = freshBuilder('circuit'); builderState.items = []; }
+        builderState.items.push(itemFor(exercise.id, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20}));
+        builderDirty = true;
+      }
+      const persisted = saveState();
+      closeDialog($('#exerciseDialog'));
+      renderExerciseLibrary(); renderPicker(); renderSettings(); renderBuilder();
+      requestAnimationFrame(() => {
+        const target = exerciseEditorContext === 'builder' ? $(`[data-remove-item="${Math.max(0, builderState.items.length - 1)}"]`) : $(`[data-exercise-card="${exercise.id}"] [data-edit-exercise]`);
+        target?.focus();
+      });
+      showToast(persisted ? (existing ? 'Custom exercise updated.' : exerciseEditorContext === 'builder' ? 'Custom exercise saved and added to the workout.' : 'Custom exercise saved to your library.') : 'Exercise kept for this visit only; storage is unavailable.');
+    }
+
+    function toggleExerciseArchive(exerciseId) {
+      const exercise = getExercise(exerciseId);
+      if (!exercise?.custom) return;
+      const previousButtons = $$('[data-toggle-exercise-archive]');
+      const previousIndex = Math.max(0, previousButtons.findIndex(button => button.dataset.toggleExerciseArchive === exerciseId));
+      exercise.archived = !exercise.archived;
+      exercise.updatedAt = new Date().toISOString();
+      rebuildCustomExerciseIndex();
+      const persisted = saveState();
+      renderExerciseLibrary(); renderPicker(); renderSettings();
+      requestAnimationFrame(() => {
+        const buttons = $$('[data-toggle-exercise-archive]');
+        (buttons[Math.min(previousIndex, buttons.length - 1)] || $('[data-open-exercise-editor="library"]'))?.focus();
+      });
+      showToast(persisted ? (exercise.archived ? 'Exercise archived. Existing workouts can still use it.' : 'Exercise restored to the library.') : 'Exercise updated for this visit only; storage is unavailable.');
     }
 
     function freshBuilder(mode = 'tabata') {
@@ -1564,6 +2152,23 @@
 
     function ensureBuilder() {
       if (!builderState) builderState = freshBuilder('tabata');
+    }
+
+    function switchBuilderMode(mode) {
+      ensureBuilder();
+      const previous = builderState;
+      const next = freshBuilder(mode);
+      const previousProtocol = PROTOCOL_BY_ID[previous.mode];
+      const previousDefaultName = previous.mode === 'rest' ? 'Between-Set Rest' : `My ${previousProtocol?.name || ''} Session`;
+      if (previous.name && previous.name !== previousDefaultName) next.name = previous.name;
+      next.id = previous.id;
+      next.description = previous.description || '';
+      next.difficulty = previous.difficulty || 'Custom';
+      if (previous.color) next.color = previous.color;
+      builderState = next;
+      builderDirty = true;
+      clearBuilderError();
+      renderBuilder();
     }
 
     function builderWorkout() {
@@ -1608,33 +2213,39 @@
         return;
       }
       if (!builderState.items.length) {
-        list.innerHTML = `<div class="empty-state"><strong>Add at least one exercise.</strong><br>Choose a movement from the library panel.</div>`;
+        list.innerHTML = `<div class="empty-state"><strong>Add at least one exercise.</strong><br>Choose an exercise from the library panel.</div>`;
         return;
       }
       list.innerHTML = builderState.items.map((item, index) => {
         const exercise = getExercise(item.exerciseId);
-        if (!exercise) return '';
+        if (!exercise) return `<div class="selected-exercise is-unavailable"><span class="drag-order" aria-hidden="true">${String(index + 1).padStart(2,'0')}</span><div class="selected-name"><strong>Unavailable exercise</strong><small>It may have been removed in another tab. Remove it to continue.</small></div><div class="row-actions"><button class="mini-btn remove" type="button" data-remove-item="${index}" aria-label="Remove unavailable exercise">×</button></div></div>`;
         const circuitFields = builderState.mode === 'circuit' ? `
           <div class="field row-field"><label for="item-work-${index}">Work <span class="sr-only">(seconds)</span></label><div class="input-unit"><input id="item-work-${index}" type="number" min="5" max="3600" value="${item.work}" data-item-index="${index}" data-item-field="work"><span aria-hidden="true">sec</span></div></div>
           <div class="field row-field"><label for="item-rest-${index}">Rest <span class="sr-only">(seconds)</span></label><div class="input-unit"><input id="item-rest-${index}" type="number" min="0" max="3600" value="${item.rest}" data-item-index="${index}" data-item-field="rest"><span aria-hidden="true">sec</span></div></div>` : '';
         const targetField = exercise.carry
-          ? `<div class="field row-field"><label for="item-target-${index}">Distance / time target</label><input id="item-target-${index}" type="text" maxlength="60" value="${escapeHTML(item.target || '40 sec or 30 m')}" data-item-index="${index}" data-item-field="target"></div>`
+          ? `<div class="field row-field"><label for="item-target-${index}">Distance / time target</label><input id="item-target-${index}" type="text" maxlength="60" value="${escapeHTML(item.target || (exercise.custom ? 'Time or distance' : '40 sec or 30 m'))}" data-item-index="${index}" data-item-field="target"></div>`
           : `<div class="field row-field"><label for="item-reps-${index}">Rep target</label><input id="item-reps-${index}" type="number" min="0" max="999" value="${item.reps || 0}" data-item-index="${index}" data-item-field="reps"></div>`;
         return `<div class="selected-exercise">
           <span class="drag-order" aria-hidden="true">${String(index + 1).padStart(2,'0')}</span>
           <div class="selected-name"><strong>${escapeHTML(exercise.short)}</strong><small>${escapeHTML(exercise.pattern)}</small></div>
-          <div class="field row-field weight-field"><label for="item-weight-${index}">Load</label><select id="item-weight-${index}" data-item-index="${index}" data-item-field="weight">${weightOptions(exercise, item.weight)}</select></div>
-          ${targetField}
-          ${circuitFields}
+          <div class="selected-fields">
+            <div class="field row-field weight-field"><label for="item-weight-${index}">Load</label><select id="item-weight-${index}" data-item-index="${index}" data-item-field="weight">${weightOptions(exercise, item.weight)}</select></div>
+            ${targetField}
+            ${circuitFields}
+          </div>
           <div class="row-actions"><button class="mini-btn" type="button" data-move-item="up" data-item-index="${index}" aria-label="Move ${escapeHTML(exercise.short)} up" ${index === 0 ? 'disabled' : ''}>↑</button><button class="mini-btn" type="button" data-move-item="down" data-item-index="${index}" aria-label="Move ${escapeHTML(exercise.short)} down" ${index === builderState.items.length - 1 ? 'disabled' : ''}>↓</button><button class="mini-btn remove" type="button" data-remove-item="${index}" aria-label="Remove ${escapeHTML(exercise.short)}">×</button></div>
         </div>`;
       }).join('');
     }
 
     function renderPicker() {
-      const exercises = filteredExercises($('#pickerSearch').value, $('#pickerCategory').value);
+      const query = $('#pickerSearch').value;
+      const exercises = filteredExercises(query, $('#pickerCategory').value, $('#pickerDifficulty').value);
       $('#pickerCount').textContent = exercises.length;
-      $('#pickerList').innerHTML = exercises.map(exercise => `<div class="picker-item"><div><strong>${escapeHTML(exercise.short)}</strong><small>${escapeHTML(CATEGORY_LABELS[exercise.category])} · ${escapeHTML(formatWeight(getDefaultWeight(exercise)))}</small></div><button class="btn btn-small" type="button" data-picker-add="${exercise.id}">Add</button></div>`).join('') || `<div class="empty-state">No matching exercises.</div>`;
+      $('#pickerList').innerHTML = exercises.map(exercise => {
+        const selectedCount = builderState?.items?.filter(item => item.exerciseId === exercise.id).length || 0;
+        return `<div class="picker-item"><div><strong>${escapeHTML(exercise.short)}${exercise.custom ? ' <span class="tag custom-tag">Custom</span>' : ''}</strong><small>${escapeHTML(CATEGORY_LABELS[exercise.category])} · ${escapeHTML(exercise.equipment)} · ${escapeHTML(formatWeight(getDefaultWeight(exercise)))}</small>${selectedCount ? `<small class="picker-use">${selectedCount} already in workout</small>` : ''}</div><button class="btn btn-small" type="button" data-picker-add="${exercise.id}" aria-label="Add ${escapeHTML(exercise.short)}${selectedCount ? ' again' : ''}">${selectedCount ? 'Add again' : 'Add'}</button></div>`;
+      }).join('') || `<div class="empty-state">No matching exercises.${query.trim() ? `<br><button class="btn btn-small" type="button" data-open-exercise-editor="builder" data-exercise-prefill="${escapeHTML(query.trim().slice(0,60))}">Create this exercise</button>` : ''}</div>`;
     }
 
     function updateBuilderSummary() {
@@ -1646,6 +2257,9 @@
 
     function renderBuilder() {
       ensureBuilder();
+      const restMode = builderState.mode === 'rest';
+      $('#exercisePickerPanel').hidden = restMode;
+      $('#builderLayout').classList.toggle('single-column', restMode);
       $('#builderName').value = builderState.name;
       $('#builderMode').value = builderState.mode;
       renderTimingFields();
@@ -1659,7 +2273,9 @@
       const name = builderState.name.trim();
       if (!name) return 'Give this workout a name.';
       if (builderState.mode !== 'rest' && !builderState.items.length) return 'Add at least one exercise.';
-      if (compileWorkout(builderState).phases.length === 0) return 'Add valid timing before starting.';
+      if (builderState.mode !== 'rest' && builderState.items.some(item => !getExercise(item.exerciseId))) return 'Remove unavailable exercises before starting.';
+      const compiled = compileWorkout(builderState);
+      if (compiled.phases.length === 0 || (builderState.mode !== 'rest' && !compiled.phases.some(phase => phase.phase === 'work'))) return 'Add valid timing before starting.';
       return '';
     }
 
@@ -1765,27 +2381,27 @@
       const wakeSupported = 'wakeLock' in navigator;
       $('#settingWake').disabled = !wakeSupported;
       $('#wakeSupport').textContent = wakeSupported ? 'Request a wake lock during active workouts.' : 'Wake Lock is unavailable; the timer still stays accurate.';
-      $('#defaultWeightGrid').innerHTML = EXERCISES.filter(exercise => exercise.weights.length > 1).map(exercise => `<div class="weight-default"><label for="default-${exercise.id}">${escapeHTML(exercise.short)}</label><select id="default-${exercise.id}" data-default-weight="${exercise.id}">${weightOptions(exercise, getDefaultWeight(exercise))}</select></div>`).join('');
+      $('#defaultWeightGrid').innerHTML = allExercises().filter(exercise => exercise.weights.length > 1).map(exercise => `<div class="weight-default"><label for="default-${exercise.id}">${escapeHTML(exercise.short)}${exercise.custom ? ' · Custom' : ''}</label><select id="default-${exercise.id}" data-default-weight="${exercise.id}">${weightOptions(exercise, getDefaultWeight(exercise))}</select></div>`).join('');
     }
 
-    function normalizeImportedWorkout(raw, index) {
+    function normalizeImportedWorkout(raw, index, options = {}) {
       if (!raw || typeof raw !== 'object') return null;
       if (!PROTOCOL_BY_ID[raw.mode]) return null;
       const name = String(raw.name || '').trim().slice(0, 60);
       if (!name) return null;
-      const protocol = PROTOCOL_BY_ID[raw.mode];
       const workout = freshBuilder(raw.mode);
       workout.id = uid('imported');
       workout.name = name;
       workout.description = String(raw.description || '').slice(0, 240);
-      workout.config = {...protocol.defaults, ...(raw.config && typeof raw.config === 'object' ? raw.config : {})};
-      if ('rounds' in workout.config) workout.config.rounds = clampInt(workout.config.rounds,1,200,protocol.defaults.rounds || 1);
-      if ('maxReps' in workout.config) workout.config.maxReps = clampInt(workout.config.maxReps,2,30,10);
+      workout.config = normalizeWorkoutConfig(raw.mode, raw.config);
       workout.items = [];
       for (const rawItem of Array.isArray(raw.items) ? raw.items.slice(0, 60) : []) {
-        const exercise = getExercise(rawItem?.exerciseId);
+        const sourceId = String(rawItem?.exerciseId || '');
+        const exerciseId = options.idMap?.has(sourceId) ? options.idMap.get(sourceId) : sourceId;
+        if (!exerciseId) continue;
+        const exercise = getExercise(exerciseId, options.customExercises || null);
         if (!exercise) continue;
-        workout.items.push(itemFor(exercise.id, rawItem));
+        workout.items.push(itemFor(exercise.id, rawItem, options.customExercises || null));
       }
       if (workout.mode !== 'rest' && !workout.items.length) return null;
       if (!compileWorkout(workout).phases.length) return null;
@@ -1794,17 +2410,17 @@
     }
 
     function exportCustomWorkouts() {
-      const payload = {app:'Mateo HIIT', version:APP_VERSION, exportedAt:new Date().toISOString(), workouts:appState.customWorkouts};
+      const payload = {app:'Mateo HIIT', version:APP_VERSION, exportedAt:new Date().toISOString(), exercises:appState.customExercises, workouts:appState.customWorkouts};
       const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `mateo-hiit-workouts-${new Date().toISOString().slice(0,10)}.json`;
+      link.download = `mateo-hiit-backup-${new Date().toISOString().slice(0,10)}.json`;
       document.body.append(link);
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showToast(`${appState.customWorkouts.length} workout${appState.customWorkouts.length === 1 ? '' : 's'} exported.`);
+      showToast(`${appState.customExercises.length} custom exercise${appState.customExercises.length === 1 ? '' : 's'} and ${appState.customWorkouts.length} workout${appState.customWorkouts.length === 1 ? '' : 's'} exported.`);
     }
 
     async function importCustomWorkouts(file) {
@@ -1813,22 +2429,71 @@
         if (file.size > 2 * 1024 * 1024) throw new Error('Backup exceeds 2 MB');
         const parsed = JSON.parse(await file.text());
         const rawWorkouts = Array.isArray(parsed) ? parsed : parsed.workouts;
-        if (!Array.isArray(rawWorkouts)) throw new Error('No workouts array');
-        const valid = rawWorkouts.slice(0, 200).map(normalizeImportedWorkout).filter(Boolean);
-        if (!valid.length) throw new Error('No valid workouts');
+        const rawExercises = !Array.isArray(parsed) && Array.isArray(parsed.exercises) ? parsed.exercises : [];
+        if (!Array.isArray(rawWorkouts) && !rawExercises.length) throw new Error('No importable data');
+        const usedIds = new Set([...Object.keys(EXERCISE_BY_ID), ...appState.customExercises.map(exercise => exercise.id)]);
+        const exerciseNames = new Set(allExercises({includeArchived:true}).map(exercise => exercise.name.toLowerCase()));
+        const idMap = new Map();
+        const importedExercises = [];
+        let skippedExercises = Math.max(0, rawExercises.length - MAX_CUSTOM_EXERCISES);
+        for (const raw of rawExercises.slice(0, MAX_CUSTOM_EXERCISES)) {
+          const sourceId = String(raw?.id || '').trim().toLowerCase();
+          if (sourceId && idMap.has(sourceId)) continue;
+          const existing = sourceId ? getExercise(sourceId) : null;
+          const sameDefinition = existing?.custom &&
+            existing.name.trim().toLowerCase() === String(raw?.name || '').trim().toLowerCase() &&
+            existing.category === raw?.category && existing.targetType === (raw?.targetType === 'text' || raw?.carry === true ? 'text' : 'reps') &&
+            [...existing.weights].sort().join('|') === [...new Set((Array.isArray(raw?.weights) ? raw.weights : []).filter(id => Object.prototype.hasOwnProperty.call(WEIGHTS, id)))].sort().join('|');
+          if (sameDefinition) {
+            idMap.set(sourceId, existing.id);
+            continue;
+          }
+          if (appState.customExercises.length + importedExercises.length >= MAX_CUSTOM_EXERCISES) {
+            if (sourceId) idMap.set(sourceId, null);
+            skippedExercises++;
+            continue;
+          }
+          const exercise = normalizeCustomExercise(raw, {usedIds, forceNewId:Boolean(existing)});
+          if (!exercise) {
+            if (sourceId) idMap.set(sourceId, null);
+            continue;
+          }
+          const baseName = exercise.name;
+          let suffix = 2;
+          while (exerciseNames.has(exercise.name.toLowerCase())) {
+            const suffixText = ` (imported ${suffix++})`;
+            exercise.name = `${baseName.slice(0, Math.max(1, 60 - suffixText.length))}${suffixText}`;
+          }
+          exercise.short = exercise.short === baseName.slice(0, 36) ? exercise.name.slice(0, 36) : exercise.short;
+          exerciseNames.add(exercise.name.toLowerCase());
+          if (sourceId) idMap.set(sourceId, exercise.id);
+          importedExercises.push(exercise);
+        }
+        const stagedExercises = [...appState.customExercises, ...importedExercises];
+        rebuildCustomExerciseIndex(stagedExercises);
+        const valid = (Array.isArray(rawWorkouts) ? rawWorkouts : []).slice(0, 200).map((workout, index) => normalizeImportedWorkout(workout, index, {idMap, customExercises:stagedExercises})).filter(Boolean);
+        if (!valid.length && !importedExercises.length) throw new Error(skippedExercises ? 'Exercise library is full' : 'No valid data');
         const names = new Set(appState.customWorkouts.map(workout => workout.name.toLowerCase()));
         for (const workout of valid) {
           const base = workout.name;
           let suffix = 2;
-          while (names.has(workout.name.toLowerCase())) workout.name = `${base} (imported ${suffix++})`;
+          while (names.has(workout.name.toLowerCase())) {
+            const suffixText = ` (imported ${suffix++})`;
+            workout.name = `${base.slice(0, Math.max(1, 60 - suffixText.length))}${suffixText}`;
+          }
           names.add(workout.name.toLowerCase());
           appState.customWorkouts.push(workout);
         }
+        appState.customExercises.push(...importedExercises);
+        rebuildCustomExerciseIndex();
         const persisted = saveState();
-        renderDashboard();
-        showToast(persisted ? `Imported ${valid.length} workout${valid.length === 1 ? '' : 's'}; existing plans were kept.` : `Imported ${valid.length} workout${valid.length === 1 ? '' : 's'} for this visit only; storage is unavailable.`);
+        renderDashboard(); renderExerciseLibrary(); renderPicker(); renderSettings();
+        const summary = `${importedExercises.length} exercise${importedExercises.length === 1 ? '' : 's'} and ${valid.length} workout${valid.length === 1 ? '' : 's'}`;
+        const skipped = skippedExercises ? ` ${skippedExercises} exercise${skippedExercises === 1 ? ' was' : 's were'} skipped because the custom library is full.` : '';
+        showToast(persisted ? `Imported ${summary}; existing data was kept.${skipped}` : `Imported ${summary} for this visit only; storage is unavailable.${skipped}`);
       } catch (error) {
-        showToast(error.message === 'Backup exceeds 2 MB' ? 'Import failed: backups must be 2 MB or smaller.' : 'Import failed. Choose a valid Mateo HIIT JSON backup.');
+        rebuildCustomExerciseIndex();
+        showToast(error.message === 'Backup exceeds 2 MB' ? 'Import failed: backups must be 2 MB or smaller.' : error.message === 'Exercise library is full' ? `Import stopped: the custom library already has ${MAX_CUSTOM_EXERCISES} exercises.` : 'Import failed. Choose a valid Mateo HIIT JSON backup.');
       } finally {
         $('#importWorkouts').value = '';
       }
@@ -1837,6 +2502,9 @@
     function initializeStaticUI() {
       fillCategorySelect($('#libraryCategory'));
       fillCategorySelect($('#pickerCategory'));
+      fillCategorySelect($('#exerciseCategory'), false);
+      $('#exerciseLoadProfile').innerHTML = Object.entries(WEIGHT_PROFILES).map(([id,profile]) => `<option value="${id}">${escapeHTML(profile.label)}</option>`).join('');
+      updateExerciseLoadOptions('BW');
       $('#builderMode').innerHTML = PROTOCOLS.map(protocol => `<option value="${protocol.id}">${escapeHTML(protocol.name)}</option>`).join('');
       $('#protocolGrid').innerHTML = PROTOCOLS.map(protocol => `<button class="protocol-card" type="button" data-build-mode="${protocol.id}"><span class="protocol-icon">${escapeHTML(protocol.code)}</span><strong>${escapeHTML(protocol.name)}</strong><span>${escapeHTML(protocol.summary)}</span></button>`).join('');
       applyTheme();
@@ -1863,25 +2531,44 @@
           const workout = appState.customWorkouts.find(item => item.id === edit.dataset.editWorkout);
           if (workout) { builderState = deepClone(workout); builderDirty = false; setView('builder'); }
         }
+        const openExercise = event.target.closest('[data-open-exercise-editor]');
+        if (openExercise) openExerciseEditor(null, openExercise.dataset.openExerciseEditor, openExercise.dataset.exercisePrefill || '');
+        const editExercise = event.target.closest('[data-edit-exercise]');
+        if (editExercise) openExerciseEditor(editExercise.dataset.editExercise, 'library');
+        const archiveExercise = event.target.closest('[data-toggle-exercise-archive]');
+        if (archiveExercise) toggleExerciseArchive(archiveExercise.dataset.toggleExerciseArchive);
         const addLibrary = event.target.closest('[data-add-from-library]');
         if (addLibrary) {
           ensureBuilder();
-          if (builderState.mode === 'rest') builderState = freshBuilder('circuit');
-          builderState.items.push(itemFor(addLibrary.dataset.addFromLibrary, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20}));
+          if (builderState.mode === 'rest') { builderState = freshBuilder('circuit'); builderState.items = []; }
+          const item = itemFor(addLibrary.dataset.addFromLibrary, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20});
+          if (!item) return;
+          builderState.items.push(item);
           builderDirty = true;
           setView('builder');
           showToast('Exercise added to the builder.');
         }
         const pickerAdd = event.target.closest('[data-picker-add]');
         if (pickerAdd) {
-          builderState.items.push(itemFor(pickerAdd.dataset.pickerAdd, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20}));
-          clearBuilderError(); markBuilderDirty(); renderSelectedExercises();
+          ensureBuilder();
+          const exerciseId = pickerAdd.dataset.pickerAdd;
+          const exercise = getExercise(exerciseId);
+          const switchedFromRest = builderState.mode === 'rest';
+          if (switchedFromRest) { builderState = freshBuilder('circuit'); builderState.items = []; }
+          const item = itemFor(exerciseId, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20});
+          if (!item) return;
+          builderState.items.push(item);
+          clearBuilderError(); markBuilderDirty();
+          if (switchedFromRest) renderBuilder();
+          else { renderSelectedExercises(); renderPicker(); }
+          requestAnimationFrame(() => $(`[data-picker-add="${exerciseId}"]`)?.focus());
+          showToast(`${exercise?.short || 'Exercise'} added to the workout.`);
         }
         const remove = event.target.closest('[data-remove-item]');
         if (remove) {
           const index = Number(remove.dataset.removeItem);
           const removedName = getExercise(builderState.items[index]?.exerciseId)?.short || 'Exercise';
-          builderState.items.splice(index, 1); markBuilderDirty(); renderSelectedExercises();
+          builderState.items.splice(index, 1); markBuilderDirty(); renderSelectedExercises(); renderPicker();
           requestAnimationFrame(() => (document.querySelector(`[data-remove-item="${Math.min(index, builderState.items.length - 1)}"]`) || $('#pickerSearch')).focus());
           showToast(`${removedName} removed from the sequence.`);
         }
@@ -1892,7 +2579,7 @@
           if (to >= 0 && to < builderState.items.length) {
             const movedName = getExercise(builderState.items[from]?.exerciseId)?.short || 'Exercise';
             [builderState.items[from], builderState.items[to]] = [builderState.items[to], builderState.items[from]];
-            markBuilderDirty(); renderSelectedExercises();
+            markBuilderDirty(); renderSelectedExercises(); renderPicker();
             requestAnimationFrame(() => document.querySelector(`[data-item-index="${to}"][data-move-item]:not([disabled])`)?.focus());
             showToast(`${movedName} moved to position ${to + 1} of ${builderState.items.length}.`);
           }
@@ -1935,6 +2622,17 @@
       $('#librarySearch').addEventListener('input', renderExerciseLibrary);
       $('#libraryCategory').addEventListener('change', renderExerciseLibrary);
       $('#libraryDifficulty').addEventListener('change', renderExerciseLibrary);
+      $('#libraryEquipment').addEventListener('change', renderExerciseLibrary);
+      $('#librarySource').addEventListener('change', renderExerciseLibrary);
+      $('#clearLibraryFilters').addEventListener('click', () => {
+        $('#librarySearch').value = '';
+        $('#libraryCategory').value = 'all';
+        $('#libraryDifficulty').value = 'all';
+        $('#libraryEquipment').value = 'all';
+        $('#librarySource').value = 'all';
+        renderExerciseLibrary();
+        $('#librarySearch').focus();
+      });
       $('#exerciseGrid').addEventListener('change', event => {
         const select = event.target.closest('[data-library-weight]');
         if (!select) return;
@@ -1944,10 +2642,18 @@
 
       $('#builderName').addEventListener('input', event => { ensureBuilder(); builderState.name = event.target.value; builderDirty = true; clearBuilderError(); });
       $('#builderMode').addEventListener('change', event => {
-        const oldName = builderState.name;
-        builderState = freshBuilder(event.target.value);
-        if (oldName && !/^My .+ Session$/.test(oldName)) builderState.name = oldName;
-        builderDirty = true; renderBuilder();
+        const previousMode = builderState.mode;
+        const nextMode = event.target.value;
+        if (nextMode === previousMode) return;
+        const changeMode = () => switchBuilderMode(nextMode);
+        if (!builderDirty) return changeMode();
+        event.target.value = previousMode;
+        askForConfirmation({
+          title:'Change timer mode?',
+          message:'The current timing and exercise sequence will be replaced. Any custom workout name will be kept.',
+          confirmLabel:'Change mode', danger:false, action:changeMode,
+          onCancel:() => { $('#builderMode').value = previousMode; $('#builderMode').focus(); }
+        });
       });
       $('#timingFields').addEventListener('input', event => {
         const input = event.target.closest('[data-config-key]');
@@ -1956,8 +2662,12 @@
         const key = input.dataset.configKey;
         if (input.tagName === 'SELECT') builderState.config[key] = input.value;
         else {
-          const value = clamp(input.value, Number(input.min || 0), Number(input.max || 99999), builderState.config[key] || 0);
-          builderState.config[key] = (key === 'rounds' || key === 'maxReps' ? Math.round(value) : value) * Number(input.dataset.configScale || 1);
+          const scale = Number(input.dataset.configScale || 1);
+          const fallback = Number(builderState.config[key] || 0) / scale;
+          const clamped = clamp(input.value, Number(input.min || 0), Number(input.max || 99999), fallback);
+          const value = key === 'rounds' || key === 'maxReps' ? Math.round(clamped) : clamped;
+          if (String(value) !== input.value) input.value = String(value);
+          builderState.config[key] = value * scale;
         }
         markBuilderDirty();
       });
@@ -1970,11 +2680,25 @@
         const field = input.dataset.itemField;
         if (field === 'weight') item.weight = input.value;
         else if (field === 'target') item.target = input.value.slice(0, 60);
-        else item[field] = field === 'reps' ? clampInt(input.value, 0, 999, item[field] || 0) : clamp(input.value, 0, 3600, item[field] || 0);
+        else {
+          const value = field === 'reps'
+            ? clampInt(input.value, 0, 999, item[field] || 0)
+            : clamp(input.value, field === 'work' ? 5 : 0, 3600, item[field] || (field === 'work' ? 5 : 0));
+          item[field] = value;
+          if (String(value) !== input.value) input.value = String(value);
+        }
         markBuilderDirty();
       });
       $('#pickerSearch').addEventListener('input', renderPicker);
       $('#pickerCategory').addEventListener('change', renderPicker);
+      $('#pickerDifficulty').addEventListener('change', renderPicker);
+      $('#exerciseLoadProfile').addEventListener('change', () => updateExerciseLoadOptions());
+      $('#exerciseForm').addEventListener('input', event => {
+        $('#exerciseFormError').hidden = true;
+        event.target.removeAttribute('aria-invalid');
+        event.target.removeAttribute('aria-describedby');
+      });
+      $('#exerciseForm').addEventListener('submit', saveCustomExercise);
       $('#saveWorkout').addEventListener('click', saveBuilderWorkout);
       $('#startBuilderWorkout').addEventListener('click', () => { const error = validateBuilder(); if (error) reportBuilderError(error); else { clearBuilderError(); openWorkoutReview(builderWorkout()); } });
       $('#resetBuilder').addEventListener('click', () => {
@@ -1982,7 +2706,6 @@
         if (builderDirty) askForConfirmation({title:'Reset this workout?', message:'Unsaved builder changes will be discarded.', confirmLabel:'Reset builder', action:reset}); else reset();
       });
 
-      $('#quickStart').addEventListener('click', () => openWorkoutReview({id:'quick-tabata',name:'4-Minute Swing Tabata',mode:'tabata',difficulty:'Intermediate',description:'Classic 20:10 timing with alternating swings and mountain climbers.',config:{work:20,rest:10,rounds:8,includeFinalRest:true},items:[itemFor('two-hand-swing',{weight:'KB35'}),itemFor('mountain-climber',{weight:'BW'})]}));
       $('#confirmStart').addEventListener('click', () => { if (pendingWorkout) { closeDialog($('#startDialog')); startTimerWorkout(pendingWorkout); } });
       $('#startReview').addEventListener('change', event => {
         const select = event.target.closest('[data-review-weight]');
@@ -2025,7 +2748,7 @@
       });
       $('#exportWorkouts').addEventListener('click', exportCustomWorkouts);
       $('#importWorkouts').addEventListener('change', event => importCustomWorkouts(event.target.files?.[0]));
-      $('#resetAllData').addEventListener('click', () => askForConfirmation({title:'Reset Mateo HIIT?',message:'This removes custom workouts, history, default loads, and settings from this device.',confirmLabel:'Reset all data',action:() => { appState = deepClone(DEFAULT_STATE); builderState = freshBuilder('tabata'); builderDirty = false; const persisted = saveState(); applyTheme(); updateMuteButtons(); renderDashboard(); renderSettings(); renderBuilder(); showToast(persisted ? 'All app data reset.' : 'Data reset for this visit only; browser storage is unavailable.'); }}));
+      $('#resetAllData').addEventListener('click', () => askForConfirmation({title:'Reset Mateo HIIT?',message:'This removes custom exercises, custom workouts, history, default loads, and settings from this device.',confirmLabel:'Reset all data',action:() => { appState = deepClone(DEFAULT_STATE); rebuildCustomExerciseIndex(); builderState = freshBuilder('tabata'); builderDirty = false; const persisted = saveState(); applyTheme(); updateMuteButtons(); renderDashboard(); renderSettings(); renderBuilder(); renderExerciseLibrary(); showToast(persisted ? 'All app data reset.' : 'Data reset for this visit only; browser storage is unavailable.'); }}));
       $('#headerMute').addEventListener('click', toggleSound);
       $('#headerTheme').addEventListener('click', () => { appState.settings.theme = resolveTheme() === 'dark' ? 'light' : 'dark'; saveState(); applyTheme(); renderSettings(); });
       matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => { if (appState.settings.theme === 'system') applyTheme(); });
@@ -2033,7 +2756,7 @@
         if (event.key !== STORAGE_KEY) return;
         appState = loadState();
         applyTheme(); updateMuteButtons();
-        renderDashboard(); renderHistory(); renderSettings(); renderExerciseLibrary(); renderPicker();
+        renderDashboard(); renderHistory(); renderSettings(); renderExerciseLibrary(); renderBuilder();
       });
     }
 
@@ -2705,6 +3428,7 @@
 
     initializeStaticUI();
     bindApplicationEvents();
+    bindSwipeNavigation();
     bindTimerEvents();
   </script>
 </body>
