@@ -37,6 +37,14 @@
       --danger: #ea979e;
       --grid: rgba(136, 192, 208, .03);
       --shadow: 0 18px 48px rgba(18, 22, 29, .32);
+      --sheen: rgba(236, 239, 244, .055);
+      --sheen-strong: rgba(236, 239, 244, .11);
+      --ambient-a: rgba(136, 192, 208, .085);
+      --ambient-b: rgba(180, 142, 173, .045);
+      --shadow-soft: 0 1px 0 rgba(236, 239, 244, .025), 0 10px 28px rgba(18, 22, 29, .16);
+      --shadow-raised: 0 1px 0 rgba(236, 239, 244, .055), 0 18px 42px rgba(18, 22, 29, .25);
+      --glass-header: rgba(46, 52, 64, .88);
+      --glass-nav: rgba(59, 66, 82, .90);
       --radius-sm: 8px;
       --radius: 12px;
       --radius-lg: 18px;
@@ -69,6 +77,14 @@
       --danger: #a94450;
       --grid: rgba(94, 129, 172, .035);
       --shadow: 0 18px 44px rgba(46, 52, 64, .12);
+      --sheen: rgba(255, 255, 255, .42);
+      --sheen-strong: rgba(255, 255, 255, .78);
+      --ambient-a: rgba(94, 129, 172, .085);
+      --ambient-b: rgba(180, 142, 173, .045);
+      --shadow-soft: 0 1px 0 rgba(255, 255, 255, .78), 0 10px 28px rgba(46, 52, 64, .085);
+      --shadow-raised: 0 1px 0 rgba(255, 255, 255, .9), 0 18px 40px rgba(46, 52, 64, .14);
+      --glass-header: rgba(236, 239, 244, .90);
+      --glass-nav: rgba(248, 250, 252, .91);
       --focus: #486991;
     }
 
@@ -82,7 +98,10 @@
       min-height: 100vh;
       overflow-x: hidden;
       overflow-x: clip;
-      background: var(--bg);
+      background:
+        radial-gradient(900px 460px at 8% -8%, var(--ambient-a), transparent 70%),
+        radial-gradient(760px 420px at 100% 4%, var(--ambient-b), transparent 72%),
+        var(--bg);
       color: var(--text);
       font-family: Inter, "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
       font-size: 16px;
@@ -135,8 +154,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 20px;
-      background: var(--bg);
+      background: var(--glass-header);
       border-bottom: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
     }
 
     .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -148,8 +168,11 @@
       place-items: center;
       border: 1px solid color-mix(in srgb, var(--accent) 72%, var(--line));
       border-radius: 8px;
-      background: var(--surface-2);
+      background:
+        linear-gradient(145deg, var(--sheen-strong), transparent 42%),
+        color-mix(in srgb, var(--accent) 7%, var(--surface-2));
       color: var(--accent);
+      box-shadow: inset 0 1px 0 var(--sheen-strong), 0 8px 22px color-mix(in srgb, var(--accent) 10%, transparent);
     }
     .brand-dumbbell { position: relative; width: 26px; height: 18px; display: block; }
     .brand-dumbbell::before {
@@ -187,7 +210,9 @@
       border: 1px solid var(--control-line);
       border-radius: 8px;
       background: var(--surface);
-      box-shadow: none;
+      background-image: linear-gradient(180deg, var(--sheen), transparent 52%);
+      box-shadow: inset 0 1px 0 var(--sheen), 0 4px 12px rgba(18, 22, 29, .08);
+      transition: transform .2s cubic-bezier(.16, 1, .3, 1), background .2s ease, border-color .2s ease, box-shadow .2s ease;
     }
     .icon-btn:hover, .round-btn:hover { background: var(--surface-2); border-color: var(--accent); }
 
@@ -255,14 +280,17 @@
       font-weight: 500;
       line-height: 1.1;
       text-decoration: none;
-      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+      background-image: linear-gradient(180deg, var(--sheen), transparent 52%);
+      box-shadow: inset 0 1px 0 var(--sheen), 0 4px 12px rgba(18, 22, 29, .08);
+      transition: transform .2s cubic-bezier(.16, 1, .3, 1), background .2s ease, border-color .2s ease, box-shadow .2s ease;
     }
-    .btn:hover { transform: translateY(-1px); border-color: var(--accent); background: var(--surface-3); }
+    .btn:hover { transform: translateY(-1px); border-color: var(--accent); background-color: var(--surface-3); box-shadow: inset 0 1px 0 var(--sheen-strong), 0 9px 22px rgba(18, 22, 29, .13); }
     .btn:active { transform: translateY(0); }
-    .btn-primary { border-color: transparent; background: var(--accent); color: var(--accent-ink); }
-    .btn-primary:hover { background: var(--accent); border-color: transparent; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
+    .btn-primary { border-color: transparent; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white), var(--accent)); color: var(--accent-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 7px 18px color-mix(in srgb, var(--accent) 14%, transparent); }
+    .btn-primary:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), var(--accent)); border-color: transparent; box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 11px 26px color-mix(in srgb, var(--accent) 22%, transparent); }
     .btn-ghost { background: transparent; }
     .btn-danger { color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
+    .btn-danger:hover { border-color: color-mix(in srgb, var(--danger) 62%, var(--line-strong)); background: color-mix(in srgb, var(--danger) 13%, var(--surface)); box-shadow: inset 0 1px 0 var(--sheen), 0 9px 22px color-mix(in srgb, var(--danger) 12%, transparent); }
     .btn-small { min-height: 44px; padding: 9px 13px; border-radius: 8px; font-size: 14px; }
     .btn-wide { width: 100%; }
 
@@ -304,7 +332,7 @@
       left: 0;
       width: 100%;
       height: 4px;
-      background: var(--card-accent, var(--accent));
+      background: linear-gradient(90deg, var(--card-accent, var(--accent)), color-mix(in srgb, var(--card-accent, var(--accent)) 68%, white), var(--card-accent, var(--accent)));
     }
     .workout-card:hover { border-color: var(--line-strong); }
     .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -524,7 +552,7 @@
     .mini-btn.remove:hover { color: var(--danger); }
     .mini-btn:disabled { cursor: not-allowed; opacity: .34; border-color: var(--line); }
 
-    .exercise-picker { position: sticky; top: calc(var(--header-h) + 16px); max-height: calc(100vh - var(--header-h) - var(--nav-h) - 34px); overflow: hidden; display: flex; flex-direction: column; }
+    .exercise-picker { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top) + 16px); max-height: calc(100vh - var(--header-h) - env(safe-area-inset-top) - var(--nav-h) - max(10px, env(safe-area-inset-bottom)) - 24px); max-height: calc(100dvh - var(--header-h) - env(safe-area-inset-top) - var(--nav-h) - max(10px, env(safe-area-inset-bottom)) - 24px); overflow: hidden; display: flex; flex-direction: column; }
     .picker-filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .picker-create { margin-bottom: 12px; }
     .picker-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 4px; }
@@ -573,11 +601,11 @@
       padding: 7px;
       border: 1px solid var(--line-strong);
       border-radius: 14px;
-      background: var(--surface);
-      box-shadow: 0 12px 32px rgba(0,0,0,.24);
+      background: var(--glass-nav);
+      box-shadow: var(--shadow-raised);
     }
-    .nav-btn { min-height: 58px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; letter-spacing: 0; }
-    .nav-btn[aria-current="page"] { background: transparent; color: var(--text); font-weight: 600; box-shadow: inset 0 -3px 0 var(--accent); }
+    .nav-btn { min-height: 58px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; letter-spacing: 0; transition: color .2s ease, background-color .2s ease, box-shadow .2s ease; }
+    .nav-btn[aria-current="page"] { background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--text); font-weight: 600; box-shadow: inset 0 1px 0 var(--sheen), inset 0 -2px 0 var(--accent); }
 
     dialog {
       width: min(calc(100% - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)), 680px);
@@ -709,6 +737,99 @@
     #importWorkouts:focus-visible + label[for="importWorkouts"] { outline: 3px solid var(--focus); outline-offset: 3px; }
     .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 
+    /* Quiet arctic sheen: static highlights keep the interface crisp and swipe-friendly. */
+    .workout-card,
+    .protocol-card,
+    .exercise-card,
+    .panel,
+    .history-item,
+    dialog {
+      background-image: linear-gradient(145deg, var(--sheen), transparent 34%);
+      box-shadow: inset 0 1px 0 var(--sheen), var(--shadow-soft);
+    }
+    dialog { box-shadow: inset 0 1px 0 var(--sheen), var(--shadow); }
+
+    .stat,
+    .summary-cell,
+    .selected-exercise,
+    .picker-item,
+    .weight-default,
+    .review-hero,
+    .review-stat,
+    .timer-detail,
+    .builder-actions {
+      background-image: linear-gradient(145deg, var(--sheen), transparent 42%);
+      box-shadow: inset 0 1px 0 var(--sheen);
+    }
+
+    .stats-strip { box-shadow: var(--shadow-soft); }
+    .mini-btn, .ratio-btn, .timer-control {
+      background-image: linear-gradient(180deg, var(--sheen), transparent 52%);
+      box-shadow: inset 0 1px 0 var(--sheen), 0 4px 12px rgba(18, 22, 29, .07);
+      transition: transform .2s cubic-bezier(.16, 1, .3, 1), border-color .2s ease, box-shadow .2s ease;
+    }
+    .timer-control.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--phase) 88%, white), var(--phase)); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 8px 22px color-mix(in srgb, var(--phase) 15%, transparent); }
+    .workout-card, .exercise-card, .protocol-card { transition: transform .24s cubic-bezier(.16, 1, .3, 1), border-color .2s ease, box-shadow .24s ease; }
+    .workout-card::before { z-index: 2; height: 3px; }
+    .workout-card::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background: linear-gradient(112deg, transparent 0 68%, var(--sheen) 77%, transparent 87%);
+      opacity: .72;
+      pointer-events: none;
+    }
+    .workout-card > * { position: relative; z-index: 1; }
+
+    .backup-panel { position: relative; overflow: hidden; }
+    .backup-panel::before {
+      content: "";
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      top: -150px;
+      right: -90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent), transparent 68%);
+      pointer-events: none;
+    }
+    .backup-panel > * { position: relative; z-index: 1; }
+    .backup-kicker { margin: 0 0 7px; color: var(--accent); font-size: 11px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; }
+    .backup-panel h2 { margin-bottom: 9px; }
+    .backup-lede { max-width: 62ch; margin-bottom: 15px; color: var(--muted); }
+    .backup-manifest { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px; padding: 0; list-style: none; }
+    .backup-manifest li {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 31px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface-2) 90%, transparent);
+      box-shadow: inset 0 1px 0 var(--sheen);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .backup-manifest li::before { content: "✓"; color: var(--work); font-weight: 600; }
+    .backup-note { margin: 0; padding-top: 15px; border-top: 1px solid var(--line); line-height: 1.55; }
+    .backup-actions { justify-content: flex-start; margin-top: 18px; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .app-header { -webkit-backdrop-filter: blur(18px) saturate(120%); backdrop-filter: blur(18px) saturate(120%); }
+      .workout-card:hover,
+      .exercise-card:hover,
+      .protocol-card:hover {
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--line-strong));
+        box-shadow: inset 0 1px 0 var(--sheen-strong), var(--shadow-raised);
+      }
+      .nav-btn:hover { background-color: color-mix(in srgb, var(--accent) 6%, transparent); color: var(--text); }
+      .icon-btn:hover, .round-btn:hover, .mini-btn:hover, .ratio-btn:hover { box-shadow: inset 0 1px 0 var(--sheen-strong), 0 8px 18px rgba(18, 22, 29, .12); }
+    }
+
     @media (max-width: 1000px) {
       .library-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .library-toolbar .field:first-child { grid-column: 1 / -1; }
@@ -773,6 +894,8 @@
       .selected-fields { grid-template-columns: 1fr; }
       .builder-summary { grid-template-columns: 1fr 1fr; }
       .builder-actions { grid-template-columns: 1fr; }
+      .backup-actions { display: grid; grid-template-columns: 1fr; }
+      .backup-actions .btn { width: 100%; }
       .score-fields { grid-template-columns: 1fr; }
       .review-list li { grid-template-columns: 28px minmax(0, 1fr); }
       .review-list li > span:last-child { grid-column: 2; width: 100%; }
@@ -951,18 +1074,23 @@
             <div class="panel-head"><div><h2>Default weights</h2><p class="field-help">Used when adding exercises to a workout.</p></div></div>
             <div class="default-weight-grid" id="defaultWeightGrid"></div>
           </div>
-          <div class="panel">
-            <h2>Backup & restore</h2>
-            <p class="field-help">A full backup includes settings, default loads, custom exercises, saved workouts, and complete workout history. The file stays on this device unless you share it. Older exercise-and-workout backups can still be imported.</p>
-            <div class="dialog-actions" style="justify-content:flex-start">
-              <button class="btn" id="exportWorkouts" type="button">Download full backup</button>
+          <div class="panel backup-panel">
+            <p class="backup-kicker">Complete device snapshot</p>
+            <h2>Full app backup</h2>
+            <p class="backup-lede">Download one file containing everything saved in the app: preferences, default loads, custom exercises, saved workouts, and workout history.</p>
+            <ul class="backup-manifest" aria-label="Included in every full backup">
+              <li>Settings</li><li>Default loads</li><li>Custom exercises</li><li>Saved workouts</li><li>History</li>
+            </ul>
+            <p class="field-help backup-note">Backup files stay on your device unless you share them. Restoring a full backup replaces this device’s current app data after confirmation. Older exercise-and-workout backup files are added to your existing data instead.</p>
+            <div class="dialog-actions backup-actions">
+              <button class="btn" id="exportWorkouts" type="button">Download backup</button>
               <input class="sr-only" id="importWorkouts" type="file" accept="application/json,.json">
-              <label class="btn" for="importWorkouts">Restore backup</label>
+              <label class="btn" for="importWorkouts">Restore from backup</label>
             </div>
           </div>
           <div class="panel">
             <h2>Local data</h2>
-            <p class="field-help">Reset all settings, custom exercises, custom workouts, exercise weights, and history stored by Your Own Gym on this device.</p>
+            <p class="field-help">Reset all settings, custom exercises, custom workouts, default loads, and history stored by Your Own Gym on this device.</p>
             <button class="btn btn-danger" id="resetAllData" type="button">Reset all app data</button>
           </div>
         </div>
