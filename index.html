@@ -8,10 +8,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Mateo HIIT">
-  <meta name="description" content="An offline-ready HIIT, kettlebell, dumbbell, and bodyweight workout timer for a focused home gym setup.">
-  <link rel="manifest" href='data:application/manifest+json,%7B%22name%22%3A%22Mateo%20HIIT%22%2C%22short_name%22%3A%22Mateo%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%232e3440%22%2C%22theme_color%22%3A%22%2388c0d0%22%7D'>
-  <title>Mateo HIIT — Garage Gym Timer</title>
+  <meta name="apple-mobile-web-app-title" content="Your Own Gym by Mateo F.">
+  <meta name="application-name" content="Your Own Gym by Mateo F.">
+  <meta name="description" content="Your Own Gym by Mateo F. is an offline-ready HIIT, kettlebell, dumbbell, and bodyweight workout timer for focused home training.">
+  <link rel="manifest" href='data:application/manifest+json,%7B%22name%22%3A%22Your%20Own%20Gym%20by%20Mateo%20F.%22%2C%22short_name%22%3A%22Your%20Own%20Gym%22%2C%22display%22%3A%22standalone%22%2C%22start_url%22%3A%22.%22%2C%22background_color%22%3A%22%232e3440%22%2C%22theme_color%22%3A%22%2388c0d0%22%7D'>
+  <title>Your Own Gym by Mateo F. — Workout Timer</title>
   <style>
     :root {
       color-scheme: dark;
@@ -149,13 +150,33 @@
       border-radius: 8px;
       background: var(--surface-2);
       color: var(--accent);
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: .02em;
+    }
+    .brand-dumbbell { position: relative; width: 26px; height: 18px; display: block; }
+    .brand-dumbbell::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 3px;
+      transform: translateY(-50%);
+      border-radius: 999px;
+      background: currentColor;
+    }
+    .brand-dumbbell::after {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inset: 0 auto 0 0;
+      width: 4px;
+      border-radius: 2px;
+      background: currentColor;
+      box-shadow: 5px 0 0 -1px currentColor, 17px 0 0 -1px currentColor, 22px 0 0 currentColor;
     }
     .brand-copy { min-width: 0; }
-    .brand-name { display: block; font-weight: 600; letter-spacing: -.01em; line-height: 1; }
-    .brand-sub { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+    .brand-name { display: block; font-weight: 500; letter-spacing: -.015em; line-height: 1; white-space: nowrap; }
+    .brand-sub { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: .025em; line-height: 1; white-space: nowrap; }
     .header-actions { display: flex; gap: 8px; }
 
     .icon-btn, .round-btn {
@@ -358,6 +379,53 @@
       outline: none;
       background: var(--surface);
       color: var(--text);
+    }
+    select option, select optgroup { background: var(--surface); color: var(--text); }
+    select option:checked { background: var(--accent); color: var(--accent-ink); }
+
+    @supports (appearance: base-select) {
+      select,
+      ::picker(select) {
+        appearance: base-select;
+      }
+      select { align-items: center; gap: 8px; }
+      select::picker-icon {
+        color: var(--muted);
+        transition: transform 160ms ease, color 160ms ease;
+      }
+      select:hover::picker-icon, select:focus::picker-icon { color: var(--accent); }
+      select:open::picker-icon { transform: rotate(180deg); }
+      ::picker(select) {
+        max-height: min(360px, 60vh);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        margin-block-start: 6px;
+        padding: 6px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: var(--shadow);
+        scrollbar-color: var(--surface-3) var(--surface);
+      }
+      select option {
+        min-height: 40px;
+        padding: 9px 11px;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      select option:is(:hover, :focus, :focus-visible) {
+        background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+        color: var(--text);
+      }
+      select option:checked {
+        background: color-mix(in srgb, var(--accent) 30%, var(--surface-2));
+        color: var(--text);
+        font-weight: 500;
+      }
+      select option::checkmark { color: var(--accent); }
     }
     textarea { min-height: 96px; resize: vertical; }
     input:hover, select:hover, textarea:hover { border-color: var(--accent); }
@@ -657,7 +725,9 @@
     @media (max-width: 720px) {
       :root { --header-h: 68px; --nav-h: 70px; }
       .brand-mark { width: 38px; height: 38px; }
-      .brand-sub { display: none; }
+      .brand { gap: 10px; }
+      .brand-name { font-size: 14px; }
+      .brand-sub { margin-top: 4px; font-size: 11px; }
       .header-actions .icon-btn:first-child { display: none; }
       main { width: min(calc(100% - 22px - env(safe-area-inset-left) - env(safe-area-inset-right)), var(--max)); }
       .view { padding-top: 20px; }
@@ -743,11 +813,11 @@
   <a class="skip-link" href="#mainContent">Skip to main content</a>
   <div class="app-shell" id="appShell">
     <header class="app-header">
-      <div class="brand" aria-label="Mateo HIIT home">
-        <div class="brand-mark" aria-hidden="true">MH</div>
+      <div class="brand" aria-label="Your Own Gym by Mateo F.">
+        <div class="brand-mark" aria-hidden="true"><span class="brand-dumbbell"></span></div>
         <div class="brand-copy">
-          <span class="brand-name">MATEO HIIT</span>
-          <span class="brand-sub">Personal training system</span>
+          <span class="brand-name">Your Own Gym</span>
+          <span class="brand-sub">by Mateo F.</span>
         </div>
       </div>
       <div class="header-actions">
@@ -892,7 +962,7 @@
           </div>
           <div class="panel">
             <h2>Local data</h2>
-            <p class="field-help">Reset all settings, custom exercises, custom workouts, exercise weights, and history stored by Mateo HIIT on this device.</p>
+            <p class="field-help">Reset all settings, custom exercises, custom workouts, exercise weights, and history stored by Your Own Gym on this device.</p>
             <button class="btn btn-danger" id="resetAllData" type="button">Reset all app data</button>
           </div>
         </div>
@@ -2510,12 +2580,12 @@
     }
 
     function exportCustomWorkouts() {
-      const payload = {app:'Mateo HIIT', version:APP_VERSION, exportedAt:new Date().toISOString(), exercises:appState.customExercises, workouts:appState.customWorkouts};
+      const payload = {app:'Your Own Gym by Mateo F.', version:APP_VERSION, exportedAt:new Date().toISOString(), exercises:appState.customExercises, workouts:appState.customWorkouts};
       const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `mateo-hiit-backup-${new Date().toISOString().slice(0,10)}.json`;
+      link.download = `your-own-gym-backup-${new Date().toISOString().slice(0,10)}.json`;
       document.body.append(link);
       link.click();
       link.remove();
@@ -2593,7 +2663,7 @@
         showToast(persisted ? `Imported ${summary}; existing data was kept.${skipped}` : `Imported ${summary} for this visit only; storage is unavailable.${skipped}`);
       } catch (error) {
         rebuildCustomExerciseIndex();
-        showToast(error.message === 'Backup exceeds 2 MB' ? 'Import failed: backups must be 2 MB or smaller.' : error.message === 'Exercise library is full' ? `Import stopped: the custom library already has ${MAX_CUSTOM_EXERCISES} exercises.` : 'Import failed. Choose a valid Mateo HIIT JSON backup.');
+        showToast(error.message === 'Backup exceeds 2 MB' ? 'Import failed: backups must be 2 MB or smaller.' : error.message === 'Exercise library is full' ? `Import stopped: the custom library already has ${MAX_CUSTOM_EXERCISES} exercises.` : 'Import failed. Choose a valid Your Own Gym JSON backup.');
       } finally {
         $('#importWorkouts').value = '';
       }
@@ -2844,7 +2914,7 @@
       });
       $('#exportWorkouts').addEventListener('click', exportCustomWorkouts);
       $('#importWorkouts').addEventListener('change', event => importCustomWorkouts(event.target.files?.[0]));
-      $('#resetAllData').addEventListener('click', () => askForConfirmation({title:'Reset Mateo HIIT?',message:'This removes custom exercises, custom workouts, history, default loads, and settings from this device.',confirmLabel:'Reset all data',action:() => { appState = deepClone(DEFAULT_STATE); rebuildCustomExerciseIndex(); builderState = freshBuilder('tabata'); builderDirty = false; const persisted = saveState(); applyTheme(); updateMuteButtons(); renderDashboard(); renderSettings(); renderBuilder(); renderExerciseLibrary(); showToast(persisted ? 'All app data reset.' : 'Data reset for this visit only; browser storage is unavailable.'); }}));
+      $('#resetAllData').addEventListener('click', () => askForConfirmation({title:'Reset Your Own Gym?',message:'This removes custom exercises, custom workouts, history, default loads, and settings from this device.',confirmLabel:'Reset all data',action:() => { appState = deepClone(DEFAULT_STATE); rebuildCustomExerciseIndex(); builderState = freshBuilder('tabata'); builderDirty = false; const persisted = saveState(); applyTheme(); updateMuteButtons(); renderDashboard(); renderSettings(); renderBuilder(); renderExerciseLibrary(); showToast(persisted ? 'All app data reset.' : 'Data reset for this visit only; browser storage is unavailable.'); }}));
       $('#headerMute').addEventListener('click', toggleSound);
       $('#headerTheme').addEventListener('click', () => { appState.settings.theme = resolveTheme() === 'dark' ? 'light' : 'dark'; saveState(); applyTheme(); renderSettings(); });
       matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => { if (appState.settings.theme === 'system') applyTheme(); });
