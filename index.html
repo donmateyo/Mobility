@@ -172,7 +172,7 @@
 
     main { width: min(calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)), var(--max)); margin: 0 auto; touch-action: pan-y pinch-zoom; }
     .view { padding: 32px 0 18px; animation: view-in .25s ease both; }
-    .view.is-swipe-tracking { animation: none; user-select: none; will-change: transform, opacity; }
+    .view.is-swipe-tracking { animation: none; user-select: none; cursor: grabbing; will-change: transform, opacity; }
     .view.is-swipe-transition { animation: none; will-change: transform, opacity; }
     .view.is-swipe-settled { animation: none; }
     @keyframes view-in { from { opacity: 0; transform: translateY(6px); } }
@@ -834,7 +834,7 @@
               </fieldset>
             </div>
             <div class="panel">
-              <div class="panel-head"><h3>3. Exercise sequence</h3><span class="field-help">Use arrows to reorder</span></div>
+              <div class="panel-head"><h3 id="builderExerciseTitle">3. Exercise sequence</h3><span class="field-help" id="builderExerciseHelp">Use arrows to reorder</span></div>
               <div class="builder-summary" aria-label="Workout estimate">
                 <div class="summary-cell"><small>Duration</small><strong id="builderDuration">—</strong></div>
                 <div class="summary-cell"><small>Exercises</small><strong id="builderMovementCount">0</strong></div>
@@ -1130,7 +1130,7 @@
       { id:'interval', name:'Classic HIIT', code:'W:R', summary:'Custom work, rest, warm-up, and cooldown.', defaults:{work:30,rest:60,rounds:8,warmup:120,cooldown:120} },
       { id:'circuit', name:'Circuit', code:'CYCLE', summary:'Rotate stations with individual timing.', defaults:{work:40,rest:20,rounds:3,warmup:0,cooldown:0} },
       { id:'ladder', name:'Ladder', code:'1→10', summary:'Climb, descend, or pyramid rep targets.', defaults:{direction:'down',maxReps:10,work:50,rest:30,warmup:0,cooldown:0} },
-      { id:'rest', name:'Rest Timer', code:'REST', summary:'A clean standalone recovery countdown.', defaults:{duration:120} }
+      { id:'rest', name:'Rest Timer', code:'REST', summary:'A recovery countdown with an optional exercise plan.', defaults:{duration:120} }
     ];
     const PROTOCOL_BY_ID = Object.fromEntries(PROTOCOLS.map(protocol => [protocol.id, protocol]));
 
@@ -1442,7 +1442,15 @@
           if (rest > 0 && index < rungs.length - 1) phases.push(phaseFor('rest', rest, {label:'Rung recovery', round:index + 1, totalRounds:rungs.length}));
         });
       } else if (workout.mode === 'rest') {
-        phases.push(phaseFor('rest', clamp(config.duration, 5, 7200, 120), {label:'Recovery', cue:'Breathe slowly and prepare for the next set.'}));
+        const nextItem = items[0];
+        const nextExercise = getExercise(nextItem?.exerciseId);
+        phases.push(phaseFor('rest', clamp(config.duration, 5, 7200, 120), {
+          exerciseId:nextExercise?.id,
+          weight:nextItem?.weight,
+          target:nextItem?.target || (nextItem?.reps ? `${nextItem.reps} rep target` : ''),
+          label:nextExercise ? nextExercise.short : 'Recovery',
+          cue:nextExercise ? `Breathe slowly and prepare for ${nextExercise.name}.` : 'Breathe slowly and prepare for the next set.'
+        }));
       }
 
       if (cooldown) phases.push(phaseFor('cooldown', cooldown, {label:'Cooldown', cue:'Keep moving lightly and let your breathing settle.'}));
@@ -1634,6 +1642,9 @@
     let swipeTransitioning = false;
     let swipeTransitionVersion = 0;
     let swipeAnimations = [];
+    let swipeWheelIdleTimer = 0;
+    let swipeWheelLatched = false;
+    let swipeMouseClickGuard = null;
 
     function hasHorizontalScrollAncestor(target, boundary) {
       for (let element = target; element && element !== boundary; element = element.parentElement) {
@@ -1688,13 +1699,29 @@
       if (!state.frame) state.frame = requestAnimationFrame(() => renderSwipeFrame(state));
     }
 
+    function armSwipeWheelIdle() {
+      if (swipeWheelIdleTimer) clearTimeout(swipeWheelIdleTimer);
+      swipeWheelIdleTimer = setTimeout(() => {
+        swipeWheelIdleTimer = 0;
+        swipeWheelLatched = false;
+        const state = activeSwipeGesture;
+        if (state?.inputType === 'wheel') finishSwipeGesture(state, false);
+      }, 220);
+    }
+
+    function resetSwipeWheelSession() {
+      if (swipeWheelIdleTimer) clearTimeout(swipeWheelIdleTimer);
+      swipeWheelIdleTimer = 0;
+      swipeWheelLatched = false;
+    }
+
     function detachSwipePointer(state) {
       if (activeSwipeGesture === state) activeSwipeGesture = null;
       if (state.frame) cancelAnimationFrame(state.frame);
       state.frame = 0;
       state.view.classList.remove('is-swipe-tracking');
       const main = $('#mainContent');
-      try { if (main.hasPointerCapture?.(state.pointerId)) main.releasePointerCapture(state.pointerId); } catch (error) {}
+      try { if (Number.isInteger(state.pointerId) && main.hasPointerCapture?.(state.pointerId)) main.releasePointerCapture(state.pointerId); } catch (error) {}
     }
 
     function resetSwipeVisual(state, keepSettled = true) {
@@ -1748,13 +1775,14 @@
       hideSwipeHint();
 
       const targetName = commit ? VIEW_ORDER[state.targetIndex] : null;
+      const focusDestination = state.inputType !== 'mouse' && state.inputType !== 'wheel';
       const canAnimate = !state.reducedMotion && typeof state.view.animate === 'function';
       if (!canAnimate) {
         resetSwipeVisual(state);
         if (targetName) {
           const incoming = document.querySelector(`.view[data-view="${targetName}"]`);
           incoming?.classList.add('is-swipe-settled');
-          setView(targetName, {focus:true, instantScroll:true, swipe:true});
+          setView(targetName, {focus:focusDestination, instantScroll:true, swipe:true});
           state.view.classList.remove('is-swipe-settled');
         }
         return;
@@ -1794,7 +1822,7 @@
         const incoming = document.querySelector(`.view[data-view="${targetName}"]`);
         incoming?.classList.remove('is-swipe-settled');
         incoming?.classList.add('is-swipe-transition');
-        setView(targetName, {focus:true, instantScroll:true, swipe:true, render:false});
+        setView(targetName, {focus:focusDestination, instantScroll:true, swipe:true, render:false});
         state.view.style.removeProperty('transform');
         state.view.style.removeProperty('opacity');
         state.view.classList.remove('is-swipe-tracking','is-swipe-transition','is-swipe-settled');
@@ -1824,6 +1852,7 @@
     function cancelActiveSwipe(immediate = false) {
       const state = activeSwipeGesture;
       if (!state) return;
+      if (state.inputType === 'wheel') { swipeWheelLatched = true; armSwipeWheelIdle(); }
       if (!immediate && state.horizontal) finishSwipeGesture(state, false);
       else { detachSwipePointer(state); resetSwipeVisual(state); }
     }
@@ -1831,7 +1860,7 @@
     function bindSwipeNavigation() {
       const main = $('#mainContent');
       main.addEventListener('pointerdown', event => {
-        if (!event.isPrimary || (event.pointerType !== 'touch' && event.pointerType !== 'pen') || event.button !== 0 || swipeTransitioning) return;
+        if (activeSwipeGesture || !event.isPrimary || !['touch','pen','mouse'].includes(event.pointerType) || event.button !== 0 || swipeTransitioning) return;
         if (!$('#timerView').hidden || document.querySelector('dialog[open]') || $('#appShell').inert || $('#appShell').getAttribute('aria-hidden') === 'true') return;
         if (event.clientX <= 24 || event.clientX >= window.innerWidth - 24) return;
         const target = event.target instanceof Element ? event.target : null;
@@ -1842,7 +1871,7 @@
         if (viewIndex < 0) return;
         const width = Math.max(320, Math.min(main.clientWidth || window.innerWidth, window.innerWidth));
         activeSwipeGesture = {
-          pointerId:event.pointerId, view, viewIndex, width,
+          pointerId:event.pointerId, inputType:event.pointerType, view, viewIndex, width,
           threshold:Math.min(110, Math.max(58, width * .18)),
           startX:event.clientX, startY:event.clientY, startTime:event.timeStamp,
           lastX:event.clientX, lastTime:event.timeStamp, dx:0, dy:0, velocity:0,
@@ -1851,9 +1880,10 @@
         };
       });
 
-      main.addEventListener('pointermove', event => {
+      window.addEventListener('pointermove', event => {
         const state = activeSwipeGesture;
         if (!state || state.pointerId !== event.pointerId) return;
+        if (state.inputType === 'mouse' && (event.buttons & 1) === 0) return cancelActiveSwipe(true);
         state.dx = event.clientX - state.startX;
         state.dy = event.clientY - state.startY;
         const absoluteX = Math.abs(state.dx), absoluteY = Math.abs(state.dy);
@@ -1864,16 +1894,18 @@
           state.horizontal = true;
           state.view.classList.add('is-swipe-settled','is-swipe-tracking');
           try { main.setPointerCapture(event.pointerId); } catch (error) {}
+          if (state.inputType === 'mouse') window.getSelection()?.removeAllRanges();
         }
+        if (event.cancelable) event.preventDefault();
         const elapsed = Math.max(1, event.timeStamp - state.lastTime);
         const instantVelocity = (event.clientX - state.lastX) / elapsed;
         state.velocity = state.velocity * .64 + instantVelocity * .36;
         state.lastX = event.clientX;
         state.lastTime = event.timeStamp;
         queueSwipeFrame(state);
-      });
+      }, {passive:false});
 
-      main.addEventListener('pointerup', event => {
+      window.addEventListener('pointerup', event => {
         const state = activeSwipeGesture;
         if (!state || state.pointerId !== event.pointerId) return;
         if (!state.horizontal) return cancelActiveSwipe(true);
@@ -1884,19 +1916,84 @@
         const quickFlick = directionMatches && Math.abs(state.dx) >= 38 && Math.abs(state.velocity) >= .48 && event.timeStamp - state.startTime < 520;
         state.targetIndex = state.dx < 0 ? state.viewIndex + 1 : state.viewIndex - 1;
         const hasTarget = state.targetIndex >= 0 && state.targetIndex < VIEW_ORDER.length;
+        if (state.inputType === 'mouse') swipeMouseClickGuard = {x:event.clientX, y:event.clientY, until:performance.now() + 180};
         finishSwipeGesture(state, hasTarget && (Math.abs(state.dx) >= state.threshold || quickFlick));
       });
 
-      main.addEventListener('pointercancel', event => {
+      window.addEventListener('pointercancel', event => {
         if (activeSwipeGesture?.pointerId === event.pointerId) cancelActiveSwipe(true);
       });
+      main.addEventListener('dragstart', event => {
+        if (activeSwipeGesture?.inputType === 'mouse' && activeSwipeGesture.horizontal) event.preventDefault();
+      });
+      document.addEventListener('click', event => {
+        const guard = swipeMouseClickGuard;
+        if (!guard || performance.now() > guard.until || event.detail === 0) {
+          if (guard && performance.now() > guard.until) swipeMouseClickGuard = null;
+          return;
+        }
+        if (Math.hypot(event.clientX - guard.x, event.clientY - guard.y) > 36) return;
+        swipeMouseClickGuard = null;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+
+      main.addEventListener('wheel', event => {
+        const absoluteX = Math.abs(event.deltaX);
+        const absoluteY = Math.abs(event.deltaY);
+        if (event.ctrlKey || absoluteX === 0 || absoluteX < absoluteY * 1.25) return;
+        if (swipeWheelLatched) {
+          if (event.cancelable) event.preventDefault();
+          armSwipeWheelIdle();
+          return;
+        }
+        if (swipeTransitioning) {
+          if (event.cancelable) event.preventDefault();
+          return;
+        }
+        if (activeSwipeGesture && activeSwipeGesture.inputType !== 'wheel') return;
+        if (!$('#timerView').hidden || document.querySelector('dialog[open]') || $('#appShell').inert || $('#appShell').getAttribute('aria-hidden') === 'true') return;
+        const target = event.target instanceof Element ? event.target : null;
+        if (!target || target.closest(SWIPE_IGNORE_SELECTOR) || hasHorizontalScrollAncestor(target, main)) return;
+        const view = target.closest('.view:not([hidden])');
+        if (!view) return;
+        const viewIndex = VIEW_ORDER.indexOf(view.dataset.view);
+        if (viewIndex < 0) return;
+        const width = Math.max(320, Math.min(main.clientWidth || window.innerWidth, window.innerWidth));
+        let state = activeSwipeGesture;
+        if (!state) {
+          state = activeSwipeGesture = {
+            pointerId:null, inputType:'wheel', view, viewIndex, width,
+            threshold:Math.min(90, Math.max(54, width * .12)),
+            startX:0, startY:0, startTime:event.timeStamp, lastX:0, lastTime:event.timeStamp,
+            dx:0, dy:0, velocity:0, visualDx:0, visualOpacity:1,
+            targetIndex:viewIndex, horizontal:true, frame:0,
+            reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches
+          };
+          view.classList.add('is-swipe-settled','is-swipe-tracking');
+        }
+        if (state.inputType !== 'wheel' || state.view !== view) return;
+        if (event.cancelable) event.preventDefault();
+        const deltaScale = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? width : 1;
+        state.dx = clamp(state.dx - event.deltaX * deltaScale, -width * .72, width * .72, 0);
+        state.targetIndex = state.dx < 0 ? state.viewIndex + 1 : state.dx > 0 ? state.viewIndex - 1 : state.viewIndex;
+        state.lastTime = event.timeStamp;
+        queueSwipeFrame(state);
+        armSwipeWheelIdle();
+        if (Math.abs(state.dx) >= state.threshold) {
+          const hasTarget = state.targetIndex >= 0 && state.targetIndex < VIEW_ORDER.length;
+          swipeWheelLatched = true;
+          finishSwipeGesture(state, hasTarget);
+        }
+      }, {passive:false});
+
       main.addEventListener('lostpointercapture', event => {
         if (activeSwipeGesture?.pointerId === event.pointerId) cancelActiveSwipe(true);
       });
       window.addEventListener('resize', () => { cancelActiveSwipe(true); cancelSwipeTransition(); });
-      window.addEventListener('blur', () => { cancelActiveSwipe(true); cancelSwipeTransition(); });
-      window.addEventListener('pagehide', () => { cancelActiveSwipe(true); cancelSwipeTransition(); });
-      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { cancelActiveSwipe(true); cancelSwipeTransition(); } });
+      window.addEventListener('blur', () => { cancelActiveSwipe(true); cancelSwipeTransition(); resetSwipeWheelSession(); });
+      window.addEventListener('pagehide', () => { cancelActiveSwipe(true); cancelSwipeTransition(); resetSwipeWheelSession(); });
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { cancelActiveSwipe(true); cancelSwipeTransition(); resetSwipeWheelSession(); } });
     }
 
     function workoutModeLabel(workout) {
@@ -2104,7 +2201,6 @@
       migrateExerciseReferences(exercise);
       if (!existing && exerciseEditorContext === 'builder') {
         ensureBuilder();
-        if (builderState.mode === 'rest') { builderState = freshBuilder('circuit'); builderState.items = []; }
         builderState.items.push(itemFor(exercise.id, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20}));
         builderDirty = true;
       }
@@ -2200,7 +2296,7 @@
       } else if (builderState.mode === 'ladder') {
         html = `<div class="form-grid three"><div class="field"><label for="timing-direction">Ladder direction</label><select id="timing-direction" data-config-key="direction"><option value="down" ${config.direction === 'down' ? 'selected' : ''}>10 → 1 descending</option><option value="up" ${config.direction === 'up' ? 'selected' : ''}>1 → 10 ascending</option><option value="pyramid" ${config.direction === 'pyramid' ? 'selected' : ''}>1 → 10 → 1 pyramid</option></select></div>${timingField('Top rung','maxReps',config.maxReps,'reps',2,30)}${timingField('Work cap / rung','work',config.work,'sec',10,600)}${timingField('Rest / rung','rest',config.rest,'sec',0,600)}${timingField('Warm-up','warmup',config.warmup || 0,'min',0,60,60)}${timingField('Cooldown','cooldown',config.cooldown || 0,'min',0,60,60)}</div>`;
       } else if (builderState.mode === 'rest') {
-        html = `<div class="form-grid">${timingField('Rest duration','duration',config.duration,'sec',5,7200)}</div><p class="field-help">A single recovery timer with the same countdown, pause, audio, and wake-lock controls.</p>`;
+        html = `<div class="form-grid">${timingField('Rest duration','duration',config.duration,'sec',5,7200)}</div><p class="field-help">A single recovery countdown that also works on its own. Optionally add an exercise plan: the first movement appears up next on the timer, and the rest stay with the saved plan for reference.</p>`;
       }
       $('#timingFields').innerHTML = html;
     }
@@ -2208,12 +2304,10 @@
     function renderSelectedExercises() {
       ensureBuilder();
       const list = $('#selectedExerciseList');
-      if (builderState.mode === 'rest') {
-        list.innerHTML = `<div class="empty-state"><strong>No exercise needed.</strong><br>This mode runs a standalone rest countdown.</div>`;
-        return;
-      }
       if (!builderState.items.length) {
-        list.innerHTML = `<div class="empty-state"><strong>Add at least one exercise.</strong><br>Choose an exercise from the library panel.</div>`;
+        list.innerHTML = builderState.mode === 'rest'
+          ? `<div class="empty-state"><strong>Exercise plan is optional.</strong><br>Add movements from the library to keep your next set visible during recovery.</div>`
+          : `<div class="empty-state"><strong>Add at least one exercise.</strong><br>Choose an exercise from the library panel.</div>`;
         return;
       }
       list.innerHTML = builderState.items.map((item, index) => {
@@ -2258,8 +2352,11 @@
     function renderBuilder() {
       ensureBuilder();
       const restMode = builderState.mode === 'rest';
-      $('#exercisePickerPanel').hidden = restMode;
-      $('#builderLayout').classList.toggle('single-column', restMode);
+      $('#exercisePickerPanel').hidden = false;
+      $('#builderLayout').classList.remove('single-column');
+      $('#builderExerciseTitle').textContent = restMode ? '3. Exercise plan (optional)' : '3. Exercise sequence';
+      $('#builderExerciseHelp').textContent = restMode ? 'First movement appears next' : 'Use arrows to reorder';
+      $('#pickerTitle').textContent = restMode ? 'Add to exercise plan' : 'Add exercises';
       $('#builderName').value = builderState.name;
       $('#builderMode').value = builderState.mode;
       renderTimingFields();
@@ -2273,7 +2370,7 @@
       const name = builderState.name.trim();
       if (!name) return 'Give this workout a name.';
       if (builderState.mode !== 'rest' && !builderState.items.length) return 'Add at least one exercise.';
-      if (builderState.mode !== 'rest' && builderState.items.some(item => !getExercise(item.exerciseId))) return 'Remove unavailable exercises before starting.';
+      if (builderState.items.some(item => !getExercise(item.exerciseId))) return 'Remove unavailable exercises before starting.';
       const compiled = compileWorkout(builderState);
       if (compiled.phases.length === 0 || (builderState.mode !== 'rest' && !compiled.phases.some(phase => phase.phase === 'work'))) return 'Add valid timing before starting.';
       return '';
@@ -2327,7 +2424,10 @@
       if (workout.mode === 'amrap') return `${config.duration}-minute AMRAP`;
       if (workout.mode === 'circuit') return `${config.rounds} circuit rounds`;
       if (workout.mode === 'ladder') return `${config.direction || 'down'} ladder to ${config.maxReps}`;
-      if (workout.mode === 'rest') return `${config.duration}-second recovery`;
+      if (workout.mode === 'rest') {
+        const nextExercise = getExercise(workout.items?.[0]?.exerciseId);
+        return `${config.duration}-second recovery${nextExercise ? ` before ${nextExercise.short}` : ''}`;
+      }
       return 'Structured timed session';
     }
 
@@ -2540,7 +2640,6 @@
         const addLibrary = event.target.closest('[data-add-from-library]');
         if (addLibrary) {
           ensureBuilder();
-          if (builderState.mode === 'rest') { builderState = freshBuilder('circuit'); builderState.items = []; }
           const item = itemFor(addLibrary.dataset.addFromLibrary, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20});
           if (!item) return;
           builderState.items.push(item);
@@ -2553,14 +2652,11 @@
           ensureBuilder();
           const exerciseId = pickerAdd.dataset.pickerAdd;
           const exercise = getExercise(exerciseId);
-          const switchedFromRest = builderState.mode === 'rest';
-          if (switchedFromRest) { builderState = freshBuilder('circuit'); builderState.items = []; }
           const item = itemFor(exerciseId, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20});
           if (!item) return;
           builderState.items.push(item);
           clearBuilderError(); markBuilderDirty();
-          if (switchedFromRest) renderBuilder();
-          else { renderSelectedExercises(); renderPicker(); }
+          renderSelectedExercises(); renderPicker();
           requestAnimationFrame(() => $(`[data-picker-add="${exerciseId}"]`)?.focus());
           showToast(`${exercise?.short || 'Exercise'} added to the workout.`);
         }
