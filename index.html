@@ -952,12 +952,12 @@
             <div class="default-weight-grid" id="defaultWeightGrid"></div>
           </div>
           <div class="panel">
-            <h2>Custom training data</h2>
-            <p class="field-help">Export custom exercises and workouts together, or merge a previous backup. Your data never leaves this browser.</p>
+            <h2>Backup & restore</h2>
+            <p class="field-help">A full backup includes settings, default loads, custom exercises, saved workouts, and complete workout history. The file stays on this device unless you share it. Older exercise-and-workout backups can still be imported.</p>
             <div class="dialog-actions" style="justify-content:flex-start">
-              <button class="btn" id="exportWorkouts" type="button">Export JSON</button>
+              <button class="btn" id="exportWorkouts" type="button">Download full backup</button>
               <input class="sr-only" id="importWorkouts" type="file" accept="application/json,.json">
-              <label class="btn" for="importWorkouts">Import JSON</label>
+              <label class="btn" for="importWorkouts">Restore backup</label>
             </div>
           </div>
           <div class="panel">
@@ -1092,8 +1092,18 @@
   <script>
     'use strict';
     // ----- Domain data: built-in catalog plus device-local custom movements -----
-    const APP_VERSION = 2;
+    const APP_VERSION = 3;
+    const BACKUP_FORMAT = 'your-own-gym-backup';
+    const BACKUP_SCHEMA_VERSION = 1;
+    const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
+    const MAX_HISTORY_ENTRIES = 500;
     const MAX_CUSTOM_EXERCISES = 250;
+    const MAX_CUSTOM_WORKOUTS = 1000;
+    const MAX_WORKOUT_ITEMS = 500;
+    const MAX_TOTAL_WORKOUT_ITEMS = 25000;
+    const MAX_BACKUP_CUSTOM_WORKOUTS = 5000;
+    const MAX_BACKUP_WORKOUT_ITEMS = 2000;
+    const MAX_BACKUP_TOTAL_WORKOUT_ITEMS = 100000;
     const STORAGE_KEY = 'forge-hiit-state-v1';
     const VIEW_ORDER = ['workouts','library','builder','history','settings'];
     const VIEW_LABELS = {workouts:'Workouts', library:'Library', builder:'Builder', history:'History', settings:'Settings'};
@@ -1190,7 +1200,7 @@
       { id:'overhead-carry', name:'Single-Kettlebell Overhead Carry', short:'Overhead Carry', category:'carry', tier:'advanced', intensity:'High', pattern:'Carry · Overhead stability', equipment:'Kettlebell', weights:['KB35','KB50','KB70'], defaultWeight:'KB35', cue:'Maintain a firm vertical lockout and walk only while the shoulder stays stable and pain-free.', regression:'Use a rack carry until overhead position is secure.', carry:true }
     ];
 
-    const EXERCISE_BY_ID = Object.fromEntries(EXERCISES.map(exercise => [exercise.id, exercise]));
+    const EXERCISE_BY_ID = Object.assign(Object.create(null), Object.fromEntries(EXERCISES.map(exercise => [exercise.id, exercise])));
     let CUSTOM_EXERCISE_BY_ID = Object.create(null);
 
     const PROTOCOLS = [
@@ -1202,7 +1212,7 @@
       { id:'ladder', name:'Ladder', code:'1→10', summary:'Climb, descend, or pyramid rep targets.', defaults:{direction:'down',maxReps:10,work:50,rest:30,warmup:0,cooldown:0} },
       { id:'rest', name:'Rest Timer', code:'REST', summary:'A recovery countdown with an optional exercise plan.', defaults:{duration:120} }
     ];
-    const PROTOCOL_BY_ID = Object.fromEntries(PROTOCOLS.map(protocol => [protocol.id, protocol]));
+    const PROTOCOL_BY_ID = Object.assign(Object.create(null), Object.fromEntries(PROTOCOLS.map(protocol => [protocol.id, protocol])));
 
     const PRESETS = [
       {
@@ -1337,7 +1347,7 @@
       const usedIds = options.usedIds || new Set([...Object.keys(EXERCISE_BY_ID), ...Object.keys(CUSTOM_EXERCISE_BY_ID)]);
       const candidateId = String(raw.id || '').trim().toLowerCase();
       let id = !options.forceNewId && /^custom-exercise-[a-z0-9-]{1,84}$/.test(candidateId) && !usedIds.has(candidateId) ? candidateId : uid('custom-exercise');
-      while (usedIds.has(id) || EXERCISE_BY_ID[id]) id = uid('custom-exercise');
+      while (usedIds.has(id) || Object.prototype.hasOwnProperty.call(EXERCISE_BY_ID, id)) id = uid('custom-exercise');
       usedIds.add(id);
       const category = Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, raw.category) ? raw.category : 'strength';
       const tier = ['beginner','intermediate','advanced'].includes(raw.tier) ? raw.tier : 'beginner';
@@ -1357,19 +1367,20 @@
         weights, defaultWeight, targetType, carry:targetType === 'text', custom:true,
         cue, regression,
         archived:raw.archived === true,
-        createdAt:typeof raw.createdAt === 'string' ? raw.createdAt : now,
-        updatedAt:typeof raw.updatedAt === 'string' ? raw.updatedAt : now
+        createdAt:typeof raw.createdAt === 'string' ? raw.createdAt.slice(0, 40) : now,
+        updatedAt:typeof raw.updatedAt === 'string' ? raw.updatedAt.slice(0, 40) : now
       };
     }
 
     function rebuildCustomExerciseIndex(exercises = appState?.customExercises || []) {
-      CUSTOM_EXERCISE_BY_ID = Object.fromEntries(exercises.map(exercise => [exercise.id, exercise]));
+      CUSTOM_EXERCISE_BY_ID = Object.assign(Object.create(null), Object.fromEntries(exercises.map(exercise => [exercise.id, exercise])));
     }
 
     function getExercise(id, customExercises = null) {
-      if (EXERCISE_BY_ID[id]) return EXERCISE_BY_ID[id];
+      if (typeof id !== 'string') return null;
+      if (Object.prototype.hasOwnProperty.call(EXERCISE_BY_ID, id)) return EXERCISE_BY_ID[id];
       if (Array.isArray(customExercises)) return customExercises.find(exercise => exercise.id === id) || null;
-      return CUSTOM_EXERCISE_BY_ID[id] || null;
+      return Object.prototype.hasOwnProperty.call(CUSTOM_EXERCISE_BY_ID, id) ? CUSTOM_EXERCISE_BY_ID[id] : null;
     }
 
     function allExercises({includeArchived = false} = {}) {
@@ -1529,55 +1540,101 @@
     }
 
     // ----- Local persistence and application views -----
+    function isPlainObject(value) {
+      return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    function normalizeSettingsState(raw) {
+      const source = isPlainObject(raw) ? raw : {};
+      const defaults = DEFAULT_STATE.settings;
+      const countdown = clampInt(source.countdown, 0, 10, defaults.countdown);
+      return {
+        sound:typeof source.sound === 'boolean' ? source.sound : defaults.sound,
+        vibration:typeof source.vibration === 'boolean' ? source.vibration : defaults.vibration,
+        countdown:[0,3,5,10].includes(countdown) ? countdown : defaults.countdown,
+        theme:['dark','light','system'].includes(source.theme) ? source.theme : defaults.theme,
+        wakeLock:typeof source.wakeLock === 'boolean' ? source.wakeLock : defaults.wakeLock
+      };
+    }
+
+    function normalizeHistoryEntries(raw) {
+      const usedIds = new Set();
+      return (Array.isArray(raw) ? raw : []).slice(0, MAX_HISTORY_ENTRIES).flatMap(entry => {
+        if (!isPlainObject(entry) || typeof entry.name !== 'string') return [];
+        let id = typeof entry.id === 'string' ? entry.id.trim().slice(0, 100) : '';
+        if (!id || usedIds.has(id)) id = uid('history');
+        while (usedIds.has(id)) id = uid('history');
+        usedIds.add(id);
+        const parsedDate = new Date(entry.date);
+        const date = Number.isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
+        const score = isPlainObject(entry.score) ? {rounds:clampInt(entry.score.rounds,0,999,0), reps:clampInt(entry.score.reps,0,9999,0)} : undefined;
+        return [{
+          id, date, name:entry.name.trim().slice(0,80) || 'Workout',
+          mode:typeof entry.mode === 'string' ? entry.mode.slice(0,40) : 'unknown',
+          duration:clampInt(entry.duration,0,999999,0), plannedDuration:clampInt(entry.plannedDuration,0,999999,0),
+          status:entry.status === 'completed' ? 'completed' : 'incomplete', score,
+          note:typeof entry.note === 'string' ? entry.note.slice(0,240) : ''
+        }];
+      });
+    }
+
+    function normalizeStoredState(parsed) {
+      if (!isPlainObject(parsed)) return deepClone(DEFAULT_STATE);
+      const usedExerciseIds = new Set(Object.keys(EXERCISE_BY_ID));
+      const exerciseIdMap = new Map();
+      const customExercises = (Array.isArray(parsed.customExercises) ? parsed.customExercises : []).slice(0, MAX_CUSTOM_EXERCISES).flatMap(raw => {
+        const sourceId = String(raw?.id || '').trim().toLowerCase();
+        const exercise = normalizeCustomExercise(raw, {usedIds:usedExerciseIds});
+        if (!exercise) return [];
+        if (sourceId && !exerciseIdMap.has(sourceId)) exerciseIdMap.set(sourceId, exercise.id);
+        return [exercise];
+      });
+      const usedWorkoutIds = new Set();
+      const rawCustom = Array.isArray(parsed.customWorkouts) ? parsed.customWorkouts : [];
+      const customWorkouts = rawCustom.flatMap(workout => {
+        if (!isPlainObject(workout) || typeof workout.name !== 'string' || !Object.prototype.hasOwnProperty.call(PROTOCOL_BY_ID, workout.mode) || !Array.isArray(workout.items)) return [];
+        const items = workout.items.flatMap(item => {
+          const sourceId = String(item?.exerciseId || '').trim().toLowerCase();
+          const exerciseId = exerciseIdMap.get(sourceId) || sourceId;
+          const exercise = getExercise(exerciseId, customExercises);
+          if (!exercise) return [];
+          const weight = exercise.weights.includes(item.weight) ? item.weight : exercise.defaultWeight;
+          return [{exerciseId:exercise.id, weight, reps:clampInt(item.reps,0,999,exercise.carry ? 0 : 10), work:clamp(item.work,5,3600,40), rest:clamp(item.rest,0,3600,20), target:typeof item.target === 'string' ? item.target.slice(0,60) : (exercise.carry ? (exercise.custom ? 'Time or distance' : '40 sec or 30 m') : '')}];
+        });
+        if (workout.mode !== 'rest' && !items.length) return [];
+        let id = typeof workout.id === 'string' ? workout.id.trim().slice(0,100) : '';
+        if (!id || usedWorkoutIds.has(id)) id = uid('recovered');
+        while (usedWorkoutIds.has(id)) id = uid('recovered');
+        usedWorkoutIds.add(id);
+        return [{
+          id, name:workout.name.trim().slice(0,60) || 'Recovered workout', mode:workout.mode,
+          description:typeof workout.description === 'string' ? workout.description.slice(0,240) : '',
+          difficulty:typeof workout.difficulty === 'string' ? workout.difficulty.slice(0,30) : 'Custom',
+          color:typeof workout.color === 'string' && /^#[0-9a-f]{6}$/i.test(workout.color) ? workout.color : '#88c0d0',
+          equipment:typeof workout.equipment === 'string' ? workout.equipment.slice(0,160) : '',
+          updatedAt:typeof workout.updatedAt === 'string' ? workout.updatedAt.slice(0,40) : '',
+          config:normalizeWorkoutConfig(workout.mode, workout.config), items
+        }];
+      });
+      const weightDefaults = {};
+      if (isPlainObject(parsed.weightDefaults)) {
+        for (const [rawId, weight] of Object.entries(parsed.weightDefaults)) {
+          const sourceId = String(rawId).trim().toLowerCase();
+          const exerciseId = exerciseIdMap.get(sourceId) || sourceId;
+          const exercise = getExercise(exerciseId, customExercises);
+          if (exercise?.weights.includes(weight)) weightDefaults[exercise.id] = weight;
+        }
+      }
+      return {
+        settings:normalizeSettingsState(parsed.settings), weightDefaults,
+        customExercises, customWorkouts, history:normalizeHistoryEntries(parsed.history)
+      };
+    }
+
     function loadState() {
       try {
-        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-        if (!parsed || typeof parsed !== 'object') { rebuildCustomExerciseIndex([]); return deepClone(DEFAULT_STATE); }
-        const usedExerciseIds = new Set(Object.keys(EXERCISE_BY_ID));
-        const customExercises = (Array.isArray(parsed.customExercises) ? parsed.customExercises : []).slice(0, MAX_CUSTOM_EXERCISES).flatMap(raw => {
-          const exercise = normalizeCustomExercise(raw, {usedIds:usedExerciseIds});
-          return exercise ? [exercise] : [];
-        });
-        rebuildCustomExerciseIndex(customExercises);
-        const rawCustom = Array.isArray(parsed.customWorkouts) ? parsed.customWorkouts : [];
-        const customWorkouts = rawCustom.flatMap(workout => {
-          if (!workout || typeof workout !== 'object' || typeof workout.name !== 'string' || !PROTOCOL_BY_ID[workout.mode] || !Array.isArray(workout.items)) return [];
-          const items = workout.items.flatMap(item => {
-            const exercise = getExercise(item?.exerciseId, customExercises);
-            if (!exercise) return [];
-            const weight = exercise.weights.includes(item.weight) ? item.weight : exercise.defaultWeight;
-            return [{exerciseId:exercise.id, weight, reps:clampInt(item.reps,0,999,exercise.carry ? 0 : 10), work:clamp(item.work,5,3600,40), rest:clamp(item.rest,0,3600,20), target:typeof item.target === 'string' ? item.target.slice(0,60) : (exercise.carry ? (exercise.custom ? 'Time or distance' : '40 sec or 30 m') : '')}];
-          });
-          if (workout.mode !== 'rest' && !items.length) return [];
-          const config = normalizeWorkoutConfig(workout.mode, workout.config);
-          return [{
-            id:typeof workout.id === 'string' ? workout.id.slice(0,100) : uid('recovered'),
-            name:workout.name.trim().slice(0,60) || 'Recovered workout', mode:workout.mode,
-            description:typeof workout.description === 'string' ? workout.description.slice(0,240) : '',
-            difficulty:typeof workout.difficulty === 'string' ? workout.difficulty.slice(0,30) : 'Custom',
-            color:typeof workout.color === 'string' && /^#[0-9a-f]{6}$/i.test(workout.color) ? workout.color : '#88c0d0',
-            equipment:typeof workout.equipment === 'string' ? workout.equipment.slice(0,160) : '',
-            updatedAt:typeof workout.updatedAt === 'string' ? workout.updatedAt : '',
-            config, items
-          }];
-        });
-        const history = (Array.isArray(parsed.history) ? parsed.history : []).flatMap(entry => {
-          if (!entry || typeof entry !== 'object' || typeof entry.name !== 'string') return [];
-          return [{id:typeof entry.id === 'string' ? entry.id : uid('history'), date:Number.isNaN(new Date(entry.date).getTime()) ? new Date().toISOString() : entry.date, name:entry.name.slice(0,80), mode:typeof entry.mode === 'string' ? entry.mode : 'unknown', duration:clampInt(entry.duration,0,999999,0), plannedDuration:clampInt(entry.plannedDuration,0,999999,0), status:entry.status === 'completed' ? 'completed' : 'incomplete', score:entry.score && typeof entry.score === 'object' ? {rounds:clampInt(entry.score.rounds,0,999,0),reps:clampInt(entry.score.reps,0,9999,0)} : undefined, note:typeof entry.note === 'string' ? entry.note.slice(0,240) : ''}];
-        });
-        const state = {
-          settings:{...DEFAULT_STATE.settings, ...(parsed.settings && typeof parsed.settings === 'object' && !Array.isArray(parsed.settings) ? parsed.settings : {})},
-          weightDefaults: parsed.weightDefaults && typeof parsed.weightDefaults === 'object' && !Array.isArray(parsed.weightDefaults) ? {...parsed.weightDefaults} : {},
-          customExercises,
-          customWorkouts,
-          history
-        };
-        state.settings.countdown = clampInt(state.settings.countdown, 0, 10, 3);
-        if (!['dark','light','system'].includes(state.settings.theme)) state.settings.theme = 'dark';
-        for (const [id, weight] of Object.entries(state.weightDefaults)) {
-          const exercise = getExercise(id, customExercises);
-          if (!exercise || !exercise.weights.includes(weight)) delete state.weightDefaults[id];
-        }
+        const state = normalizeStoredState(JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'));
+        rebuildCustomExerciseIndex(state.customExercises);
         return state;
       } catch (error) {
         rebuildCustomExerciseIndex([]);
@@ -2269,19 +2326,21 @@
       } else appState.customExercises.unshift(exercise);
       rebuildCustomExerciseIndex();
       migrateExerciseReferences(exercise);
-      if (!existing && exerciseEditorContext === 'builder') {
-        ensureBuilder();
+      let addedToBuilder = false;
+      if (!existing && exerciseEditorContext === 'builder' && builderCanAcceptItem()) {
         builderState.items.push(itemFor(exercise.id, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20}));
         builderDirty = true;
+        addedToBuilder = true;
       }
       const persisted = saveState();
       closeDialog($('#exerciseDialog'));
       renderExerciseLibrary(); renderPicker(); renderSettings(); renderBuilder();
       requestAnimationFrame(() => {
-        const target = exerciseEditorContext === 'builder' ? $(`[data-remove-item="${Math.max(0, builderState.items.length - 1)}"]`) : $(`[data-exercise-card="${exercise.id}"] [data-edit-exercise]`);
+        const target = addedToBuilder ? $(`[data-remove-item="${Math.max(0, builderState.items.length - 1)}"]`) : exerciseEditorContext === 'builder' ? $('#pickerSearch') : $(`[data-exercise-card="${exercise.id}"] [data-edit-exercise]`);
         target?.focus();
       });
-      showToast(persisted ? (existing ? 'Custom exercise updated.' : exerciseEditorContext === 'builder' ? 'Custom exercise saved and added to the workout.' : 'Custom exercise saved to your library.') : 'Exercise kept for this visit only; storage is unavailable.');
+      const savedMessage = existing ? 'Custom exercise updated.' : addedToBuilder ? 'Custom exercise saved and added to the workout.' : exerciseEditorContext === 'builder' ? `Custom exercise saved to your library. This workout already has ${MAX_WORKOUT_ITEMS} exercises.` : 'Custom exercise saved to your library.';
+      showToast(persisted ? savedMessage : 'Exercise kept for this visit only; storage is unavailable.');
     }
 
     function toggleExerciseArchive(exerciseId) {
@@ -2318,6 +2377,13 @@
 
     function ensureBuilder() {
       if (!builderState) builderState = freshBuilder('tabata');
+    }
+
+    function builderCanAcceptItem() {
+      ensureBuilder();
+      if (builderState.items.length < MAX_WORKOUT_ITEMS) return true;
+      showToast(`A workout can contain up to ${MAX_WORKOUT_ITEMS} exercises.`);
+      return false;
     }
 
     function switchBuilderMode(mode) {
@@ -2440,6 +2506,7 @@
       const name = builderState.name.trim();
       if (!name) return 'Give this workout a name.';
       if (builderState.mode !== 'rest' && !builderState.items.length) return 'Add at least one exercise.';
+      if (builderState.items.length > MAX_WORKOUT_ITEMS) return `Keep the workout to ${MAX_WORKOUT_ITEMS} exercises or fewer.`;
       if (builderState.items.some(item => !getExercise(item.exerciseId))) return 'Remove unavailable exercises before starting.';
       const compiled = compileWorkout(builderState);
       if (compiled.phases.length === 0 || (builderState.mode !== 'rest' && !compiled.phases.some(phase => phase.phase === 'work'))) return 'Add valid timing before starting.';
@@ -2474,6 +2541,9 @@
       workout.id = workout.id || uid('custom');
       workout.updatedAt = new Date().toISOString();
       const existing = appState.customWorkouts.findIndex(item => item.id === workout.id);
+      if (existing < 0 && appState.customWorkouts.length >= MAX_CUSTOM_WORKOUTS) return showToast(`The saved workout library can hold up to ${MAX_CUSTOM_WORKOUTS} workouts.`);
+      const otherItemCount = appState.customWorkouts.reduce((sum, item, index) => sum + (index === existing ? 0 : item.items.length), 0);
+      if (otherItemCount + workout.items.length > MAX_TOTAL_WORKOUT_ITEMS) return showToast(`Saved workouts can contain up to ${MAX_TOTAL_WORKOUT_ITEMS.toLocaleString()} exercise entries in total.`);
       if (existing >= 0) appState.customWorkouts[existing] = workout;
       else appState.customWorkouts.unshift(workout);
       builderState = deepClone(workout);
@@ -2565,7 +2635,7 @@
       workout.description = String(raw.description || '').slice(0, 240);
       workout.config = normalizeWorkoutConfig(raw.mode, raw.config);
       workout.items = [];
-      for (const rawItem of Array.isArray(raw.items) ? raw.items.slice(0, 60) : []) {
+      for (const rawItem of Array.isArray(raw.items) ? raw.items.slice(0, MAX_WORKOUT_ITEMS) : []) {
         const sourceId = String(rawItem?.exerciseId || '');
         const exerciseId = options.idMap?.has(sourceId) ? options.idMap.get(sourceId) : sourceId;
         if (!exerciseId) continue;
@@ -2579,25 +2649,141 @@
       return workout;
     }
 
-    function exportCustomWorkouts() {
-      const payload = {app:'Your Own Gym by Mateo F.', version:APP_VERSION, exportedAt:new Date().toISOString(), exercises:appState.customExercises, workouts:appState.customWorkouts};
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `your-own-gym-backup-${new Date().toISOString().slice(0,10)}.json`;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showToast(`${appState.customExercises.length} custom exercise${appState.customExercises.length === 1 ? '' : 's'} and ${appState.customWorkouts.length} workout${appState.customWorkouts.length === 1 ? '' : 's'} exported.`);
+    function backupDataFromState(state) {
+      return {
+        settings:state.settings,
+        weightDefaults:state.weightDefaults,
+        exercises:state.customExercises,
+        workouts:state.customWorkouts,
+        history:state.history
+      };
     }
 
-    async function importCustomWorkouts(file) {
+    function sameJSONValue(left, right) {
+      if (left === right) return true;
+      if (Array.isArray(left) || Array.isArray(right)) return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => sameJSONValue(value, right[index]));
+      if (!isPlainObject(left) || !isPlainObject(right)) return false;
+      const leftKeys = Object.keys(left).filter(key => left[key] !== undefined).sort();
+      const rightKeys = Object.keys(right).filter(key => right[key] !== undefined).sort();
+      return leftKeys.length === rightKeys.length && leftKeys.every((key, index) => key === rightKeys[index] && sameJSONValue(left[key], right[key]));
+    }
+
+    function assertBackupDataLimits(exercises, workouts, history) {
+      if (exercises.length > MAX_CUSTOM_EXERCISES || workouts.length > MAX_BACKUP_CUSTOM_WORKOUTS || history.length > MAX_HISTORY_ENTRIES) throw new Error('Backup exceeds app data limits');
+      let itemCount = 0;
+      for (const workout of workouts) {
+        const count = Array.isArray(workout?.items) ? workout.items.length : 0;
+        if (count > MAX_BACKUP_WORKOUT_ITEMS) throw new Error('Backup exceeds app data limits');
+        itemCount += count;
+        if (itemCount > MAX_BACKUP_TOTAL_WORKOUT_ITEMS) throw new Error('Backup exceeds app data limits');
+      }
+      return itemCount;
+    }
+
+    function normalizeCompleteBackup(parsed) {
+      if (parsed.schemaVersion !== BACKUP_SCHEMA_VERSION) throw new Error('Unsupported backup version');
+      if (!isPlainObject(parsed.settings) || !isPlainObject(parsed.weightDefaults) || !Array.isArray(parsed.exercises) || !Array.isArray(parsed.workouts) || !Array.isArray(parsed.history)) throw new Error('Invalid complete backup');
+      const rawSettings = parsed.settings;
+      if (typeof rawSettings.sound !== 'boolean' || typeof rawSettings.vibration !== 'boolean' || typeof rawSettings.wakeLock !== 'boolean' || ![0,3,5,10].includes(rawSettings.countdown) || !['dark','light','system'].includes(rawSettings.theme)) throw new Error('Invalid complete backup');
+      const rawItemCount = assertBackupDataLimits(parsed.exercises, parsed.workouts, parsed.history);
+      const exerciseIds = new Set();
+      for (const exercise of parsed.exercises) {
+        const id = typeof exercise?.id === 'string' ? exercise.id.trim().toLowerCase() : '';
+        if (exercise?.id !== id || !/^custom-exercise-[a-z0-9-]{1,84}$/.test(id) || Object.prototype.hasOwnProperty.call(EXERCISE_BY_ID, id) || exerciseIds.has(id)) throw new Error('Invalid complete backup');
+        exerciseIds.add(id);
+      }
+      for (const collection of [parsed.workouts, parsed.history]) {
+        const ids = new Set();
+        for (const entry of collection) {
+          const id = typeof entry?.id === 'string' ? entry.id.trim() : '';
+          if (!id || id.length > 100 || entry?.id !== id || ids.has(id)) throw new Error('Invalid complete backup');
+          ids.add(id);
+        }
+      }
+      const state = normalizeStoredState({
+        settings:parsed.settings,
+        weightDefaults:parsed.weightDefaults,
+        customExercises:parsed.exercises,
+        customWorkouts:parsed.workouts,
+        history:parsed.history
+      });
+      const restoredItemCount = state.customWorkouts.reduce((sum, workout) => sum + workout.items.length, 0);
+      const providedData = {settings:parsed.settings, weightDefaults:parsed.weightDefaults, exercises:parsed.exercises, workouts:parsed.workouts, history:parsed.history};
+      if (state.customExercises.length !== parsed.exercises.length || state.customWorkouts.length !== parsed.workouts.length || state.history.length !== parsed.history.length || restoredItemCount !== rawItemCount || Object.keys(state.weightDefaults).length !== Object.keys(parsed.weightDefaults).length || !sameJSONValue(backupDataFromState(state), providedData)) throw new Error('Invalid complete backup');
+      return state;
+    }
+
+    function applyCompleteBackup(state) {
+      appState = state;
+      rebuildCustomExerciseIndex();
+      builderState = freshBuilder('tabata');
+      builderDirty = false;
+      editingExerciseId = null;
+      exerciseEditorContext = 'library';
+      pendingWorkout = null;
+      const persisted = saveState();
+      applyTheme();
+      updateMuteButtons();
+      renderDashboard();
+      renderHistory();
+      renderSettings();
+      renderExerciseLibrary();
+      renderBuilder();
+      const summary = `${appState.customExercises.length} custom exercise${appState.customExercises.length === 1 ? '' : 's'}, ${appState.customWorkouts.length} workout${appState.customWorkouts.length === 1 ? '' : 's'}, and ${appState.history.length} history entr${appState.history.length === 1 ? 'y' : 'ies'}`;
+      showToast(persisted ? `Full backup restored: ${summary}.` : `Backup restored for this visit only: ${summary}.`);
+    }
+
+    function exportFullBackup() {
+      try {
+        const sourceItemCount = assertBackupDataLimits(appState.customExercises, appState.customWorkouts, appState.history);
+        const snapshot = normalizeStoredState(appState);
+        const snapshotItemCount = snapshot.customWorkouts.reduce((sum, workout) => sum + workout.items.length, 0);
+        if (snapshot.customExercises.length !== appState.customExercises.length || snapshot.customWorkouts.length !== appState.customWorkouts.length || snapshot.history.length !== appState.history.length || snapshotItemCount !== sourceItemCount || Object.keys(snapshot.weightDefaults).length !== Object.keys(appState.weightDefaults).length) throw new Error('Backup source is invalid');
+        const payload = {
+          format:BACKUP_FORMAT,
+          schemaVersion:BACKUP_SCHEMA_VERSION,
+          app:'Your Own Gym by Mateo F.',
+          version:APP_VERSION,
+          exportedAt:new Date().toISOString(),
+          ...deepClone(backupDataFromState(snapshot))
+        };
+        normalizeCompleteBackup(payload);
+        const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+        if (blob.size > MAX_BACKUP_BYTES) throw new Error('Backup file is too large');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `your-own-gym-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast(`Full backup downloaded: ${snapshot.customExercises.length} custom exercise${snapshot.customExercises.length === 1 ? '' : 's'}, ${snapshot.customWorkouts.length} workout${snapshot.customWorkouts.length === 1 ? '' : 's'}, and ${snapshot.history.length} history entr${snapshot.history.length === 1 ? 'y' : 'ies'}, plus settings and default loads.`);
+      } catch (error) {
+        showToast(error.message === 'Backup file is too large' ? 'Backup could not be created because the saved data is larger than 25 MB.' : 'Backup could not be created because the saved data is outside the app limits.');
+      }
+    }
+
+    async function importBackup(file) {
       if (!file) return;
       try {
-        if (file.size > 2 * 1024 * 1024) throw new Error('Backup exceeds 2 MB');
+        if (file.size > MAX_BACKUP_BYTES) throw new Error('Backup file is too large');
         const parsed = JSON.parse(await file.text());
+        if (isPlainObject(parsed) && parsed.format === BACKUP_FORMAT) {
+          const restoredState = normalizeCompleteBackup(parsed);
+          const exported = new Date(parsed.exportedAt);
+          const dated = Number.isNaN(exported.getTime()) ? '' : ` from ${exported.toLocaleDateString([], {dateStyle:'medium'})}`;
+          const restoredItemCount = restoredState.customWorkouts.reduce((sum, workout) => sum + workout.items.length, 0);
+          const largeBackup = restoredState.customWorkouts.length > MAX_CUSTOM_WORKOUTS || restoredState.customWorkouts.some(workout => workout.items.length > MAX_WORKOUT_ITEMS) || restoredItemCount > MAX_TOTAL_WORKOUT_ITEMS;
+          askForConfirmation({
+            title:'Restore full backup?',
+            message:`This replaces the app data currently stored on this device with the selected backup${dated}. It contains ${restoredState.customExercises.length} custom exercise${restoredState.customExercises.length === 1 ? '' : 's'}, ${restoredState.customWorkouts.length} workout${restoredState.customWorkouts.length === 1 ? '' : 's'}, ${restoredState.history.length} history entr${restoredState.history.length === 1 ? 'y' : 'ies'}, settings, and default loads.${largeBackup ? ' This is a large legacy backup, so restoring and opening the workout list may take longer.' : ''}`,
+            confirmLabel:'Restore backup',
+            action:() => applyCompleteBackup(restoredState)
+          });
+          return;
+        }
+        if (isPlainObject(parsed) && ['format','schemaVersion','settings','weightDefaults','history'].some(key => Object.prototype.hasOwnProperty.call(parsed, key))) throw new Error('Invalid complete backup');
         const rawWorkouts = Array.isArray(parsed) ? parsed : parsed.workouts;
         const rawExercises = !Array.isArray(parsed) && Array.isArray(parsed.exercises) ? parsed.exercises : [];
         if (!Array.isArray(rawWorkouts) && !rawExercises.length) throw new Error('No importable data');
@@ -2641,8 +2827,26 @@
         }
         const stagedExercises = [...appState.customExercises, ...importedExercises];
         rebuildCustomExerciseIndex(stagedExercises);
-        const valid = (Array.isArray(rawWorkouts) ? rawWorkouts : []).slice(0, 200).map((workout, index) => normalizeImportedWorkout(workout, index, {idMap, customExercises:stagedExercises})).filter(Boolean);
-        if (!valid.length && !importedExercises.length) throw new Error(skippedExercises ? 'Exercise library is full' : 'No valid data');
+        const workoutCandidates = Array.isArray(rawWorkouts) ? rawWorkouts : [];
+        const availableWorkoutSlots = Math.max(0, MAX_CUSTOM_WORKOUTS - appState.customWorkouts.length);
+        let availableItemSlots = Math.max(0, MAX_TOTAL_WORKOUT_ITEMS - appState.customWorkouts.reduce((sum, workout) => sum + workout.items.length, 0));
+        let skippedWorkouts = Math.max(0, workoutCandidates.length - MAX_CUSTOM_WORKOUTS);
+        const valid = [];
+        for (const [index, rawWorkout] of workoutCandidates.slice(0, MAX_CUSTOM_WORKOUTS).entries()) {
+          if (Array.isArray(rawWorkout?.items) && rawWorkout.items.length > MAX_WORKOUT_ITEMS) {
+            skippedWorkouts++;
+            continue;
+          }
+          const workout = normalizeImportedWorkout(rawWorkout, index, {idMap, customExercises:stagedExercises});
+          if (!workout) continue;
+          if (valid.length >= availableWorkoutSlots || workout.items.length > availableItemSlots) {
+            skippedWorkouts++;
+            continue;
+          }
+          valid.push(workout);
+          availableItemSlots -= workout.items.length;
+        }
+        if (!valid.length && !importedExercises.length) throw new Error(skippedExercises ? 'Exercise library is full' : skippedWorkouts ? 'Workout library is full' : 'No valid data');
         const names = new Set(appState.customWorkouts.map(workout => workout.name.toLowerCase()));
         for (const workout of valid) {
           const base = workout.name;
@@ -2659,11 +2863,17 @@
         const persisted = saveState();
         renderDashboard(); renderExerciseLibrary(); renderPicker(); renderSettings();
         const summary = `${importedExercises.length} exercise${importedExercises.length === 1 ? '' : 's'} and ${valid.length} workout${valid.length === 1 ? '' : 's'}`;
-        const skipped = skippedExercises ? ` ${skippedExercises} exercise${skippedExercises === 1 ? ' was' : 's were'} skipped because the custom library is full.` : '';
-        showToast(persisted ? `Imported ${summary}; existing data was kept.${skipped}` : `Imported ${summary} for this visit only; storage is unavailable.${skipped}`);
+        const skipped = `${skippedExercises ? ` ${skippedExercises} exercise${skippedExercises === 1 ? ' was' : 's were'} skipped because the custom library is full.` : ''}${skippedWorkouts ? ` ${skippedWorkouts} workout${skippedWorkouts === 1 ? ' was' : 's were'} skipped because the saved-workout limits were reached.` : ''}`;
+        showToast(persisted ? `Imported legacy backup with ${summary}; existing data was kept. Settings, default loads, and history were not present.${skipped}` : `Imported legacy backup with ${summary} for this visit only. Settings, default loads, and history were not present.${skipped}`);
       } catch (error) {
         rebuildCustomExerciseIndex();
-        showToast(error.message === 'Backup exceeds 2 MB' ? 'Import failed: backups must be 2 MB or smaller.' : error.message === 'Exercise library is full' ? `Import stopped: the custom library already has ${MAX_CUSTOM_EXERCISES} exercises.` : 'Import failed. Choose a valid Your Own Gym JSON backup.');
+        let message = 'Import failed. Choose a valid Your Own Gym JSON backup.';
+        if (error.message === 'Backup file is too large') message = 'Import failed: backups must be 25 MB or smaller.';
+        else if (error.message === 'Unsupported backup version') message = 'Import failed: this backup was created by a newer, unsupported version of the app.';
+        else if (error.message === 'Backup exceeds app data limits') message = 'Import failed: this backup exceeds the app data limits.';
+        else if (error.message === 'Exercise library is full') message = `Import stopped: the custom library already has ${MAX_CUSTOM_EXERCISES} exercises.`;
+        else if (error.message === 'Workout library is full') message = 'Import stopped: the saved workout library has reached its limit.';
+        showToast(message);
       } finally {
         $('#importWorkouts').value = '';
       }
@@ -2709,7 +2919,7 @@
         if (archiveExercise) toggleExerciseArchive(archiveExercise.dataset.toggleExerciseArchive);
         const addLibrary = event.target.closest('[data-add-from-library]');
         if (addLibrary) {
-          ensureBuilder();
+          if (!builderCanAcceptItem()) return;
           const item = itemFor(addLibrary.dataset.addFromLibrary, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20});
           if (!item) return;
           builderState.items.push(item);
@@ -2719,7 +2929,7 @@
         }
         const pickerAdd = event.target.closest('[data-picker-add]');
         if (pickerAdd) {
-          ensureBuilder();
+          if (!builderCanAcceptItem()) return;
           const exerciseId = pickerAdd.dataset.pickerAdd;
           const exercise = getExercise(exerciseId);
           const item = itemFor(exerciseId, {work:builderState.config.work || 40, rest:builderState.config.rest ?? 20});
@@ -2912,8 +3122,8 @@
         const exercise = getExercise(select.dataset.defaultWeight);
         if (exercise?.weights.includes(select.value)) { appState.weightDefaults[exercise.id] = select.value; const persisted = saveState(); renderExerciseLibrary(); renderPicker(); showToast(persisted ? 'Default weight updated.' : 'Default changed for this visit only; storage is unavailable.'); }
       });
-      $('#exportWorkouts').addEventListener('click', exportCustomWorkouts);
-      $('#importWorkouts').addEventListener('change', event => importCustomWorkouts(event.target.files?.[0]));
+      $('#exportWorkouts').addEventListener('click', exportFullBackup);
+      $('#importWorkouts').addEventListener('change', event => importBackup(event.target.files?.[0]));
       $('#resetAllData').addEventListener('click', () => askForConfirmation({title:'Reset Your Own Gym?',message:'This removes custom exercises, custom workouts, history, default loads, and settings from this device.',confirmLabel:'Reset all data',action:() => { appState = deepClone(DEFAULT_STATE); rebuildCustomExerciseIndex(); builderState = freshBuilder('tabata'); builderDirty = false; const persisted = saveState(); applyTheme(); updateMuteButtons(); renderDashboard(); renderSettings(); renderBuilder(); renderExerciseLibrary(); showToast(persisted ? 'All app data reset.' : 'Data reset for this visit only; browser storage is unavailable.'); }}));
       $('#headerMute').addEventListener('click', toggleSound);
       $('#headerTheme').addEventListener('click', () => { appState.settings.theme = resolveTheme() === 'dark' ? 'light' : 'dark'; saveState(); applyTheme(); renderSettings(); });
