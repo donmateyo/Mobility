@@ -1,7 +1,7 @@
 'use strict';
 
 const CACHE_PREFIX = 'your-own-gym-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}2026-07-21-1`;
+const CACHE_NAME = `${CACHE_PREFIX}2026-07-22-1`;
 const INDEX_URL = new URL('./index.html', self.registration.scope).href;
 const APP_SHELL = [
   './',
